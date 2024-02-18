@@ -1,0 +1,180 @@
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+a{
+  text-decoration: none;
+  color: black;
+}
+
+@font-face {
+  font-family: NetteLight;
+  src: url(../fonts/NetteGrotesk-Light.otf);
+}
+
+@font-face {
+  font-family: NetteRegular;
+  src: url(../fonts/NetteGrotesk-Regular.otf);
+}
+
+@font-face {
+  font-family: NetteMedium;
+  src: url(../fonts/NetteGrotesk-Medium.otf);
+}
+
+@font-face {
+  font-family: NetteBlack;
+  src: url(../fonts/NetteGrotesk-Black.otf);
+}
+
+body{
+  font-family: NetteRegular;
+}
+
+.button-text{
+  margin-top: 5%;
+  margin-bottom: 5%;
+}
+
+.back_button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center; /* Vertically center the content */
+  margin: auto;
+  width:  clamp(92%, 15px, 77%);
+  height: 3vw;
+  background: white;
+  color: black;
+  font-size: clamp(12pt, 1.5vw, 16pt);
+  border: 2px solid black;
+  margin-top: 0.5vw;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.back_button:hover {
+  background-color: black;
+  color: white;
+}
+
+.arrow_left {
+  height: 70%;
+  font-size: 1.3em;
+}
+
+p{
+  min-height: 10vh;
+  width: 90%;
+  margin-left: 5%;
+  margin-right: 5%;
+  padding: 20px 0px;
+  margin-bottom: 5em;
+}
+
+.sub-headline{
+  columns: 2 300px;
+  font-size: clamp(12pt, 1.5vw, 16pt);
+  text-transform: lowercase;
+}
+
+h1{
+  min-height: 10vh;
+  width: clamp(90%, 15px, 75%);
+  margin: auto;
+  padding: 20px 0px;
+}
+
+button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center; /* Vertically center the content */
+  margin: auto;
+  width:  clamp(92%, 15px, 77%);
+  height: 3vw;
+  background: white;
+  color: black;
+  font-size: clamp(12pt, 1.5vw, 16pt);
+  border: 2px solid black;
+  margin-top: 0.5vw;
+  padding-left: 10px;
+  padding-right: 10px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: black;
+  color: white;
+}
+
+/* FOOTER */
+
+main {
+  min-height: 100vh;
+  background: white;
+  position: relative;
+  z-index: 1;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+footer {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: black;
+  padding-top: 50px;
+  padding-bottom: 50px;
+  color: white;
+}
+
+.footer_info{
+  display: flex;
+  width: 86%;
+  margin: auto;
+  justify-content: space-between;
+  align-items: center;
+  margin-right: 8%;
+}
+
+.footer-text {
+  color: white;
+  font-size: 16pt;
+}
+
+.footer-impressum{
+  display: contents;
+  color: white;
+  font-size: 12pt;
+  font-family: NetteLight;
+}
+
+/* FOOTER */
+
+@media screen and (max-width: 700px){
+
+  .back_button {
+    height: 10vw;
+    font-family: NetteMedium;
+  }
+  
+}
+
+@media screen and (min-width: 2500px) {
+
+  .everything{
+    margin-left: 500px;
+    margin-right: 500px;
+  }
+
+  .back_button {
+    height: 2vw;
+  }
+
+
+}
+
