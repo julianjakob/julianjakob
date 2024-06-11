@@ -113,6 +113,8 @@ body{
   color: white;
 }
 
+
+
 .project_button_2 {
   position: relative;
   display: flex;
@@ -145,6 +147,8 @@ body{
   transform: rotate(180deg);
 }
 
+
+
 .project_button_3 {
   position: relative;
   display: flex;
@@ -176,7 +180,6 @@ body{
 .project_button_3:hover .arrow_right {
   transform: rotate(180deg);
 }
-
 
 
 
@@ -373,6 +376,16 @@ footer {
     font-family: NetteMedium;
   }
 
+  .project_button_4 {
+    background-image: url('../Images/Untold.png');
+    background-size: cover;
+    background-position: center;
+    height: 50.3312vw; /* Expand height on hover */
+    margin-top: 1vw;
+    color: white;
+    font-family: NetteMedium;
+  }
+
   .arrow_right {
     transform: rotate(180deg);
   }
@@ -386,6 +399,10 @@ footer {
   }
 
   .project_button_3:hover .additional_text {
+    opacity: 0;
+  }
+
+  .project_button_4:hover .additional_text {
     opacity: 0;
   }
   
@@ -402,6 +419,10 @@ footer {
   }
 
   .project_button_3:hover {
+    height: 50.3312vw;
+  }
+
+  .project_button_4:hover {
     height: 50.3312vw;
   }
 
@@ -431,6 +452,10 @@ footer {
   }
 
   .project_button_3{
+    height: 2vw;
+  }
+
+  .project_button_4{
     height: 2vw;
   }
 
