@@ -1,108 +1,462 @@
-<!DOCTYPE html>
-<html lang="en">
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="X-UA-Compatible" content="ie=edge">
-<title>julianjakob</title>
-<link rel="stylesheet" href="css/project_overview.css">
-<link rel="icon" type="image/x-icon" href="Images/Favicon.jpg">
-</head>
+a{
+  text-decoration: none;
+  color: black;
+}
 
-<body>
-  <div class="everything">
-  <main>
+@font-face {
+  font-family: NetteLight;
+  src: url(../fonts/NetteGrotesk-Light.otf);
+}
 
-  <section class="back">
-    <div class="button-text">
-      <a href="index.html">
-        <button class="back_button">
-          <span class="arrow_left"><ion-icon name="arrow-back-sharp"></ion-icon></span>
-          <span class="button__text">back</span>
-        </button>
-      </a>
-    </div>
-  </section>
+@font-face {
+  font-family: NetteRegular;
+  src: url(../fonts/NetteGrotesk-Regular.otf);
+}
 
-  <h1 class="headline">PROJECTS 24</h1>
+@font-face {
+  font-family: NetteMedium;
+  src: url(../fonts/NetteGrotesk-Medium.otf);
+}
 
-  <div class="abstand-unten">
-
-    <section>
-      <div class="project_button">
-        <a href="project_04.html">
-          <button class="project_button_4">
-            <span class="project_button_text">UNTOLD MUSIC FESTIVAL</span>
-            <span class="arrow_right"><ion-icon name="arrow-back-sharp"></ion-icon></span>
-            <div class="additional_text">(untold, electronic music festival | cluj-napoca, romania | bachelor project)</div> <!-- New div for additional text -->
-          </button>
-        </a>
-      </div>
-    </section>
+@font-face {
+  font-family: NetteBlack;
+  src: url(../fonts/NetteGrotesk-Black.otf);
+}
 
 
-  <section>
-    <div class="project_button">
-      <a href="project_01.html">
-        <button class="project_button_1">
-          <span class="project_button_text">BERNHARD LASSACHER</span>
-          <span class="arrow_right"><ion-icon name="arrow-back-sharp"></ion-icon></span>
-          <div class="additional_text">(bernhard lassacher, blacksmith | pinzgau, austria | university project, cooperation, freelance )</div> <!-- New div for additional text -->
-        </button>
-      </a>
-    </div>
-  </section>
+body{
+  font-family: NetteRegular;
+}
 
-  <section>
-    <div class="project_button">
-      <a href="project_02.html">
-        <button class="project_button_2">
-          <span class="project_button_text">TABULA RASA</span>
-          <span class="arrow_right"><ion-icon name="arrow-back-sharp"></ion-icon></span>
-          <div class="additional_text">(tabula rasa, cardgame | st. pölten, austria | university project)</div> <!-- New div for additional text -->
-        </button>
-      </a>
-    </div>
-  </section>
+.button-text{
+  margin-top: 5%;
+  margin-bottom: 5%;
+}
 
-  <section>
-    <div class="project_button">
-      <a href="project_03.html">
-        <button class="project_button_3">
-          <span class="project_button_text">FILMFESTIVAL KITZBÜHEL</span>
-          <span class="arrow_right"><ion-icon name="arrow-back-sharp"></ion-icon></span>
-          <div class="additional_text">(filmfestival kitzbühel, poster design | kitzbühel, austria | competition)</div> <!-- New div for additional text -->
-        </button>
-      </a>
-    </div>
-  </section>
-</div>
-</div>
+.back_button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center; /* Vertically center the content */
+  margin: auto;
+  width: 92%;
+  height: 3vw;
+  background: white;
+  color: black;
+  font-size: clamp(12pt, 1.5vw, 16pt);
+  border: 2px solid black;
+  margin-top: 0.5vw;
+  padding-left: 10px;
+  padding-right: 10px;
+  cursor: pointer;
+}
 
-</main>
+.back_button:hover {
+  background-color: black;
+  color: white;
+}
 
-<footer role="info">
-  <div class="footer_info">
-  <a href="mailto:julian.jakob500@gmail.com" target="_blank">
-    <h3 class="footer-text"><ion-icon name="mail-sharp"></ion-icon></h3>
-  </a>
-  <a href="https://www.linkedin.com/in/julian-jakob/" target="_blank">
-    <h3 class="footer-text"><ion-icon name="logo-linkedin"></ion-icon></h3>
-  </a>
-  <a href="https://www.instagram.com/julianjakob_design/" target="_blank">
-    <h3 class="footer-text"><ion-icon name="logo-instagram"></ion-icon></h3>
-  </a>
-  <a href="impressum.html" target="_blank">
-    <p class="footer-impressum"><u>legal notice</u></p>
-  </a>
-  </div>
-</footer>
-</div>
+.arrow_left {
+  height: 70%;
+  font-size: 1.3em;
+}
 
-<script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
-<script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+.project_button_text {
+  margin-top: 0.5%;
+}
 
-</body>
+.project_button_1 {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin: auto;
+  width: clamp(92%, 15px, 77%);
+  height: 3vw;
+  background: white;
+  color: black;
+  font-size: clamp(12pt, 1.5vw, 16pt);
+  border: 2px solid black;
+  margin-top: 0.5vw;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 2px;
+  overflow: hidden;
+  transition: height 0.8s ease; /* Smoothly transition height */
+  cursor: pointer;
+}
 
-</html>
+.project_button_1:hover {
+  background-image: url('../Images/Lassacher-13.jpg');
+  background-size: cover;
+  background-position: center;
+  height: 19.6608vw; /* Expand height on hover */
+}
+
+.project_button_1:hover .arrow_right {
+  transform: rotate(180deg);
+  color: white;
+}
+
+.project_button_1:hover .project_button_text {
+  color: white;
+}
+
+.project_button_1:hover .additional_text {
+  color: white;
+}
+
+
+
+.project_button_2 {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin: auto;
+  width: clamp(92%, 15px, 77%);
+  height: 3vw;
+  background: white;
+  color: black;
+  font-size: clamp(12pt, 1.5vw, 16pt);
+  border: 2px solid black;
+  margin-top: 0.5vw;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 2px;
+  overflow: hidden;
+  transition: height 0.8s ease; /* Smoothly transition height */
+  cursor: pointer;
+}
+
+.project_button_2:hover {
+  background-image: url('../Images/Tabula/Tabula-6.jpg');
+  background-size: cover;
+  background-position: center;
+  height: 19.6608vw; /* Expand height on hover */
+}
+
+.project_button_2:hover .arrow_right {
+  transform: rotate(180deg);
+}
+
+
+
+.project_button_3 {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin: auto;
+  width: clamp(92%, 15px, 77%);
+  height: 3vw;
+  background: white;
+  color: black;
+  font-size: clamp(12pt, 1.5vw, 16pt);
+  border: 2px solid black;
+  margin-top: 0.5vw;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 2px;
+  overflow: hidden;
+  transition: height 0.8s ease; /* Smoothly transition height */
+  cursor: pointer;
+}
+
+.project_button_3:hover {
+  background-image: url('../Images/Kitzbühel-1.jpg');
+  background-size: cover;
+  background-position: center;
+  height: 19.6608vw; /* Expand height on hover */
+}
+
+.project_button_3:hover .arrow_right {
+  transform: rotate(180deg);
+}
+
+
+
+
+.project_button_4 {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin: auto;
+  width: clamp(92%, 15px, 77%);
+  height: 3vw;
+  background: white;
+  color: black;
+  font-size: clamp(12pt, 1.5vw, 16pt);
+  border: 2px solid black;
+  margin-top: 0.5vw;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 2px;
+  overflow: hidden;
+  transition: height 0.8s ease; /* Smoothly transition height */
+  cursor: pointer;
+}
+
+.project_button_4:hover {
+  background-image: url('../Images/Untold.png');
+  background-size: cover;
+  background-position: center;
+  height: 19.6608vw; /* Expand height on hover */
+}
+
+.project_button_4:hover .arrow_right {
+  transform: rotate(180deg);
+  color: white;
+}
+
+.project_button_4:hover .project_button_text {
+  color: white;
+}
+
+.project_button_4:hover .additional_text {
+  color: white;
+}
+
+.arrow_right {
+  position: absolute;
+  top: 0px; /* Adjust as needed to align the arrow vertically */
+  right: 10px;
+  font-size: 1.3em;
+  transform: rotate(-90deg);
+  transition: rotate 1s ease;
+}
+
+.additional_text {
+  font-size: 1.3rem;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  text-align: left;
+  width: 92%;
+  padding-left: 10px;
+  padding-bottom: 10px;
+  opacity: 0; /* Initially hide the additional text */
+  transition: opacity 0.3s ease; /* Smoothly transition opacity */
+}
+
+.project_button_1:hover .additional_text {
+  opacity: 1; /* Display the additional text when button is hovered */
+}
+
+.project_button_2:hover .additional_text {
+  opacity: 1; /* Display the additional text when button is hovered */
+}
+
+.project_button_3:hover .additional_text {
+  opacity: 1; /* Display the additional text when button is hovered */
+}
+
+.project_button_4:hover .additional_text {
+  opacity: 1; /* Display the additional text when button is hovered */
+}
+
+h1{
+  min-height: 10vh;
+  width: clamp(90%, 15px, 75%);
+  margin: auto;
+  margin-top: 0;
+  padding: 20px 0px;
+}
+
+.headline{
+  font-size: clamp(18pt, 1.5vw, 25.6pt);
+  column-span: all;
+}
+
+/* FOOTER */
+
+main {
+  min-height: 100vh;
+  background: white;
+  position: relative;
+  z-index: 1;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+footer {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: black;
+  padding-top: 50px;
+  padding-bottom: 50px;
+  color: white;
+}
+
+.footer_info{
+  display: flex;
+  width: 86%;
+  margin: auto;
+  justify-content: space-between;
+  align-items: center;
+  margin-right: 8%;
+}
+
+.footer-text {
+  color: white;
+  font-size: 16pt;
+}
+
+.footer-impressum{
+  display: contents;
+  color: white;
+  font-size: 12pt;
+  font-family: NetteLight;
+}
+
+.abstand-unten{
+  margin-bottom: 10vh;
+}
+
+/* FOOTER */
+
+@media screen and (max-width: 768px){
+  .video{
+    height: 50vw;
+  }
+
+  .sub-headline {
+    display: none;
+  }
+
+  .back_button {
+    height: 10vw;
+    font-family: NetteMedium;
+  }
+
+  button {
+    height: 10vw; /* Button height for screens smaller than 768px */
+  }
+
+}
+
+@media screen and (max-width: 1080px){
+
+  .project_button_1 {
+    background-image: url('/Images/Lassacher-13.jpg');
+    background-size: cover;
+    background-position: center;
+    height: 50.3312vw; /* Expand height on hover */
+    margin-top: 1vw;
+    color: white;
+    font-family: NetteMedium;
+  }
+
+  .project_button_2 {
+    background-image: url('/Images/Tabula/Tabula-6.jpg');
+    background-size: cover;
+    background-position: center;
+    height: 50.3312vw; /* Expand height on hover */
+    margin-top: 1vw;
+    font-family: NetteMedium;
+  }
+
+  .project_button_3 {
+    background-image: url('/Images/Kitzbühel-1.jpg');
+    background-size: cover;
+    background-position: center;
+    height: 50.3312vw; /* Expand height on hover */
+    margin-top: 1vw;
+    font-family: NetteMedium;
+  }
+
+  .project_button_4 {
+    background-image: url('/Images/Untold.png');
+    background-size: cover;
+    background-position: center;
+    height: 50.3312vw; /* Expand height on hover */
+    margin-top: 1vw;
+    color: white;
+    font-family: NetteMedium;
+  }
+
+  .arrow_right {
+    transform: rotate(180deg);
+  }
+
+  .project_button_1:hover .additional_text {
+    opacity: 0;
+  }
+
+  .project_button_2:hover .additional_text {
+    opacity: 0;
+  }
+
+  .project_button_3:hover .additional_text {
+    opacity: 0;
+  }
+
+  .project_button_4:hover .additional_text {
+    opacity: 0;
+  }
+  
+  .project_button_text{
+    opacity: 0;
+  }
+
+  .project_button_1:hover {
+    height: 50.3312vw;
+  }
+
+  .project_button_2:hover {
+    height: 50.3312vw;
+  }
+
+  .project_button_3:hover {
+    height: 50.3312vw;
+  }
+
+  .project_button_4:hover {
+    height: 50.3312vw;
+  }
+
+}
+
+@media screen and (min-width: 2500px) {
+
+  .everything{
+    margin-left: 500px;
+    margin-right: 500px;
+  }
+
+  .video{
+    height: 65vh;
+  }
+
+  .back_button {
+    height: 2vw;
+  }
+
+  .project_button_1{
+    height: 2vw;
+  }
+
+  .project_button_2{
+    height: 2vw;
+  }
+
+  .project_button_3{
+    height: 2vw;
+  }
+
+  .project_button_4{
+    height: 2vw;
+  }
+
+}
