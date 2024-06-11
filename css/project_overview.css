@@ -167,7 +167,7 @@ body{
 }
 
 .project_button_3:hover {
-  background-image: url('../Images/Kitzbühel-1.jpg');
+  background-image: url('../Images/Kitzbühel-1.jpg');
   background-size: cover;
   background-position: center;
   height: 19.6608vw; /* Expand height on hover */
@@ -175,6 +175,51 @@ body{
 
 .project_button_3:hover .arrow_right {
   transform: rotate(180deg);
+}
+
+
+
+
+
+.project_button_4 {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin: auto;
+  width: clamp(92%, 15px, 77%);
+  height: 3vw;
+  background: white;
+  color: black;
+  font-size: clamp(12pt, 1.5vw, 16pt);
+  border: 2px solid black;
+  margin-top: 0.5vw;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 2px;
+  overflow: hidden;
+  transition: height 0.8s ease; /* Smoothly transition height */
+  cursor: pointer;
+}
+
+.project_button_4:hover {
+  background-image: url('../Images/Untold.png');
+  background-size: cover;
+  background-position: center;
+  height: 19.6608vw; /* Expand height on hover */
+}
+
+.project_button_4:hover .arrow_right {
+  transform: rotate(180deg);
+  color: white;
+}
+
+.project_button_4:hover .project_button_text {
+  color: white;
+}
+
+.project_button_4:hover .additional_text {
+  color: white;
 }
 
 .arrow_right {
@@ -209,6 +254,10 @@ body{
 }
 
 .project_button_3:hover .additional_text {
+  opacity: 1; /* Display the additional text when button is hovered */
+}
+
+.project_button_4:hover .additional_text {
   opacity: 1; /* Display the additional text when button is hovered */
 }
 
@@ -316,7 +365,7 @@ footer {
   }
 
   .project_button_3 {
-    background-image: url('../Images/Kitzbühel-1.jpg');
+    background-image: url('../Images/Kitzbühel-1.jpg');
     background-size: cover;
     background-position: center;
     height: 50.3312vw; /* Expand height on hover */
