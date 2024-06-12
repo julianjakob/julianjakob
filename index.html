@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title>julianjakob</title>
+<link rel="stylesheet" href="css/home.css">
+<link rel="icon" type="image/x-icon" href="Images/Favicon.jpg">
+</head>
+
+<body>
+  <div class="everything">
+
+  <div class="cursor"></div>
+
+  <div class="portfolio">
+    <header>
+      <nav>
+      <a href="index.html">
+        <h3 class="logo">julianjakob</h3>
+      </a>
+      <a href="mailto:julian.jakob500@gmail.com" target="_blank">
+        <h3 class="email">julian.jakob500@gmail.com</h3>
+      </a>
+      </nav>
+      <main>
+        <section class="page cover">
+          <div class="hero">
+            <a href="project_overview.html">
+              <video id="autoplayVideo" class="video" autoplay muted loop playsinline>
+                <source src="Videos/02_Website_Reel.mp4" type="video/mp4" alt="Cover-Video">
+              </video>
+          </a>
+          </div>
+        </section>
+        <section class="page introduction">
+          <div class="text">
+            
+            <p class="headline">julian is an austrian graphic designer, focusing on visual flexible systems. by now, he 
+              has worked with brands and studios such as nostalgic, b2impact, untold music festival, and bernhard lassacher. 
+              as of june 2024, he has completed his bachelor's studies in graphic and information design in austria.</p>
+
+            <p class="sub-headline">hello there, i'm julian, a creative from austria specializing in visual flexible systems, 
+              working in both print and web, with a focus on 3d visualizations. my creative journey began around the age of 
+              15 when one of my high school professors gave me an old version of photoshop to experiment with. from then on, i've
+              dedicated myself to learning design and completed my first commercial project when i was about 16 years old. 
+              since then, i've worked on projects not only in austria but also in spain, belgium and romania. here, you can explore a 
+              selection of my most recent <a href="project_overview.html"><u>projects of 2024.</u></a></p>
+          </div>
+        </section>
+        <section class="page buttons">
+          <div class="button-text">
+            <a href="https://www.linkedin.com/in/julian-jakob/" target="_blank">
+              <button>
+                <span class="button__text">linkedin (new tab)</span>
+                <span class="arrow__45_up"><ion-icon name="arrow-up-outline"></ion-icon></span>
+              </button>
+            </a>
+            <a href="https://www.instagram.com/julianjakob_design/" target="_blank">
+              <button>
+                <span class="button__text">instagram (new tab)</span>
+                <span class="arrow__45_up"><ion-icon name="arrow-up-outline"></ion-icon></span>
+              </button>
+            </a>
+            <a href="https://drive.google.com/uc?export=download&id=1oBaf0EbEanqMwLMkKnd4Xe5ufaZyqnj8" target="_blank">
+              <button>
+                <span class="button__text">offline portfolio (download)</span>
+                <span class="arrow__45_down"><ion-icon name="arrow-up-outline"></ion-icon></span>
+              </button>
+            </a>
+            <a href="https://drive.google.com/uc?export=download&id=1jzhk934M5fbLA461bLGiZHZ0V1OFuVVD" target="_blank">
+              <button>
+                <span class="button__text">curriculum vitae (download)</span>
+                <span class="arrow__45_down"><ion-icon name="arrow-up-outline"></ion-icon></span>
+              </button>
+            </a>
+            <a href="project_overview.html">
+              <button class="project-button">
+                <span class="button__text">projects</span>
+                <span class="arrow_right"><ion-icon name="arrow-up-outline"></ion-icon></span>
+              </button>
+            </a>
+          </div>
+        </section>
+      </main>
+    </header>
+  </div>
+
+
+
+  <footer role="info">
+      <div class="footer_info">
+      <a href="mailto:julian.jakob500@gmail.com" target="_blank">
+        <h3 class="footer-text"><ion-icon name="mail-sharp"></ion-icon></h3>
+      </a>
+      <a href="https://www.linkedin.com/in/julian-jakob/" target="_blank">
+        <h3 class="footer-text"><ion-icon name="logo-linkedin"></ion-icon></h3>
+      </a>
+      <a href="https://www.instagram.com/julianjakob_design/" target="_blank">
+        <h3 class="footer-text"><ion-icon name="logo-instagram"></ion-icon></h3>
+      </a>
+      <a href="impressum.html" target="_blank">
+        <p class="footer-impressum"><u>legal notice</u></p>
+      </a>
+      </div>
+  </footer>
+
+</div>
+
+  <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+ 
+ <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var video = document.getElementById('autoplayVideo');
+    
+      // Play the video when it's loaded and ready to play
+      video.addEventListener('canplaythrough', function() {
+        video.play();
+      });
+    
+      // If autoplay fails, try playing the video on user interaction
+      document.addEventListener('click', function() {
+        if (video.paused) {
+          video.play();
+        }
+      });
+    });
+    </script>
+
+</body>
+</html>
