@@ -1145,16 +1145,19 @@ async function renderHomeSlides(pageHome, projects) {
       // ── Manifest vorhanden: kein einziger HEAD-Request nötig ──
       const hasCase = !!(manifest.case && (manifest.case.hasIntro || manifest.case.hero));
       for (const item of (manifest.home || [])) {
-        const src = `${homeBase}${item.src}`;
-        const kind = item.src.match(/\.(mp4|webm)$/i) ? "video" : "image";
         let block;
         if (item.type === "row") {
-          block = { type: "row", items: item.items.map(f => ({
-            kind: f.match(/\.(mp4|webm)$/i) ? "video" : "image",
+          block = { type: "row", items: (item.items || []).map(f => ({
+            kind: /\.(mp4|webm)$/i.test(f) ? "video" : "image",
             src: `${homeBase}${f}`
           }))};
+        } else if (item.type === "single" && item.src) {
+          block = { type: "single", item: {
+            kind: /\.(mp4|webm)$/i.test(item.src) ? "video" : "image",
+            src: `${homeBase}${item.src}`
+          }};
         } else {
-          block = { type: "single", item: { kind, src } };
+          continue; // unbekanntes Format überspringen
         }
         slidesToRender.push({ title: project.title, link: `#case=${project.slot}`, hasCase, block });
       }
