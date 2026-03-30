@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <base href="/">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- ── Primary SEO ── -->
+    <title>Julian Jakob — Global Brand Designer</title>
+    <meta name="description" content="Austrian brand designer with international experience for companies such as Spotify, Meta and Sony Music.">
+    <meta name="author" content="Julian Jakob">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://julianjakob.at/">
+
+    <!-- ── Open Graph (social sharing) ── -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://julianjakob.at/">
+    <meta property="og:title" content="Julian Jakob — Global Brand Designer">
+    <meta property="og:description" content="Austrian brand designer with international experience for companies such as Spotify, Meta and Sony Music.">
+    <meta property="og:image" content="https://julianjakob.at/assets/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="de_AT">
+    <meta property="og:site_name" content="Julian Jakob">
+
+    <!-- ── Twitter / X Card ── -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Julian Jakob — Global Brand Designer">
+    <meta name="twitter:description" content="Austrian brand designer with international experience for companies such as Spotify, Meta and Sony Music.">
+    <meta name="twitter:image" content="https://julianjakob.at/assets/og-image.jpg">
+
+    <!-- ── Structured Data (schema.org) ── -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "Julian Jakob",
+      "url": "https://julianjakob.at",
+      "email": "hello@julianjakob.at",
+      "jobTitle": "Brand Designer",
+      "description": "Austrian brand designer with international experience for companies such as Spotify, Meta and Sony Music.",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Bergstraße 3",
+        "postalCode": "5223",
+        "addressLocality": "Pfaffstätt",
+        "addressCountry": "AT"
+      },
+      "sameAs": [
+        "https://www.instagram.com/julianjakob.at/",
+        "https://www.linkedin.com/in/julian-jakob/"
+      ],
+      "knowsAbout": ["Brand Design", "Visual Identity", "Brand Strategy", "Creative Direction"],
+      "worksFor": {
+        "@type": "Organization",
+        "name": "Studio Herrström"
+      }
+    }
+    </script>
+
+    <!-- ── Favicon ── -->
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+
+    <!-- ── Styles & Fonts ── -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Inter wird lokal geladen via @font-face in style.css -->
+</head>
+<body>
+
+    <noscript>
+      <style>body{display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#fff;color:#000;text-align:center;padding:20px}</style>
+      <p>Julian Jakob — Brand Designer<br><br>Please enable JavaScript to view this portfolio.<br><a href="mailto:hello@julianjakob.at">hello@julianjakob.at</a></p>
+    </noscript>
+
+    <div id="intro-banner" class="banner-overlay">
+        <div class="banner-content">
+            <h1 class="type-banner-headline"
+                data-en="Constructing flexible<br>brand systems."
+                data-de="Entwicklung von flexiblen<br>Markensystemen.">Constructing flexible<br>brand systems.</h1>
+            <div class="type-banner-footer">©julianjakob</div>
+        </div>
+    </div>
+
+    <header id="main-header">
+        <a href="#" data-dest="home" class="brand type-ui-text nav-link">©julianjakob</a>
+        <div style="display:flex;align-items:flex-start;gap:20px;">
+            <div id="lang-toggle" class="lang-toggle type-ui-text">DE</div>
+            <button id="menu-btn" class="menu-trigger type-ui-text text-right"
+                    aria-label="Open navigation menu"
+                    aria-expanded="false"
+                    data-en="Menu" data-de="Menü"
+                    data-close-en="Close" data-close-de="Schließen">Menu</button>
+        </div>
+    </header>
+
+    <div id="menu-overlay">
+        <div class="menu-list">
+            <a href="#" data-dest="about"   class="type-menu-item nav-link pair-gap" data-en="About"   data-de="Über mich">About</a>
+            <a href="#" data-dest="process" class="type-menu-item nav-link pair-gap" data-en="Process" data-de="Prozess">Process</a>
+            <a href="#" data-dest="pricing" class="type-menu-item nav-link"          data-en="Services" data-de="Leistungen">Services</a>
+        </div>
+
+        <div class="menu-bottom">
+            <a href="#" data-dest="contact" class="type-menu-item nav-link pair-gap" data-en="Contact" data-de="Kontakt">Contact</a>
+            <a href="https://cal.com/julian-jakob-ro0eik/15min" target="_blank" class="type-menu-item menu-intro-link">
+                <span data-en="Intro call" data-de="Erstgespräch">Intro call</span>
+            </a>
+        </div>
+
+        <div class="menu-footer">
+            <a href="#" data-dest="legal" class="type-ui-text nav-link" data-en="Legal" data-de="Impressum">Legal</a>
+            <!-- Hidden translation anchor for case page label -->
+            <a data-dest="case" data-en="Case" data-de="Projekt" style="display:none"></a>
+            <a href="mailto:hello@julianjakob.at" class="type-ui-text text-right">hello@julianjakob.at</a>
+        </div>
+    </div>
+
+    <!-- HOME -->
+    <main id="page-home" class="page-container slider-container visible">
+        <div class="home-loading type-ui-text"
+             data-en="Loading projects…" data-de="Projekte werden geladen…">Loading projects…</div>
+    </main>
+
+    <!-- CASE -->
+    <main id="page-case" class="page-container case-container hidden">
+        <div class="case-wrapper">
+            <div class="case-header">
+                <h1 id="case-title" class="type-about-headline"></h1>
+            </div>
+            <div id="case-content" class="case-content"></div>
+        </div>
+        <footer class="page-footer">
+            <div id="case-footer-left" class="type-ui-text">Case</div>
+            <a href="mailto:hello@julianjakob.at" class="type-ui-text text-right">hello@julianjakob.at</a>
+        </footer>
+    </main>
+
+    <!-- CONTACT -->
+    <main id="page-contact" class="page-container contact-container hidden">
+        <div class="contact-wrapper">
+            <div class="contact-group">
+                <h1 class="type-contact-header" data-en="Contact" data-de="Kontakt">Contact</h1>
+                <div class="contact-list">
+                    <a href="mailto:hello@julianjakob.at" class="contact-row">
+                        <span class="type-contact-item">hello@julianjakob.at</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+                    </a>
+                    <a href="https://cal.com/julian-jakob-ro0eik/15min" target="_blank" class="contact-row">
+                        <span class="type-contact-item" data-en="Intro call (15 minutes)" data-de="Erstgespräch (15 Minuten)">Intro call (15 minutes)</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+                    </a>
+                </div>
+            </div>
+            <div class="contact-group">
+                <h1 class="type-contact-header" data-en="Social media" data-de="Soziale Medien">Social media</h1>
+                <div class="contact-list no-lines">
+                    <a href="https://www.instagram.com/julianjakob.at/" target="_blank" class="contact-row">
+                        <span class="type-contact-item">Instagram</span>
+                    </a>
+                    <a href="https://www.linkedin.com/in/julian-jakob/" target="_blank" class="contact-row">
+                        <span class="type-contact-item">LinkedIn</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <footer class="page-footer">
+            <div class="type-ui-text" data-en="Contact" data-de="Kontakt">Contact</div>
+            <a href="mailto:hello@julianjakob.at" class="type-ui-text text-right">hello@julianjakob.at</a>
+        </footer>
+    </main>
+
+    <!-- ABOUT -->
+    <main id="page-about" class="page-container contact-container hidden">
+        <div class="contact-wrapper">
+            <div class="contact-group">
+                <h1 class="type-about-headline"
+                    data-en="Distilling complexity<br>into clarity."
+                    data-de="Komplexität in<br>Klarheit verwandeln.">Distilling complexity<br>into clarity.</h1>
+                <p class="type-contact-item"
+                   data-en="<span class='mobile-only'>Modern brand identities struggle to keep up with content demands, leading to fragmented systems, weaker messaging, and declining loyalty. My approach builds brands as evolving ecosystems—identities that adapt to context, grow with knowledge, and move with culture.</span><span class='desktop-only'>Most identities today cannot keep pace with the volume of output modern brands demand. The result is always the same: design systems fracture, messages dilute, and the loyalty that took years to build quietly erodes. Over the course of my practice, I have developed a way of building brands that function as living ecosystems rather than fixed objects. An identity, like a human one, should evolve with knowledge, adapt to context, and move with culture. That is what I build.</span>"
+                   data-de="<span class='mobile-only'>Moderne Markenidentitäten können mit den wachsenden Inhaltsanforderungen oft nicht Schritt halten, was zu fragmentierten Systemen, schwächeren Botschaften und sinkender Loyalität führt. Mein Ansatz gestaltet Marken als dynamische Ökosysteme—Identitäten, die sich anpassen, mit Wissen wachsen und sich mit der Kultur bewegen.</span><span class='desktop-only'>Die meisten Identitäten können heute nicht mit dem Umfang an Inhalten Schritt halten, den moderne Marken benötigen. Das Ergebnis ist oft dasselbe: Design-Systeme zerfasern, Botschaften verlieren an Schärfe, und die über Jahre aufgebaute Loyalität schwindet langsam. Im Laufe meiner Arbeit habe ich eine Methode entwickelt, Marken so zu gestalten, dass sie als lebendige Ökosysteme funktionieren statt als starre Objekte. Eine Identität, ähnlich einer menschlichen, sollte mit Wissen wachsen, sich dem Kontext anpassen und sich mit der Kultur bewegen. Genau das entwickle ich.</span>"><span class="mobile-only">Modern brand identities struggle to keep up with content demands, leading to fragmented systems, weaker messaging, and declining loyalty. My approach builds brands as evolving ecosystems—identities that adapt to context, grow with knowledge, and move with culture.</span><span class="desktop-only">Most identities today cannot keep pace with the volume of output modern brands demand. The result is always the same: design systems fracture, messages dilute, and the loyalty that took years to build quietly erodes. Over the course of my practice, I have developed a way of building brands that function as living ecosystems rather than fixed objects. An identity, like a human one, should evolve with knowledge, adapt to context, and move with culture. That is what I build.</span></p>
+                <img src="assets/profile-picture.jpg" class="about-portrait" alt="Julian Jakob — Global Brand Designer">
+            </div>
+            <div class="contact-group">
+                <h1 class="type-contact-header" data-en="Selected experience" data-de="Ausgewählte Erfahrung">Selected experience</h1>
+                <div class="client-grid">
+                    <div class="client-col">
+                        <span class="type-contact-item">Spotify</span>
+                        <span class="type-contact-item">Meta</span>
+                        <span class="type-contact-item">Sony Music</span>
+                        <span class="type-contact-item">Makhulo</span>
+                    </div>
+                    <div class="client-col">
+                        <span class="type-contact-item">Mercedes Maybach</span>
+                        <span class="type-contact-item">Red Bull Music</span>
+                        <span class="type-contact-item">OVB Holding AG</span>
+                        <span class="type-contact-item">Life360</span>
+                    </div>
+                </div>
+            </div>
+            <div class="contact-group">
+                <p class="type-contact-item"
+                   data-en="<span class='mobile-only'>I work at Studio Herrström in Vienna and take on a select number of freelance projects each year. With a background in both business and design, I bridge the gap between commercial performance and what people truly respond to.</span><span class='desktop-only'>I currently work at Studio Herrström, a small, fast-paced design studio in the heart of Europe, Vienna. Alongside that, I take on a handful of freelance projects each year for selected companies and individuals. Having studied and worked across both business and design, I understand what a brand needs to perform commercially and what people actually respond to. Most projects fail at the gap between those two things. That is where I work.</span>"
+                   data-de="<span class='mobile-only'>Ich arbeite bei Studio Herrström in Wien und übernehme zusätzlich ausgewählte Freelance-Projekte. Durch meinen Hintergrund in Wirtschaft und Design schließe ich die Lücke zwischen kommerziellen Anforderungen und dem, worauf Menschen tatsächlich reagieren.</span><span class='desktop-only'>Derzeit arbeite ich bei Studio Herrström, einem Designstudio im Herzen Europas in Wien. Daneben übernehme ich jährlich eine Handvoll freiberuflicher Projekte für ausgewählte Unternehmen und Einzelpersonen. Durch meine Ausbildung in Wirtschaft und mein Designstudium verstehe ich, was eine Marke kommerziell leisten muss und worauf Menschen tatsächlich reagieren. Die meisten Projekte scheitern in der Lücke zwischen diesen beiden Anforderungen. Genau dort setze ich an.</span>"><span class="mobile-only">I work at Studio Herrström in Vienna and take on a select number of freelance projects each year. With a background in both business and design, I bridge the gap between commercial performance and what people truly respond to.</span><span class="desktop-only">I currently work at Studio Herrström, a small, fast-paced design studio in the heart of Europe, Vienna. Alongside that, I take on a handful of freelance projects each year for selected companies and individuals. Having studied and worked across both business and design, I understand what a brand needs to perform commercially and what people actually respond to. Most projects fail at the gap between those two things. That is where I work.</span></p>
+            </div>
+            <div class="contact-group">
+                <h1 class="type-contact-header" data-en="Social media" data-de="Soziale Medien">Social media</h1>
+                <div class="contact-list no-lines">
+                    <a href="https://www.instagram.com/julianjakob.at/" target="_blank" class="contact-row">
+                        <span class="type-contact-item">Instagram</span>
+                    </a>
+                    <a href="https://www.linkedin.com/in/julian-jakob/" target="_blank" class="contact-row">
+                        <span class="type-contact-item">LinkedIn</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <footer class="page-footer">
+            <div class="type-ui-text" data-en="About" data-de="Über mich">About</div>
+            <a href="mailto:hello@julianjakob.at" class="type-ui-text text-right">hello@julianjakob.at</a>
+        </footer>
+    </main>
+
+    <!-- PRICING -->
+    <main id="page-pricing" class="page-container contact-container hidden">
+        <div class="contact-wrapper">
+            <div class="contact-group">
+                <h1 class="type-about-headline"
+                    data-en="Transformation<br>enables precision."
+                    data-de="Transformation<br>ermöglicht Präzision.">Transformation<br>enables precision.</h1>
+                <p class="type-contact-item"
+                   data-en="<span class='mobile-only'>Brands face different challenges at each stage—some need clarity, others structure to scale. My work builds systems that connect strategy, identity, and execution, creating a foundation for purposeful and adaptable communication. Each project is individually scoped, with focused senior involvement throughout.</span><span class='desktop-only'>I build brand systems that connect strategy, identity, and implementation — a clear foundation that allows a brand to communicate with purpose and adapt over time. Every brand faces different challenges at different stages of its development. Some require strategic clarity before they can grow, while others need structure to remain consistent as they scale. My services focus on exactly that. Every project is scoped individually. The investment reflects the specific problem, not a fixed package. I work with a small number of clients at a time, meaning each receives genuine senior attention from start to finish. Get in touch and I am happy to put together a proposal for you.</span>"
+                   data-de="<span class='mobile-only'>Marken stehen je nach Phase vor unterschiedlichen Herausforderungen—manche brauchen Klarheit, andere Struktur für Wachstum. Meine Arbeit entwickelt Systeme, die Strategie, Identität und Umsetzung verbinden und eine Grundlage für klare, anpassungsfähige Kommunikation schaffen. Jedes Projekt wird individuell definiert und durchgehend auf Senior-Level betreut.</span><span class='desktop-only'>Ich entwickle Markensysteme, die Strategie, Identität und Umsetzung verbinden – eine klare Grundlage, auf der eine Marke mit Haltung kommunizieren und sich langfristig weiterentwickeln kann. Jede Marke steht in unterschiedlichen Phasen ihrer Entwicklung vor anderen Herausforderungen. Manche brauchen zunächst strategische Klarheit, andere benötigen Struktur, um konsistent zu bleiben, während sie wachsen. Genau darauf sind meine Leistungen ausgerichtet. Jedes Projekt wird individuell definiert. Die Investition richtet sich nach der konkreten Herausforderung – nicht nach einem festen Paket. Ich arbeite mit einer kleinen Anzahl von Kunden, sodass jedes Projekt persönliche Betreuung auf Senior-Level erhält. Melden Sie sich gern – ich erstelle Ihnen ein passendes Angebot.</span>"><span class="mobile-only">Brands face different challenges at each stage—some need clarity, others structure to scale. My work builds systems that connect strategy, identity, and execution, creating a foundation for purposeful and adaptable communication. Each project is individually scoped, with focused senior involvement throughout.</span><span class="desktop-only">I build brand systems that connect strategy, identity, and implementation — a clear foundation that allows a brand to communicate with purpose and adapt over time. Every brand faces different challenges at different stages of its development. Some require strategic clarity before they can grow, while others need structure to remain consistent as they scale. My services focus on exactly that. Every project is scoped individually. The investment reflects the specific problem, not a fixed package. I work with a small number of clients at a time, meaning each receives genuine senior attention from start to finish. Get in touch and I am happy to put together a proposal for you.</span></p>
+            </div>
+
+            <div class="contact-group">
+                <h1 class="type-contact-header" data-en="Contact" data-de="Kontakt">Contact</h1>
+                <div class="contact-list">
+                    <a href="mailto:hello@julianjakob.at" class="contact-row">
+                        <span class="type-contact-item">hello@julianjakob.at</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+                    </a>
+                    <a href="https://cal.com/julian-jakob-ro0eik/15min" target="_blank" class="contact-row">
+                        <span class="type-contact-item" data-en="Intro call (15 minutes)" data-de="Erstgespräch (15 Minuten)">Intro call (15 minutes)</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <footer class="page-footer">
+            <div class="type-ui-text" data-en="Services" data-de="Leistungen">Services</div>
+            <a href="mailto:hello@julianjakob.at" class="type-ui-text text-right">hello@julianjakob.at</a>
+        </footer>
+    </main>
+
+    <!-- PROCESS -->
+    <main id="page-process" class="page-container contact-container hidden">
+        <div class="contact-wrapper">
+            <div class="contact-group">
+                <h1 class="type-about-headline"
+                    data-en="Clarity fuels<br>transformation."
+                    data-de="Klarheit treibt<br>Transformation.">Clarity fuels<br>transformation.</h1>
+                <p class="type-contact-item"
+                   data-en="<span class='mobile-only'>A strong result depends on its foundation. Every project follows a four-step process, starting with understanding competition, culture, and audience behavior before any design decisions. This groundwork separates design that simply looks good from design that performs.</span><span class='desktop-only'>The output is only as good as what leads to it. Every project follows the same four-step process. Most brand problems are not design problems. They are clarity problems. Before a single visual decision is made, I invest time understanding the competitive context, the culture, and the audience's actual behaviour. This groundwork is what separates work that looks good from work that performs.</span>"
+                   data-de="<span class='mobile-only'>Ein gutes Ergebnis basiert auf einer starken Grundlage. Jedes Projekt folgt einem klaren Prozess, der mit dem Verständnis von Wettbewerb, Kultur und Zielgruppe beginnt, bevor Design entsteht. Diese Vorarbeit unterscheidet gutes Aussehen von wirksamer Gestaltung.</span><span class='desktop-only'>Ein Ergebnis ist nur so gut wie die Grundlage, auf der es entsteht. Deshalb folgt jedes Projekt einem klaren Vier-Schritte-Prozess. Die meisten Markenprobleme sind keine Designprobleme – sie sind Klarheitsprobleme. Bevor eine einzige visuelle Entscheidung getroffen wird, investiere ich Zeit, den Wettbewerb, den kulturellen Kontext und das tatsächliche Verhalten der Zielgruppe zu verstehen. Diese Vorarbeit macht den Unterschied zwischen Design, das gut aussieht, und Design, das funktioniert.</span>"><span class="mobile-only">A strong result depends on its foundation. Every project follows a four-step process, starting with understanding competition, culture, and audience behavior before any design decisions. This groundwork separates design that simply looks good from design that performs.</span><span class="desktop-only">The output is only as good as what leads to it. Every project follows the same four-step process. Most brand problems are not design problems. They are clarity problems. Before a single visual decision is made, I invest time understanding the competitive context, the culture, and the audience's actual behaviour. This groundwork is what separates work that looks good from work that performs.</span></p>
+            </div>
+
+            <div class="contact-group">
+                <div class="contact-list">
+                    <div class="service-row expanded">
+                        <div class="service-header">
+                            <div class="service-title-wrapper">
+                                <span class="type-service-title service-num">01</span>
+                                <span class="type-service-title service-name" data-en="Research" data-de="Recherche">Research</span>
+                            </div>
+                            <span class="service-toggle">−</span>
+                        </div>
+                        <div class="service-body">
+                            <p class="type-contact-item service-description"
+                               data-en="<span class='mobile-only'>Understanding is built through research and collaboration. We define what is truly needed and why it matters by aligning with stakeholders, analyzing competitors, and studying the audience—creating a shared foundation for all decisions.</span><span class='desktop-only'>Understanding is created, not assumed. Through careful research and open collaboration, I define what you need and why it matters, before design takes form. This includes stakeholder interviews, competitive landscape mapping, and audience analysis. The output is a shared understanding that guides every decision that follows.</span>"
+                               data-de="<span class='mobile-only'>Verständnis entsteht durch Recherche und Zusammenarbeit. Gemeinsam klären wir, was wirklich gebraucht wird und warum, durch Stakeholder-Gespräche, Wettbewerbsanalysen und Zielgruppenverständnis – als Basis für alle Entscheidungen.</span><span class='desktop-only'>Verständnis entsteht – es wird nicht vorausgesetzt. Durch sorgfältige Recherche und offene Zusammenarbeit klären wir zuerst, was Sie wirklich brauchen und warum es relevant ist, bevor Design Gestalt annimmt. Dazu gehören Gespräche mit Stakeholdern, die Analyse des Wettbewerbsumfelds und eine fundierte Betrachtung der Zielgruppe. Das Ergebnis ist ein gemeinsames Verständnis, das alle weiteren Entscheidungen leitet.</span>"><span class="mobile-only">Understanding is built through research and collaboration. We define what is truly needed and why it matters by aligning with stakeholders, analyzing competitors, and studying the audience—creating a shared foundation for all decisions.</span><span class="desktop-only">Understanding is created, not assumed. Through careful research and open collaboration, I define what you need and why it matters, before design takes form. This includes stakeholder interviews, competitive landscape mapping, and audience analysis. The output is a shared understanding that guides every decision that follows.</span></p>
+                            <div class="type-service-tags"
+                                 data-en="Workshop · Competitive analysis · Audience analysis"
+                                 data-de="Workshop · Wettbewerbsanalyse · Zielgruppenanalyse">Workshop · Competitive analysis · Audience analysis</div>
+                        </div>
+                    </div>
+
+                    <div class="service-row expanded">
+                        <div class="service-header">
+                            <div class="service-title-wrapper">
+                                <span class="type-service-title service-num">02</span>
+                                <span class="type-service-title service-name" data-en="Construct" data-de="Konstruieren">Construct</span>
+                            </div>
+                            <span class="service-toggle">−</span>
+                        </div>
+                        <div class="service-body">
+                            <p class="type-contact-item service-description"
+                               data-en="<span class='mobile-only'>From these insights, I create a visual system rooted in what makes your brand distinct. It establishes how the brand communicates, translating strategy into a clear structure that ensures consistency while remaining adaptable.</span><span class='desktop-only'>Based on the findings, I construct a visual system derived from what makes your brand distinct. This defines the logic of how you speak to your specific audience. Strategy is only useful if it can be acted on. I translate research into a clear brand architecture that is specific enough to be consistent and open enough to evolve.</span>"
+                               data-de="<span class='mobile-only'>Auf dieser Grundlage entwickle ich ein visuelles System, das die Einzigartigkeit der Marke definiert. Es übersetzt Strategie in eine klare Struktur, die Konsistenz schafft und zugleich flexibel bleibt.</span><span class='desktop-only'>Auf Basis dieser Erkenntnisse entwickle ich ein visuelles System, das aus dem hervorgeht, was Ihre Marke unverwechselbar macht. Es definiert die Logik, wie Ihre Marke mit ihrer Zielgruppe kommuniziert. Strategie ist nur dann wertvoll, wenn sie umsetzbar ist. Deshalb übersetze ich die Erkenntnisse aus der Recherche in eine klare Markenarchitektur – präzise genug für Konsistenz und offen genug, um sich weiterzuentwickeln.</span>"><span class="mobile-only">From these insights, I create a visual system rooted in what makes your brand distinct. It establishes how the brand communicates, translating strategy into a clear structure that ensures consistency while remaining adaptable.</span><span class="desktop-only">Based on the findings, I construct a visual system derived from what makes your brand distinct. This defines the logic of how you speak to your specific audience. Strategy is only useful if it can be acted on. I translate research into a clear brand architecture that is specific enough to be consistent and open enough to evolve.</span></p>
+                            <div class="type-service-tags"
+                                 data-en="Positioning · Brand strategy · Messaging"
+                                 data-de="Positionierung · Markenstrategie · Messaging">Positioning · Brand strategy · Messaging</div>
+                        </div>
+                    </div>
+
+                    <div class="service-row expanded">
+                        <div class="service-header">
+                            <div class="service-title-wrapper">
+                                <span class="type-service-title service-num">03</span>
+                                <span class="type-service-title service-name" data-en="Deliver" data-de="Liefern">Deliver</span>
+                            </div>
+                            <span class="service-toggle">−</span>
+                        </div>
+                        <div class="service-body">
+                            <p class="type-contact-item service-description"
+                               data-en="<span class='mobile-only'>Whether launching or evolving a brand, this phase defines its structure. You gain the tools to build a clear, relevant, and effective presence.</span><span class='desktop-only'>For launches, refreshes or pivots, this is where your brand's structure is defined and you gain the tools to build a meaningful, clear, and high-performing presence.</span>"
+                               data-de="<span class='mobile-only'>Ob Einführung oder Weiterentwicklung – hier wird die Markenstruktur festgelegt. Sie erhalten Werkzeuge für eine klare, relevante und wirkungsvolle Präsenz.</span><span class='desktop-only'>Ob Markteinführung, Weiterentwicklung oder strategische Neuausrichtung – in dieser Phase wird die Struktur Ihrer Marke definiert. Sie erhalten die Werkzeuge, um eine klare, relevante und wirkungsvolle Markenpräsenz aufzubauen.</span>"><span class="mobile-only">Whether launching or evolving a brand, this phase defines its structure. You gain the tools to build a clear, relevant, and effective presence.</span><span class="desktop-only">For launches, refreshes or pivots, this is where your brand's structure is defined and you gain the tools to build a meaningful, clear, and high-performing presence.</span></p>
+                            <div class="type-service-tags"
+                                 data-en="Naming · Visual identity · Design system"
+                                 data-de="Namensgebung · Visuelle Identität · Designsystem">Naming · Visual identity · Design system</div>
+                        </div>
+                    </div>
+
+                    <div class="service-row expanded">
+                        <div class="service-header">
+                            <div class="service-title-wrapper">
+                                <span class="type-service-title service-num">04</span>
+                                <span class="type-service-title service-name" data-en="Implement" data-de="Implementieren">Implement</span>
+                            </div>
+                            <span class="service-toggle">−</span>
+                        </div>
+                        <div class="service-body">
+                            <p class="type-contact-item service-description"
+                               data-en="<span class='mobile-only'>Here, the brand moves into execution. Interfaces, campaigns, and internal channels are designed to express the identity consistently and without dilution.</span><span class='desktop-only'>This is where the brand leaves the guidelines and enters real life. Interfaces, activations, and internal channels are designed to carry the identity without dilution.</span>"
+                               data-de="<span class='mobile-only'>Hier geht die Marke in die Umsetzung. Interfaces, Kampagnen und Kanäle transportieren die Identität konsistent und ohne Verwässerung.</span><span class='desktop-only'>Hier verlässt die Marke das Regelwerk und tritt in die Praxis ein. Interfaces, Kampagnen und interne Kanäle werden so gestaltet, dass sie die Identität konsequent und ohne Verwässerung transportieren.</span>"><span class="mobile-only">Here, the brand moves into execution. Interfaces, campaigns, and internal channels are designed to express the identity consistently and without dilution.</span><span class="desktop-only">This is where the brand leaves the guidelines and enters real life. Interfaces, activations, and internal channels are designed to carry the identity without dilution.</span></p>
+                            <div class="type-service-tags"
+                                 data-en="Campaigns · Digital applications · Editorial design"
+                                 data-de="Kampagnen · Digitale Anwendungen · Editorial Design">Campaigns · Digital applications · Editorial design</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="contact-group">
+                <p class="type-contact-item"
+                   data-en="<span class='mobile-only'>My goal is long-term collaboration. Brand systems should grow with the company, supported by the right specialists when needed—without the overhead of a traditional agency.</span><span class='desktop-only'>My ambition with every project is a long-term partnership. A brand system should grow as your company does, and that requires someone invested in the outcome, not just the delivery. Where the scope demands it, I bring in a curated network of specialists: strategists, copywriters, motion designers, developers. The right people, precisely when needed, without the overhead of a traditional agency.</span>"
+                   data-de="<span class='mobile-only'>Mein Ziel ist eine langfristige Zusammenarbeit. Markensysteme sollen mit dem Unternehmen wachsen, unterstützt durch ein gezieltes Netzwerk von Spezialisten ohne Agentur-Overhead.</span><span class='desktop-only'>Mein Anspruch bei jedem Projekt ist eine langfristige Zusammenarbeit. Ein Markensystem sollte mit dem Unternehmen wachsen. Das erfordert jemanden, der sich für das Ergebnis verantwortlich fühlt – nicht nur für die Umsetzung. Wenn es der Umfang erfordert, arbeite ich mit einem kuratierten Netzwerk von Spezialisten zusammen: Strategen, Texter, Motion-Designer und Entwickler. Die richtigen Menschen, genau dann, wenn sie gebraucht werden – ohne den Overhead einer klassischen Agentur.</span>"><span class="mobile-only">My goal is long-term collaboration. Brand systems should grow with the company, supported by the right specialists when needed—without the overhead of a traditional agency.</span><span class="desktop-only">My ambition with every project is a long-term partnership. A brand system should grow as your company does, and that requires someone invested in the outcome, not just the delivery. Where the scope demands it, I bring in a curated network of specialists: strategists, copywriters, motion designers, developers. The right people, precisely when needed, without the overhead of a traditional agency.</span></p>
+            </div>
+        </div>
+        <footer class="page-footer">
+            <div class="type-ui-text" data-en="Process" data-de="Prozess">Process</div>
+            <a href="mailto:hello@julianjakob.at" class="type-ui-text text-right">hello@julianjakob.at</a>
+        </footer>
+    </main>
+
+    <!-- LEGAL -->
+    <main id="page-legal" class="page-container contact-container hidden">
+        <div class="contact-wrapper">
+            <div class="contact-group">
+                <p class="type-contact-item">
+                    Julian Jakob<br>
+                    5223 Pfaffstätt<br>
+                    Bergstraße 3, Austria<br>
+                    <span data-en="Graphic Designer" data-de="Werbegrafikdesigner">Graphic Designer</span>
+                </p>
+            </div>
+            <div class="contact-group">
+                <p class="type-contact-item">
+                    +43 664 88791650<br>
+                    hello@julianjakob.at
+                </p>
+            </div>
+            <div class="contact-group">
+                <h1 class="type-contact-header" data-en="Austrian business details" data-de="Österreichische Geschäftsdaten">Austrian business details</h1>
+                <p class="type-contact-item"
+                   data-en="Member of WKÖ, WKÖÖ, State Association of Graphic Designers, Federal Association of Graphic Designers<br><br>Professional law:<br>Trade regulations: www.ris.bka.gv.at<br>District administration Braunau am Inn<br><br>Graphic Designer in Austria"
+                   data-de="Mitglied der WKÖ, WKÖÖ, Landesinnung Werbegrafik-Designer, Bundessinnung Werbegrafik-Designer<br><br>Berufsrecht:<br>Gewerbeordnung: www.ris.bka.gv.at<br>Bezirkshauptmannschaft Braunau am Inn<br><br>Werbegrafik-Designer in Österreich">
+                    Member of WKÖ, WKÖÖ, State Association of Graphic Designers, Federal Association of Graphic Designers
+                    <br><br>
+                    Professional law:<br>
+                    Trade regulations: www.ris.bka.gv.at<br>
+                    District administration Braunau am Inn
+                    <br><br>
+                    Graphic Designer in Austria
+                </p>
+            </div>
+            <div class="contact-group">
+                <h1 class="type-contact-header" data-en="Complaints" data-de="Beschwerden">Complaints</h1>
+                <p class="type-contact-item"
+                   data-en="Consumers have the option to file complaints with the EU online dispute resolution platform: www.ec.europa.eu/odr.<br><br>You can also address any complaint to the email address given above."
+                   data-de="Verbraucher haben die Möglichkeit, Beschwerden an die Online-Streitbeilegungsplattform der EU zu richten: www.ec.europa.eu/odr.<br><br>Sie können allfällige Beschwerde auch an die oben angegebene E-Mail-Adresse richten.">
+                    Consumers have the option to file complaints with the EU online dispute resolution platform: www.ec.europa.eu/odr.<br><br>You can also address any complaint to the email address given above.
+                </p>
+            </div>
+        </div>
+        <footer class="page-footer">
+            <div class="type-ui-text" data-en="Legal" data-de="Impressum">Legal</div>
+            <a href="mailto:hello@julianjakob.at" class="type-ui-text text-right">hello@julianjakob.at</a>
+        </footer>
+    </main>
+
+    <footer id="project-footer">
+        <h2 id="footer-title" class="project-title type-ui-text"></h2>
+        <a id="footer-link" href="#" class="learn-more type-ui-text text-right"
+           data-en="View" data-de="Details">View</a>
+    </footer>
+
+    <script src="script.js"></script>
+
+
+    <!-- ── Language system ── -->
+    <script>
+    (function () {
+      const STORAGE_KEY = "jj_lang";
+
+      function detectLang() {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) return stored;
+        return "en";
+      }
+
+      let currentLang = detectLang();
+
+      window.getCurrentLang = function () { return currentLang; };
+
+      window.setLangToggleVisible = function (page) {
+        const toggle = document.getElementById("lang-toggle");
+        if (!toggle) return;
+        if (page === "home") {
+          toggle.classList.remove("lang-toggle--visible");
+        } else {
+          toggle.classList.add("lang-toggle--visible");
+        }
+      };
+
+      function updateToggleLabel(lang) {
+        const toggle = document.getElementById("lang-toggle");
+        if (!toggle) return;
+        toggle.style.transition = "opacity 0.3s ease";
+        toggle.style.opacity = "0";
+        setTimeout(function () {
+          toggle.textContent = lang === "de" ? "EN" : "DE";
+          toggle.style.opacity = "";
+          toggle.style.transition = "";
+        }, 300);
+      }
+
+      function applyLang(lang, animate) {
+        currentLang = lang;
+        localStorage.setItem(STORAGE_KEY, lang);
+        document.documentElement.lang = lang === "de" ? "de" : "en";
+
+        const body = document.body;
+
+        function swap() {
+          document.querySelectorAll("[data-en][data-de]").forEach(function (el) {
+            const text = el.getAttribute("data-" + lang) || el.getAttribute("data-en");
+            if (!text) return;
+            if (text.indexOf("<") !== -1 || text.indexOf("&") !== -1) {
+              el.innerHTML = text;
+            } else {
+              el.textContent = text;
+            }
+          });
+          const menuOverlay = document.getElementById("menu-overlay");
+          const menuBtn     = document.getElementById("menu-btn");
+          if (menuOverlay && menuBtn && menuOverlay.classList.contains("open")) {
+            menuBtn.textContent = lang === "de" ? "Schließen" : "Close";
+          }
+          updateToggleLabel(lang);
+          const desc = document.querySelector('meta[name="description"]');
+          if (desc) {
+            desc.setAttribute("content", lang === "de"
+              ? "Brand Designer mit internationaler Erfahrung für Firmen wie Spotify, Meta und Sony Music."
+              : "Austrian brand designer with international experience for companies such as Spotify, Meta and Sony Music."
+            );
+          }
+          if (typeof updatePageTitle === "function") {
+            const activePage = document.querySelector(".page-container.visible");
+            const pageId = activePage ? activePage.id.replace("page-", "") : "home";
+            updatePageTitle(pageId, window._currentCaseSlot || null);
+          }
+        }
+
+        if (animate) {
+          body.style.pointerEvents = "none";
+          body.classList.add("lang-fade-out");
+
+          // Warten bis fade-out abgeschlossen ist (0.2s) bevor Inhalt getauscht wird
+          setTimeout(function () {
+            var prevLang = lang === "de" ? "en" : "de";
+            document.querySelectorAll(
+              "p.type-contact-item, .case-text, .case-intro-text, .case-outro"
+            ).forEach(function (el) {
+              var clean = el.getAttribute("data-" + prevLang) || el.getAttribute("data-en");
+              if (!clean) return;
+              if (clean.indexOf("<") !== -1 || clean.indexOf("&") !== -1) {
+                el.innerHTML = clean;
+              } else {
+                el.textContent = clean;
+              }
+            });
+
+            var allEls = Array.from(document.querySelectorAll(
+              ".contact-group, .contact-wrapper, .page-footer, #project-footer, " +
+              ".menu-list, .menu-bottom, .menu-footer, " +
+              ".case-wrapper, .case-content, .case-header, .case-block, " +
+              ".service-row, .about-portrait, " +
+              ".home-loading, " +
+              "img, video, [data-en], [data-de]"
+            )).filter((el, index, self) => self.indexOf(el) === index);
+
+            var rects = allEls.map(function (el) {
+              var r = el.getBoundingClientRect();
+              return { el: el, top: r.top, height: r.height };
+            });
+
+            // Menu-Button Breite vor dem Swap sichern und animieren,
+            // damit der Lang-Toggle nicht springt
+            var menuBtn = document.getElementById("menu-btn");
+            var menuBtnNewW = 0;
+            if (menuBtn) {
+              var menuOverlay = document.getElementById("menu-overlay");
+              var isOpen = menuOverlay && menuOverlay.classList.contains("open");
+              var newText = isOpen
+                ? (lang === "de" ? "Schließen" : "Close")
+                : (menuBtn.getAttribute("data-" + lang) || "Menu");
+              var probe = menuBtn.cloneNode(false);
+              probe.style.cssText += ";position:absolute;visibility:hidden;width:auto;min-width:0;white-space:nowrap;pointer-events:none;";
+              probe.textContent = newText;
+              document.body.appendChild(probe);
+              menuBtnNewW = probe.getBoundingClientRect().width;
+              document.body.removeChild(probe);
+              menuBtn.style.width = menuBtn.getBoundingClientRect().width + "px";
+            }
+
+            swap();
+
+            // Menu-Button sanft zur neuen Breite animieren
+            if (menuBtn && menuBtnNewW) {
+              requestAnimationFrame(function () { requestAnimationFrame(function () {
+                menuBtn.style.transition = "width 0.35s ease";
+                menuBtn.style.width = menuBtnNewW + "px";
+                setTimeout(function () {
+                  menuBtn.style.transition = "";
+                  menuBtn.style.width = "";
+                }, 380);
+              }); });
+            }
+
+            if (typeof applyTypewriterEffect === "function") {
+              applyTypewriterEffect(document.querySelectorAll("[data-en][data-de]"));
+            }
+
+            allEls.forEach(function (el, i) {
+              var oldRect = rects[i];
+              var newRect = el.getBoundingClientRect();
+              var dy = oldRect.top - newRect.top;
+              
+              if (Math.abs(dy) < 0.5) return;
+
+              if (el.matches("p.type-contact-item, .case-text, .case-intro-text, .case-outro")) return;
+
+              el.style.transform = "translateY(" + dy + "px)";
+              el.style.transition = "none";
+
+              requestAnimationFrame(function () {
+                requestAnimationFrame(function () {
+                  el.style.transition = "transform 0.5s ease-in-out";
+                  el.style.transform = "translateY(0)";
+                  
+                  el.addEventListener("transitionend", function cleanup(e) {
+                    if (e.propertyName === "transform") {
+                      el.style.transform = "";
+                      el.style.transition = "";
+                      el.removeEventListener("transitionend", cleanup);
+                    }
+                  }, { once: true });
+                });
+              });
+            });
+
+            body.classList.remove("lang-fade-out");
+            body.classList.add("lang-fade-in");
+            
+            setTimeout(function () {
+              body.classList.remove("lang-fade-in");
+              body.style.pointerEvents = "auto";
+            }, 500);
+          }, 220);
+        } else {
+          swap();
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        applyLang(currentLang, false);
+        window.setLangToggleVisible("home");
+
+        const toggle = document.getElementById("lang-toggle");
+        if (toggle) {
+          toggle.addEventListener("click", function () {
+            applyLang(currentLang === "de" ? "en" : "de", true);
+          });
+        }
+      });
+    })();
+    </script>
+
+</body>
+</html>
