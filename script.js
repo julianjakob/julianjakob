@@ -1568,7 +1568,7 @@ async function findNumberedBlock(base, n) {
 }
 
 async function findMediaByStem(base, stem) {
-  const imageExts = ["jpg", "jpeg", "png", "webp"];
+  const imageExts = ["webp", "jpg", "jpeg", "png"]; // WebP zuerst — kleinste Dateigröße
   const imageExtsArr = imageExts;
 
   // Safari kann kein WebM — MP4 zuerst für Safari, WebM zuerst für andere
