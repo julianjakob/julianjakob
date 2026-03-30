@@ -1121,11 +1121,16 @@ async function renderHomeSlides(pageHome, projects) {
   pageHome.querySelectorAll(".slide-section").forEach((el) => el.remove());
 
   const slidesToRender = [];
-  for (const project of projects) {
+
+  // hasCase für alle Projekte parallel prüfen statt sequentiell
+  const hasCaseResults = await Promise.all(
+    projects.map(p => urlExists(`projects/${p.slot}/case/intro.txt`))
+  );
+
+  for (let pi = 0; pi < projects.length; pi++) {
+    const project = projects[pi];
     const homeBase = `projects/${project.slot}/home/`;
-    const caseBase = `projects/${project.slot}/case/`;
-    // intro.txt is the canonical signal — every case study has one
-    const hasCase = await urlExists(`${caseBase}intro.txt`);
+    const hasCase  = hasCaseResults[pi];
     for (let i = 1; i <= 99; i++) {
       const block = await findNumberedBlock(homeBase, i, { allowText: false });
       if (!block) break;
@@ -1263,8 +1268,19 @@ async function renderHomeSlides(pageHome, projects) {
  * the existing language swap system handles switching instantly.
  * Images are language-neutral and rendered once.
  */
+// Render Lock — verhindert dass renderCase gleichzeitig zweimal läuft
+let _renderLock = false;
+let _pendingRender = null;
+
 async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
   if (!titleEl || !contentEl) return;
+
+  // Falls gerade ein Render läuft: diesen als "als nächstes" merken
+  if (_renderLock) {
+    _pendingRender = { slot, projects, titleEl, contentEl, caseFooterLeft };
+    return;
+  }
+  _renderLock = true;
 
   const project = projects.find((p) => p.slot === slot);
   const base    = `projects/${slot}/case/`;
@@ -1429,6 +1445,14 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
     inner.appendChild(msg);
     msgBlock.appendChild(inner);
     contentEl.appendChild(msgBlock);
+  }
+
+  // Lock freigeben + ggf. gepufferten Render ausführen
+  _renderLock = false;
+  if (_pendingRender) {
+    const next = _pendingRender;
+    _pendingRender = null;
+    await renderCase(next.slot, next.projects, next.titleEl, next.contentEl, next.caseFooterLeft);
   }
 }
 
@@ -1690,28 +1714,47 @@ function getMediaDims(el) {
 
 function pad2(n) { return String(n).padStart(2, "0"); }
 
+// ── URL Existence Cache ──────────────────────────────────────────
+// Jede URL wird maximal einmal geprüft — Ergebnis wird gecacht.
+// Verhindert hunderte doppelte Requests beim Laden.
+const _urlCache = new Map();
+
 async function urlExists(url) {
-  try {
-    const head = await fetch(url, { method: "HEAD", cache: "no-store" });
-    if (!head.ok) return false;
+  if (_urlCache.has(url)) return _urlCache.get(url);
 
-    // Live Server gibt 200 + text/html für nicht existierende Dateien zurück.
-    // Echter 200 für ein Bild/Video/JSON hat nie text/html als Content-Type.
-    const ct = head.headers.get("content-type") || "";
-    if (ct.startsWith("text/html")) return false;
-
-    return true;
-  } catch {
-    // HEAD nicht unterstützt — GET mit Range als Fallback
-    try {
-      const get = await fetch(url, { method: "GET", cache: "no-store", headers: { Range: "bytes=0-0" } });
-      if (!get.ok) return false;
-      const ct = get.headers.get("content-type") || "";
-      if (ct.startsWith("text/html")) { if (get.body) get.body.cancel(); return false; }
-      if (get.body) get.body.cancel();
-      return true;
-    } catch { return false; }
+  // Falls dieselbe URL gerade geprüft wird, warten statt doppelt zu fetchen
+  if (_urlCache.has(url + "__pending")) {
+    return new Promise(resolve => {
+      const check = () => {
+        if (_urlCache.has(url)) { resolve(_urlCache.get(url)); return; }
+        setTimeout(check, 20);
+      };
+      check();
+    });
   }
+  _urlCache.set(url + "__pending", true);
+
+  let result = false;
+  try {
+    const head = await fetch(url, { method: "HEAD", cache: "default" });
+    if (head.ok) {
+      const ct = head.headers.get("content-type") || "";
+      result = !ct.startsWith("text/html");
+    }
+  } catch {
+    try {
+      const get = await fetch(url, { method: "GET", cache: "default", headers: { Range: "bytes=0-0" } });
+      if (get.ok) {
+        const ct = get.headers.get("content-type") || "";
+        result = !ct.startsWith("text/html");
+      }
+      if (get.body) get.body.cancel();
+    } catch { result = false; }
+  }
+
+  _urlCache.delete(url + "__pending");
+  _urlCache.set(url, result);
+  return result;
 }
 
 // ── Peek hint visibility ─────────────────────────────────────
