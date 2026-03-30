@@ -1090,28 +1090,38 @@ async function init() {
   }
 } // end init()
 
-/* Project loader */
+/* Project loader — liest project.json + manifest.json parallel */
 async function loadEnabledProjects() {
-  const slots = ["01", "02", "03", "04", "05", "06", "07", "08"],
-    enabled = [];
-  for (const slot of slots) {
-    const url = `projects/${slot}/project.json`;
+  const slots = ["01", "02", "03", "04", "05", "06", "07", "08"];
+
+  const results = await Promise.all(slots.map(async slot => {
     try {
-      const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok) continue;
+      const res = await fetch(`projects/${slot}/project.json`, { cache: "default" });
+      if (!res.ok) return null;
       const data = await res.json();
-      if (!data || !data.enabled) continue;
-      enabled.push({
+      if (!data || !data.enabled) return null;
+      return {
         slot,
-        title: (data.title || `Project ${slot}`).trim(),
+        title:    (data.title  || `Project ${slot}`).trim(),
         title_de: data.title_de ? data.title_de.trim() : null,
-        slug: (data.slug || `project-${slot}`).trim(),
-      });
+        slug:     (data.slug   || `project-${slot}`).trim(),
+      };
     } catch (e) {
       console.warn(`Skipping slot ${slot}:`, e);
+      return null;
     }
-  }
-  return enabled;
+  }));
+
+  return results.filter(Boolean);
+}
+
+/* Manifest loader — 1 fetch pro Projekt statt 100+ HEAD requests */
+async function loadManifest(slot) {
+  try {
+    const res = await fetch(`projects/${slot}/manifest.json`, { cache: "default" });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch { return null; }
 }
 
 /* Home render */
@@ -1122,24 +1132,40 @@ async function renderHomeSlides(pageHome, projects) {
 
   const slidesToRender = [];
 
-  // hasCase für alle Projekte parallel prüfen statt sequentiell
-  const hasCaseResults = await Promise.all(
-    projects.map(p => urlExists(`projects/${p.slot}/case/intro.txt`))
-  );
+  // Alle Manifests parallel laden — 1 fetch pro Projekt
+  const manifests = await Promise.all(projects.map(p => loadManifest(p.slot)));
 
   for (let pi = 0; pi < projects.length; pi++) {
-    const project = projects[pi];
+    const project  = projects[pi];
+    const manifest = manifests[pi];
     const homeBase = `projects/${project.slot}/home/`;
-    const hasCase  = hasCaseResults[pi];
-    for (let i = 1; i <= 99; i++) {
-      const block = await findNumberedBlock(homeBase, i, { allowText: false });
-      if (!block) break;
-      slidesToRender.push({
-        title: project.title,
-        link: `#case=${project.slot}`,
-        hasCase,
-        block,
-      });
+    const caseBase = `projects/${project.slot}/case/`;
+
+    if (manifest) {
+      // ── Manifest vorhanden: kein einziger HEAD-Request nötig ──
+      const hasCase = !!(manifest.case && (manifest.case.hasIntro || manifest.case.hero));
+      for (const item of (manifest.home || [])) {
+        const src = `${homeBase}${item.src}`;
+        const kind = item.src.match(/\.(mp4|webm)$/i) ? "video" : "image";
+        let block;
+        if (item.type === "row") {
+          block = { type: "row", items: item.items.map(f => ({
+            kind: f.match(/\.(mp4|webm)$/i) ? "video" : "image",
+            src: `${homeBase}${f}`
+          }))};
+        } else {
+          block = { type: "single", item: { kind, src } };
+        }
+        slidesToRender.push({ title: project.title, link: `#case=${project.slot}`, hasCase, block });
+      }
+    } else {
+      // ── Kein Manifest: Fallback auf HEAD-Requests ──────────────
+      const hasCase = await urlExists(`${caseBase}intro.txt`);
+      for (let i = 1; i <= 99; i++) {
+        const block = await findNumberedBlock(homeBase, i, { allowText: false });
+        if (!block) break;
+        slidesToRender.push({ title: project.title, link: `#case=${project.slot}`, hasCase, block });
+      }
     }
   }
 
@@ -1317,8 +1343,13 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
   wrapper.querySelectorAll(".case-top,.case-intro,.case-category,.case-ending").forEach((n) => n.remove());
   if (header.parentElement !== wrapper) wrapper.insertBefore(header, wrapper.firstChild);
 
+  // ── Manifest laden falls vorhanden ──
+  const manifest = await loadManifest(slot);
+
   // ── Hero (language-neutral) ──
-  const heroMedia = await findMediaByStem(base, "hero");
+  const heroMedia = manifest && manifest.case && manifest.case.hero
+    ? { kind: manifest.case.hero.match(/\.(mp4|webm)$/i) ? "video" : "image", src: `${base}${manifest.case.hero}` }
+    : await findMediaByStem(base, "hero");
   let topEl = null;
   if (heroMedia) {
     topEl = document.createElement("div");
@@ -1332,7 +1363,9 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
   }
 
   // ── Intro text ──
-  const intro = await loadBoth("intro.txt");
+  const intro = manifest && manifest.case
+    ? (manifest.case.hasIntro ? await loadBoth("intro.txt") : { en: "", de: "" })
+    : await loadBoth("intro.txt");
   let introDiv = null;
   if (intro.en) {
     introDiv = document.createElement("div");
@@ -1346,7 +1379,9 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
   }
 
   // ── Category label ──
-  const category = await loadBoth("category.txt");
+  const category = manifest && manifest.case
+    ? (manifest.case.hasCategory ? await loadBoth("category.txt") : { en: "", de: "" })
+    : await loadBoth("category.txt");
   if (category.en) {
     const cat = document.createElement("div");
     cat.className = "case-category type-contact-item";
@@ -1358,9 +1393,12 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
 
   // ── Numbered content blocks ──
   let foundAny = false;
-  for (let i = 1; i <= 199; i++) {
-    const block = await findNumberedBlock(base, i);
-    if (!block) break;
+  const caseBlocks = manifest && manifest.case && manifest.case.blocks
+    ? manifest.case.blocks  // Manifest: direkt verwenden
+    : await buildBlockListFromNetwork(base); // Fallback: HEAD-Requests
+
+  for (const block of caseBlocks) {
+    if (!block) continue;
     foundAny = true;
 
     const blockEl = document.createElement("div");
@@ -1370,7 +1408,7 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
 
     if (block.type === "text") {
       // Load both language versions of the text block
-      const num  = pad2(i);
+      const num  = block.num || pad2(block.index || caseBlocks.indexOf(block) + 1);
       const texts = await loadBoth(`${num}.txt`);
       blockEl.classList.add("is-text");
       const textEl = document.createElement("div");
@@ -1386,9 +1424,13 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
       const row = document.createElement("div");
       row.className = block.items.length >= 3 ? "media-row row-scroll" : "media-row row-fit";
       block.items.forEach((media) => {
+        // Manifest: items sind Strings; Network: items sind {kind, src} Objekte
+        const mediaObj = typeof media === "string"
+          ? { kind: media.match(/\.(mp4|webm)$/i) ? "video" : "image", src: `${base}${media}` }
+          : media;
         const itemWrap = document.createElement("div");
         itemWrap.className = "media-item";
-        itemWrap.appendChild(createMediaElement(media, { context: "case" }));
+        itemWrap.appendChild(createMediaElement(mediaObj, { context: "case" }));
         row.appendChild(itemWrap);
       });
       inner.appendChild(row);
@@ -1400,15 +1442,23 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
     inner.classList.add("single");
     const singleWrap = document.createElement("div");
     singleWrap.className = "case-media-single";
-    singleWrap.appendChild(createMediaElement(block.item, { context: "case" }));
+    // Manifest: block.src ist ein String; Network: block.item ist {kind, src}
+    const singleMedia = block.item || (block.src
+      ? { kind: block.src.match(/\.(mp4|webm)$/i) ? "video" : "image", src: `${base}${block.src}` }
+      : null);
+    singleWrap.appendChild(createMediaElement(singleMedia, { context: "case" }));
     inner.appendChild(singleWrap);
     blockEl.appendChild(inner);
     contentEl.appendChild(blockEl);
   }
 
   // ── Outro + credits ──
-  const outro  = await loadBoth("outro.txt");
-  const credit = await loadBoth("credit.txt");
+  const outro  = manifest && manifest.case
+    ? (manifest.case.hasOutro  ? await loadBoth("outro.txt")  : { en: "", de: "" })
+    : await loadBoth("outro.txt");
+  const credit = manifest && manifest.case
+    ? (manifest.case.hasCredit ? await loadBoth("credit.txt") : { en: "", de: "" })
+    : await loadBoth("credit.txt");
   if (outro.en || credit.en) {
     const ending = document.createElement("div");
     ending.className = "case-ending";
@@ -1464,6 +1514,17 @@ async function loadTextFile(base, filename) {
     if (!res.ok) return "";
     return ((await res.text()) || "").trim();
   } catch { return ""; }
+}
+
+// Fallback: baut Blockliste via HEAD-Requests (langsam, nur ohne Manifest)
+async function buildBlockListFromNetwork(base) {
+  const blocks = [];
+  for (let i = 1; i <= 199; i++) {
+    const block = await findNumberedBlock(base, i);
+    if (!block) break;
+    blocks.push(block);
+  }
+  return blocks;
 }
 
 async function findNumberedBlock(base, n) {

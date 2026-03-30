@@ -1,0 +1,62 @@
+{
+  "home": [
+    {
+      "type": "single",
+      "src": "01.jpg"
+    },
+    {
+      "type": "row",
+      "items": [
+        "02a.jpg",
+        "02b.jpg"
+      ]
+    }
+  ],
+  "case": {
+    "hero": "hero.jpg",
+    "hasIntro": true,
+    "hasCategory": true,
+    "hasOutro": true,
+    "hasCredit": true,
+    "blocks": [
+      {
+        "type": "single",
+        "src": "01.mp4"
+      },
+      {
+        "type": "single",
+        "src": "02.jpg"
+      },
+      {
+        "type": "row",
+        "items": [
+          "03a.mp4",
+          "03b.jpg"
+        ]
+      },
+      {
+        "type": "single",
+        "src": "04.jpg"
+      },
+      {
+        "type": "single",
+        "src": "05.jpg"
+      },
+      {
+        "type": "row",
+        "items": [
+          "06a.jpg",
+          "06b.jpg"
+        ]
+      },
+      {
+        "type": "single",
+        "src": "07.jpg"
+      },
+      {
+        "type": "single",
+        "src": "08.jpg"
+      }
+    ]
+  }
+}

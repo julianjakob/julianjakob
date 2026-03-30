@@ -1,0 +1,20 @@
+{
+  "home": [
+    {
+      "type": "single",
+      "src": "01.jpg"
+    },
+    {
+      "type": "single",
+      "src": "02.jpg"
+    }
+  ],
+  "case": {
+    "hero": null,
+    "hasIntro": false,
+    "hasCategory": false,
+    "hasOutro": false,
+    "hasCredit": false,
+    "blocks": []
+  }
+}

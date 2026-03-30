@@ -1,0 +1,19 @@
+{
+  "home": [
+    {
+      "type": "row",
+      "items": [
+        "01a.jpg",
+        "01b.jpg"
+      ]
+    }
+  ],
+  "case": {
+    "hero": null,
+    "hasIntro": false,
+    "hasCategory": false,
+    "hasOutro": false,
+    "hasCredit": false,
+    "blocks": []
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "home": [
+    {
+      "type": "single",
+      "src": "01.mp4"
+    },
+    {
+      "type": "row",
+      "items": [
+        "02a.jpg",
+        "02b.jpg"
+      ]
+    }
+  ],
+  "case": {
+    "hero": "hero.jpg",
+    "hasIntro": true,
+    "hasCategory": true,
+    "hasOutro": true,
+    "hasCredit": true,
+    "blocks": [
+      {
+        "type": "single",
+        "src": "01.mp4"
+      },
+      {
+        "type": "single",
+        "src": "02.jpg"
+      },
+      {
+        "type": "row",
+        "items": [
+          "03a.jpg",
+          "03b.jpg"
+        ]
+      },
+      {
+        "type": "single",
+        "src": "04.jpg"
+      },
+      {
+        "type": "single",
+        "src": "05.jpg"
+      },
+      {
+        "type": "single",
+        "src": "06.jpg"
+      },
+      {
+        "type": "single",
+        "src": "07.mp4"
+      }
+    ]
+  }
+}
