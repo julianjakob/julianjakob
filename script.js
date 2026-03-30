@@ -1090,33 +1090,49 @@ async function init() {
   }
 } // end init()
 
-/* Project loader — liest project.json + manifest.json parallel */
-async function loadEnabledProjects() {
-  const slots = ["01", "02", "03", "04", "05", "06", "07", "08"];
+/* Project + Manifest loader — 1 einziger Request für alle Daten */
+let _projectsData = null;
 
+async function loadProjectsData() {
+  if (_projectsData) return _projectsData;
+  try {
+    const res = await fetch("projects-data.json", { cache: "default" });
+    if (res.ok) {
+      _projectsData = await res.json();
+      return _projectsData;
+    }
+  } catch {}
+  return null;
+}
+
+async function loadEnabledProjects() {
+  const data = await loadProjectsData();
+  if (data) return data; // projects-data.json vorhanden — fertig
+
+  // Fallback: einzelne project.json Dateien laden (langsam)
+  const slots = ["01","02","03","04","05","06","07","08"];
   const results = await Promise.all(slots.map(async slot => {
     try {
       const res = await fetch(`projects/${slot}/project.json`, { cache: "default" });
       if (!res.ok) return null;
-      const data = await res.json();
-      if (!data || !data.enabled) return null;
-      return {
-        slot,
-        title:    (data.title  || `Project ${slot}`).trim(),
-        title_de: data.title_de ? data.title_de.trim() : null,
-        slug:     (data.slug   || `project-${slot}`).trim(),
-      };
-    } catch (e) {
-      console.warn(`Skipping slot ${slot}:`, e);
-      return null;
-    }
+      const d = await res.json();
+      if (!d || !d.enabled) return null;
+      return { slot, title: (d.title || `Project ${slot}`).trim(),
+               title_de: d.title_de ? d.title_de.trim() : null,
+               slug: (d.slug || `project-${slot}`).trim(), manifest: null };
+    } catch { return null; }
   }));
-
   return results.filter(Boolean);
 }
 
-/* Manifest loader — 1 fetch pro Projekt statt 100+ HEAD requests */
 async function loadManifest(slot) {
+  // Erst aus gecachten projects-data.json lesen
+  const data = await loadProjectsData();
+  if (data) {
+    const project = data.find(p => p.slot === slot);
+    return project ? project.manifest : null;
+  }
+  // Fallback: einzelne manifest.json
   try {
     const res = await fetch(`projects/${slot}/manifest.json`, { cache: "default" });
     if (!res.ok) return null;

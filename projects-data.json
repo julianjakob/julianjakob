@@ -1,0 +1,259 @@
+[
+  {
+    "slot": "01",
+    "title": "Sony Music: 2AMDM",
+    "title_de": "Sony Music: 2AMDM",
+    "slug": "Sony Music: 2AMDM",
+    "manifest": {
+      "home": [
+        {
+          "type": "single",
+          "src": "01.png"
+        }
+      ],
+      "case": {
+        "hero": "hero.jpg",
+        "hasIntro": true,
+        "hasCategory": true,
+        "hasOutro": true,
+        "hasCredit": true,
+        "blocks": [
+          {
+            "type": "single",
+            "src": "01.jpg"
+          },
+          {
+            "type": "single",
+            "src": "02.jpg"
+          },
+          {
+            "type": "single",
+            "src": "03.jpg"
+          },
+          {
+            "type": "row",
+            "items": [
+              "04a.jpg",
+              "04b.jpg"
+            ]
+          },
+          {
+            "type": "single",
+            "src": "05.jpg"
+          },
+          {
+            "type": "single",
+            "src": "06.jpg"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "slot": "02",
+    "title": "Sück Club",
+    "title_de": "Sück Club",
+    "slug": "Sück Club",
+    "manifest": {
+      "home": [
+        {
+          "type": "row",
+          "items": [
+            "01a.jpg",
+            "01b.jpg"
+          ]
+        }
+      ],
+      "case": {
+        "hero": null,
+        "hasIntro": false,
+        "hasCategory": false,
+        "hasOutro": false,
+        "hasCredit": false,
+        "blocks": []
+      }
+    }
+  },
+  {
+    "slot": "03",
+    "title": "Makhulo",
+    "title_de": "Makhulo",
+    "slug": "Makhulo",
+    "manifest": {
+      "home": [
+        {
+          "type": "single",
+          "src": "01.jpg"
+        },
+        {
+          "type": "row",
+          "items": [
+            "02a.jpg",
+            "02b.jpg"
+          ]
+        }
+      ],
+      "case": {
+        "hero": "hero.jpg",
+        "hasIntro": true,
+        "hasCategory": true,
+        "hasOutro": true,
+        "hasCredit": true,
+        "blocks": [
+          {
+            "type": "single",
+            "src": "01.mp4"
+          },
+          {
+            "type": "single",
+            "src": "02.jpg"
+          },
+          {
+            "type": "row",
+            "items": [
+              "03a.mp4",
+              "03b.jpg"
+            ]
+          },
+          {
+            "type": "single",
+            "src": "04.jpg"
+          },
+          {
+            "type": "single",
+            "src": "05.jpg"
+          },
+          {
+            "type": "row",
+            "items": [
+              "06a.jpg",
+              "06b.jpg"
+            ]
+          },
+          {
+            "type": "single",
+            "src": "07.jpg"
+          },
+          {
+            "type": "single",
+            "src": "08.jpg"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "slot": "04",
+    "title": "Spotify Japan",
+    "title_de": "Spotify Japan",
+    "slug": "Spotify Japan",
+    "manifest": {
+      "home": [
+        {
+          "type": "single",
+          "src": "01.jpg"
+        },
+        {
+          "type": "single",
+          "src": "02.jpg"
+        }
+      ],
+      "case": {
+        "hero": null,
+        "hasIntro": false,
+        "hasCategory": false,
+        "hasOutro": false,
+        "hasCredit": false,
+        "blocks": []
+      }
+    }
+  },
+  {
+    "slot": "05",
+    "title": "Florian",
+    "title_de": "Florian",
+    "slug": "Florian",
+    "manifest": {
+      "home": [
+        {
+          "type": "single",
+          "src": "01.mp4"
+        },
+        {
+          "type": "row",
+          "items": [
+            "02a.jpg",
+            "02b.jpg"
+          ]
+        }
+      ],
+      "case": {
+        "hero": "hero.jpg",
+        "hasIntro": true,
+        "hasCategory": true,
+        "hasOutro": true,
+        "hasCredit": true,
+        "blocks": [
+          {
+            "type": "single",
+            "src": "01.mp4"
+          },
+          {
+            "type": "single",
+            "src": "02.jpg"
+          },
+          {
+            "type": "row",
+            "items": [
+              "03a.jpg",
+              "03b.jpg"
+            ]
+          },
+          {
+            "type": "single",
+            "src": "04.jpg"
+          },
+          {
+            "type": "single",
+            "src": "05.jpg"
+          },
+          {
+            "type": "single",
+            "src": "06.jpg"
+          },
+          {
+            "type": "single",
+            "src": "07.mp4"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "slot": "07",
+    "title": "Mercedes Maybach",
+    "title_de": "Mercedes Maybach",
+    "slug": "Mercedes Maybach",
+    "manifest": {
+      "home": [
+        {
+          "type": "single",
+          "src": "01.mp4"
+        }
+      ],
+      "case": {
+        "hero": null,
+        "hasIntro": false,
+        "hasCategory": false,
+        "hasOutro": false,
+        "hasCredit": false,
+        "blocks": [
+          {
+            "type": "single",
+            "src": "01.webm"
+          }
+        ]
+      }
+    }
+  }
+]
