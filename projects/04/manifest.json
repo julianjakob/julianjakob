@@ -2,11 +2,11 @@
   "home": [
     {
       "type": "single",
-      "src": "01.jpg"
+      "src": "01.webp"
     },
     {
       "type": "single",
-      "src": "02.jpg"
+      "src": "02.webp"
     }
   ],
   "case": {

@@ -2,11 +2,11 @@
   "home": [
     {
       "type": "single",
-      "src": "01.png"
+      "src": "01.webp"
     }
   ],
   "case": {
-    "hero": "hero.jpg",
+    "hero": "hero.webp",
     "hasIntro": true,
     "hasCategory": true,
     "hasOutro": true,
@@ -14,30 +14,30 @@
     "blocks": [
       {
         "type": "single",
-        "src": "01.jpg"
+        "src": "01.webp"
       },
       {
         "type": "single",
-        "src": "02.jpg"
+        "src": "02.webp"
       },
       {
         "type": "single",
-        "src": "03.jpg"
+        "src": "03.webp"
       },
       {
         "type": "row",
         "items": [
-          "04a.jpg",
-          "04b.jpg"
+          "04a.webp",
+          "04b.webp"
         ]
       },
       {
         "type": "single",
-        "src": "05.jpg"
+        "src": "05.webp"
       },
       {
         "type": "single",
-        "src": "06.jpg"
+        "src": "06.webp"
       }
     ]
   }

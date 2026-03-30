@@ -7,13 +7,13 @@
     {
       "type": "row",
       "items": [
-        "02a.jpg",
-        "02b.jpg"
+        "02a.webp",
+        "02b.webp"
       ]
     }
   ],
   "case": {
-    "hero": "hero.jpg",
+    "hero": "hero.webp",
     "hasIntro": true,
     "hasCategory": true,
     "hasOutro": true,
@@ -25,26 +25,26 @@
       },
       {
         "type": "single",
-        "src": "02.jpg"
+        "src": "02.webp"
       },
       {
         "type": "row",
         "items": [
-          "03a.jpg",
-          "03b.jpg"
+          "03a.webp",
+          "03b.webp"
         ]
       },
       {
         "type": "single",
-        "src": "04.jpg"
+        "src": "04.webp"
       },
       {
         "type": "single",
-        "src": "05.jpg"
+        "src": "05.webp"
       },
       {
         "type": "single",
-        "src": "06.jpg"
+        "src": "06.webp"
       },
       {
         "type": "single",

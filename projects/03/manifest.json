@@ -2,18 +2,18 @@
   "home": [
     {
       "type": "single",
-      "src": "01.jpg"
+      "src": "01.webp"
     },
     {
       "type": "row",
       "items": [
-        "02a.jpg",
-        "02b.jpg"
+        "02a.webp",
+        "02b.webp"
       ]
     }
   ],
   "case": {
-    "hero": "hero.jpg",
+    "hero": "hero.webp",
     "hasIntro": true,
     "hasCategory": true,
     "hasOutro": true,
@@ -25,37 +25,37 @@
       },
       {
         "type": "single",
-        "src": "02.jpg"
+        "src": "02.webp"
       },
       {
         "type": "row",
         "items": [
           "03a.mp4",
-          "03b.jpg"
+          "03b.webp"
         ]
       },
       {
         "type": "single",
-        "src": "04.jpg"
+        "src": "04.webp"
       },
       {
         "type": "single",
-        "src": "05.jpg"
+        "src": "05.webp"
       },
       {
         "type": "row",
         "items": [
-          "06a.jpg",
-          "06b.jpg"
+          "06a.webp",
+          "06b.webp"
         ]
       },
       {
         "type": "single",
-        "src": "07.jpg"
+        "src": "07.webp"
       },
       {
         "type": "single",
-        "src": "08.jpg"
+        "src": "08.webp"
       }
     ]
   }
