@@ -97,10 +97,13 @@
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html, body {
+html {
+  height: 100%;
+  background-color: #000;
+}
+body {
   margin: 0; padding: 0;
-  height: 100%; width: 100%;
-  height: calc(var(--vh, 1vh) * 100);
+  height: 100%;
   overflow: hidden;
   font-family: var(--font-main);
   -webkit-font-smoothing: antialiased;
@@ -250,6 +253,10 @@ a { text-decoration: none; color: inherit; }
 header {
   height: var(--header-height);
   padding: var(--ui-padding-top) var(--ui-padding-side);
+  /* Safe area: content below notch/Dynamic Island on iPhone X+ */
+  padding-top: max(var(--ui-padding-top), env(safe-area-inset-top));
+  padding-left: max(var(--ui-padding-side), env(safe-area-inset-left));
+  padding-right: max(var(--ui-padding-side), env(safe-area-inset-right));
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -307,9 +314,7 @@ body.lang-fade-in [data-de] {
 
 #menu-overlay {
   position: fixed;
-  top: 0; left: 0;
-  width: 100%;
-  height: 100vh; height: calc(var(--vh, 1vh) * 100);
+  top: 0; left: 0; right: 0; bottom: 0;
   background-color: #000;
   z-index: 150;
   display: flex;
@@ -346,17 +351,13 @@ body.lang-fade-in [data-de] {
 .menu-intro-link .feather { stroke-width: 2.5; }
 
 .page-container {
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%;
-  height: 100vh; height: calc(var(--vh, 1vh) * 100);
-  overflow-y: hidden;
-  overflow-x: visible;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  overflow: visible;
   transition: transform var(--page-speed) var(--page-curve);
   transform: scaleY(var(--scaleY, 1));
   transform-style: preserve-3d;
   backface-visibility: hidden;
-  overflow: visible;
 }
 .page-container.visible { transform: scaleY(1); z-index: 10; pointer-events: auto; }
 .page-container.hidden { transform: scaleY(0); z-index: 1; pointer-events: none; }
@@ -364,6 +365,7 @@ body.lang-fade-in [data-de] {
 .contact-container {
   background-color: #fff;
   overflow-y: auto;
+  height: 100%; /* fill fixed page-container */
   padding: var(--spacing-contact-vertical) var(--ui-padding-side) 0px var(--ui-padding-side);
   display: flex;
   flex-direction: column;
@@ -374,6 +376,7 @@ body.lang-fade-in [data-de] {
 .case-container {
   background-color: #fff;
   overflow-y: auto;
+  height: 100%; /* fill fixed page-container */
   padding: 0 var(--ui-padding-side) 0 var(--ui-padding-side);
   display: flex;
   flex-direction: column;
@@ -396,9 +399,7 @@ body.lang-fade-in [data-de] {
 
 .slide-section {
   position: absolute;
-  top: 0; left: 0;
-  width: 100%;
-  height: 100%;
+  top: 0; left: 0; right: 0; bottom: 0;
   background-color: #fff;
   display: flex;
   align-items: center;
@@ -528,9 +529,7 @@ body.lang-fade-in [data-de] {
 
 .banner-overlay {
   position: fixed;
-  top: 0; left: 0;
-  width: 100%;
-  height: 100vh; height: calc(var(--vh, 1vh) * 100);
+  top: 0; left: 0; right: 0; bottom: 0;
   background-color: #fff;
   z-index: 9999;
   display: flex;
@@ -557,7 +556,7 @@ body.lang-fade-in [data-de] {
 }
 
 .case-top {
-  height: 100vh; height: calc(var(--vh, 1vh) * 100); height: 100svh;
+  height: 100vh; height: 100svh;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -793,6 +792,10 @@ p.type-contact-item.service-description {
   bottom: 0; left: 0;
   width: 100%;
   padding: var(--ui-padding-top) var(--ui-padding-side);
+  /* Safe area: above home indicator on iPhone X+ */
+  padding-bottom: max(var(--ui-padding-top), env(safe-area-inset-bottom));
+  padding-left: max(var(--ui-padding-side), env(safe-area-inset-left));
+  padding-right: max(var(--ui-padding-side), env(safe-area-inset-right));
   display: flex;
   justify-content: space-between;
   align-items: flex-end;

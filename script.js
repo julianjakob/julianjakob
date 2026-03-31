@@ -1,16 +1,3 @@
-// ── Mobile Viewport Fix ──────────────────────────────────────────
-// window.innerHeight gibt die tatsächlich sichtbare Höhe zurück,
-// ohne Browser-UI. Zuverlässiger als 100vh/dvh auf iOS Safari.
-function setVhVariable() {
-  const vh = window.innerHeight * 0.01;
-  document.documentElement.style.setProperty('--vh', `${vh}px`);
-}
-setVhVariable();
-window.addEventListener('resize', setVhVariable, { passive: true });
-window.addEventListener('orientationchange', () => {
-  setTimeout(setVhVariable, 100); // kurz warten bis Browser-UI sich angepasst hat
-}, { passive: true });
-
 document.addEventListener("DOMContentLoaded", () => {
   init().catch((e) => console.error("Init error:", e));
 });
