@@ -740,28 +740,43 @@ async function init() {
   }
 } // end init()
 
-/* Project loader */
+/* Project loader — lädt alles in einem Request via projects-data.json */
+let _projectsData = null;
+
 async function loadEnabledProjects() {
-  const slots = ["01", "02", "03", "04", "05", "06", "07", "08"],
-    enabled = [];
-  for (const slot of slots) {
-    const url = `projects/${slot}/project.json`;
+  // Versuche zuerst projects-data.json (1 Request für alles)
+  try {
+    const res = await fetch("projects-data.json", { cache: "default" });
+    if (res.ok) {
+      _projectsData = await res.json();
+      return _projectsData;
+    }
+  } catch {}
+
+  // Fallback: einzelne project.json Dateien
+  const slots = ["01", "02", "03", "04", "05", "06", "07", "08"];
+  const results = await Promise.all(slots.map(async slot => {
     try {
-      const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok) continue;
+      const res = await fetch(`projects/${slot}/project.json`, { cache: "default" });
+      if (!res.ok) return null;
       const data = await res.json();
-      if (!data || !data.enabled) continue;
-      enabled.push({
+      if (!data || !data.enabled) return null;
+      return {
         slot,
         title: (data.title || `Project ${slot}`).trim(),
         title_de: data.title_de ? data.title_de.trim() : null,
         slug: (data.slug || `project-${slot}`).trim(),
-      });
-    } catch (e) {
-      console.warn(`Skipping slot ${slot}:`, e);
-    }
-  }
-  return enabled;
+        manifest: null,
+      };
+    } catch { return null; }
+  }));
+  return results.filter(Boolean);
+}
+
+function getManifest(slot) {
+  if (!_projectsData) return null;
+  const p = _projectsData.find(p => p.slot === slot);
+  return p ? p.manifest : null;
 }
 
 /* Home render */
@@ -774,17 +789,34 @@ async function renderHomeSlides(pageHome, projects) {
   for (const project of projects) {
     const homeBase = `projects/${project.slot}/home/`;
     const caseBase = `projects/${project.slot}/case/`;
-    // intro.txt is the canonical signal — every case study has one
-    const hasCase = await urlExists(`${caseBase}intro.txt`);
-    for (let i = 1; i <= 99; i++) {
-      const block = await findNumberedBlock(homeBase, i, { allowText: false });
-      if (!block) break;
-      slidesToRender.push({
-        title: project.title,
-        link: `#case=${project.slot}`,
-        hasCase,
-        block,
-      });
+    const manifest = getManifest(project.slot);
+
+    if (manifest) {
+      // Manifest vorhanden: kein HEAD-Request nötig
+      const hasCase = !!(manifest.case && (manifest.case.hasIntro || manifest.case.hero));
+      for (const item of (manifest.home || [])) {
+        let block;
+        if (item.type === "row") {
+          block = { type: "row", items: (item.items || []).map(f => ({
+            kind: /\.(mp4|webm)$/i.test(f) ? "video" : "image",
+            src: `${homeBase}${f}`
+          }))};
+        } else if (item.type === "single" && item.src) {
+          block = { type: "single", item: {
+            kind: /\.(mp4|webm)$/i.test(item.src) ? "video" : "image",
+            src: `${homeBase}${item.src}`
+          }};
+        } else { continue; }
+        slidesToRender.push({ title: project.title, link: `#case=${project.slot}`, hasCase, block });
+      }
+    } else {
+      // Fallback: HEAD-Requests
+      const hasCase = await urlExists(`${caseBase}intro.txt`);
+      for (let i = 1; i <= 99; i++) {
+        const block = await findNumberedBlock(homeBase, i, { allowText: false });
+        if (!block) break;
+        slidesToRender.push({ title: project.title, link: `#case=${project.slot}`, hasCase, block });
+      }
     }
   }
 
@@ -896,7 +928,12 @@ async function renderHomeSlides(pageHome, projects) {
     } else {
       const wrap = document.createElement("div");
       wrap.className = "content-single";
-      wrap.appendChild(createMediaElement(item.block.item, { context: "home" }));
+      const mediaEl = createMediaElement(item.block.item, { context: "home" });
+      // Videos are always landscape/fullbleed — set immediately without waiting for metadata
+      if (item.block.item && item.block.item.kind === "video") {
+        section.classList.add("is-landscape", "is-full-bleed");
+      }
+      wrap.appendChild(mediaEl);
       section.appendChild(wrap);
     }
 
@@ -1133,7 +1170,8 @@ function setupSafariSimpleLoop(v) {
     if (v.duration && !isNaN(v.duration) && isFinite(v.duration)) {
       if (v.paused && !seeking && document.visibilityState !== "hidden") v.play().catch(() => {});
       if (!v.paused && !seeking && v.currentTime >= v.duration - 0.15) {
-        seeking = true; v.currentTime = 0; v.play().catch(() => {});
+        seeking = true;
+        v.currentTime = 0; v.play().catch(() => {});
         v.addEventListener("seeked", () => { seeking = false; }, { once: true });
       }
     }
@@ -1158,11 +1196,14 @@ function createMediaElement(media, { context }) {
     v.setAttribute("autoplay", "");
 
     v.src = media.src;
+    v.play().catch(() => {}); // Sicherstellen dass Video startet
 
+    // Safari: natives loop hat Frame-Gap — eigene Loop-Logik nötig
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
     if (isSafari) {
       v.loop = false;
       if (context === "home") {
+        // Double-Buffer für Home-Slides: kein Frame-Gap beim Loop
         v.addEventListener("loadedmetadata", function setupLoop() {
           v.removeEventListener("loadedmetadata", setupLoop);
           const parent = v.parentNode;
@@ -1181,10 +1222,14 @@ function createMediaElement(media, { context }) {
             if (!inSwap && curr.duration && !isNaN(curr.duration) && isFinite(curr.duration)) {
               if (curr.paused && document.visibilityState !== "hidden") curr.play().catch(() => {});
               const rem = curr.duration - curr.currentTime;
-              if (rem <= PREP && !prepped && !curr.paused) { prepped = true; next.currentTime = 0; next.play().catch(() => {}); }
+              if (rem <= PREP && !prepped && !curr.paused) {
+                prepped = true; next.currentTime = 0; next.play().catch(() => {});
+              }
               if (rem <= SWAP && !curr.paused) {
-                inSwap = true; const done = curr;
-                curr.style.opacity = "0"; next.style.opacity = "1"; vids = [next, done];
+                inSwap = true;
+                const done = curr;
+                curr.style.opacity = "0"; next.style.opacity = "1";
+                vids = [next, done];
                 setTimeout(() => { done.pause(); done.currentTime = 0; prepped = false; inSwap = false; }, 300);
               }
             }
@@ -1220,7 +1265,7 @@ async function applySlideOrientationClasses(slides) {
     }
 
     const imgs = Array.from(slide.querySelectorAll("img")),
-      vids = Array.from(slide.querySelectorAll("video"));
+      vids = Array.from(slide.querySelectorAll("video:not([data-loop-standby])"));
     const mediaEls = [...imgs, ...vids];
     if (mediaEls.length !== 1) {
       slide.classList.add("is-portrait");
@@ -1268,6 +1313,7 @@ function getMediaDims(el) {
 function pad2(n) { return String(n).padStart(2, "0"); }
 
 const _urlCache = new Map();
+
 async function urlExists(url) {
   if (_urlCache.has(url)) return _urlCache.get(url);
   let result = false;
