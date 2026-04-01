@@ -928,7 +928,12 @@ async function renderHomeSlides(pageHome, projects) {
     } else {
       const wrap = document.createElement("div");
       wrap.className = "content-single";
-      wrap.appendChild(createMediaElement(item.block.item, { context: "home" }));
+      const mediaEl = createMediaElement(item.block.item, { context: "home" });
+      // Videos are always landscape/fullbleed — set immediately without waiting for metadata
+      if (item.block.item && item.block.item.kind === "video") {
+        section.classList.add("is-landscape", "is-full-bleed");
+      }
+      wrap.appendChild(mediaEl);
       section.appendChild(wrap);
     }
 
@@ -1191,6 +1196,7 @@ function createMediaElement(media, { context }) {
     v.setAttribute("autoplay", "");
 
     v.src = media.src;
+    v.play().catch(() => {}); // Sicherstellen dass Video startet
 
     // Safari: natives loop hat Frame-Gap — eigene Loop-Logik nötig
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
