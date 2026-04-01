@@ -1,17 +1,13 @@
-/* ── Self-hosted Inter ─────────────────────────────────────────── */
+/* Self-hosted Inter */
 @font-face {
   font-family: "Inter";
   src: url("assets/fonts/Inter_18pt-Regular.woff") format("woff");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
+  font-weight: 400; font-style: normal; font-display: swap;
 }
 @font-face {
   font-family: "Inter";
   src: url("assets/fonts/Inter_18pt-Medium.woff") format("woff");
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
+  font-weight: 500; font-style: normal; font-display: swap;
 }
 
 /* style.css */
@@ -95,16 +91,9 @@
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html {
-  height: 100%;
-  height: -webkit-fill-available; /* iOS Safari: viewport excludes browser chrome */
-}
-body {
+html, body {
   margin: 0; padding: 0;
-  height: 100%;
-  min-height: 100%;
-  min-height: -webkit-fill-available;
-  width: 100%;
+  height: 100%; width: 100%;
   overflow: hidden;
   font-family: var(--font-main);
   -webkit-font-smoothing: antialiased;
@@ -326,10 +315,9 @@ body.lang-fade-in [data-de] {
   width: 100%;
   transition: opacity 0.3s ease;
   position: absolute;
-  bottom: calc(var(--ui-padding-top) + env(safe-area-inset-bottom, 0px));
+  bottom: var(--ui-padding-top);
   left: 0;
   padding: 0 var(--ui-padding-side);
-  padding-bottom: max(var(--ui-padding-top), 20px);
 }
 .menu-intro-link {
   display: flex;
@@ -702,7 +690,7 @@ span.mobile-only { display: inline; }
   position: relative;
   width: 100%;
   margin-top: var(--spacing-footer-gap);
-  padding-bottom: 30px;
+  padding-bottom: 20px;
   display: flex;
   justify-content: space-between;
   mix-blend-mode: normal;
