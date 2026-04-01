@@ -790,20 +790,10 @@ async function init() {
   // Aufgerufen bei: Slide-Wechsel, Seiten-Wechsel, Menu öffnen/schließen.
 
   function setUIColor(color) {
-    // Direkt per inline style — umgeht alle CSS-Spezifität-Konflikte
+    // Setzt Textfarbe in Header und Footer basierend auf Bild-Helligkeit
     document.querySelectorAll(
       'header .type-ui-text, #project-footer .type-ui-text'
     ).forEach(el => { el.style.color = color; });
-
-    // Safari theme-color: schwarz bei dunklem Inhalt, weiß bei hellem
-    const themeColor = color === '#ffffff' ? '#000000' : '#ffffff';
-    let meta = document.querySelector('meta[name="theme-color"]');
-    if (!meta) {
-      meta = document.createElement('meta');
-      meta.name = 'theme-color';
-      document.head.appendChild(meta);
-    }
-    meta.setAttribute('content', themeColor);
   }
 
   function getSlideTheme(slide) {
