@@ -1,4 +1,4 @@
-/* ── Self-hosted Inter — kein Google-Request, DSGVO-konform ─────── */
+/* ── Self-hosted Inter ─────────────────────────────────────────── */
 @font-face {
   font-family: "Inter";
   src: url("assets/fonts/Inter_18pt-Regular.woff") format("woff");
@@ -33,12 +33,12 @@
   --col-gutter: calc(0.2 * var(--grid-unit)); 
 
   --anim-speed: 0.7s;
-  --anim-curve: cubic-bezier(0.77, 0, 0.175, 1); /* easeInOutQuart — organischer als 0.80 */
+  --anim-curve: cubic-bezier(0.80, 0, 0.20, 1); 
 
   --page-speed: 0.85s;
-  --page-curve: cubic-bezier(0.65, 0, 0.15, 1); /* asymmetrisch: schneller raus, gewichtiger rein */
+  --page-curve: cubic-bezier(0.65, 0, 0.20, 1); 
 
-  --layout-width: 100%;  /* Mobile: full width */
+  --layout-width: 75%;
 
   --spacing-macro: 200px;
   --spacing-footer-gap: 150px;
@@ -67,7 +67,7 @@
   --icon-gap: 8px;                  
 
   --anim-translate-micro: 8px;      
-  --anim-translate-small: 12px;     
+  --anim-translate-small: 20px;     
 
   --bp-tablet: 768px;
   --bp-desktop: 839px;
@@ -95,13 +95,9 @@
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html {
-  height: 100%;
-  background-color: #000;
-}
-body {
+html, body {
   margin: 0; padding: 0;
-  height: 100%;
+  height: 100%; width: 100%;
   overflow: hidden;
   font-family: var(--font-main);
   -webkit-font-smoothing: antialiased;
@@ -250,10 +246,6 @@ a { text-decoration: none; color: inherit; }
 header {
   height: var(--header-height);
   padding: var(--ui-padding-top) var(--ui-padding-side);
-  /* Safe area: content below notch/Dynamic Island on iPhone X+ */
-  padding-top: max(var(--ui-padding-top), env(safe-area-inset-top));
-  padding-left: max(var(--ui-padding-side), env(safe-area-inset-left));
-  padding-right: max(var(--ui-padding-side), env(safe-area-inset-right));
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -262,13 +254,10 @@ header {
   width: 100%;
   z-index: 200;
   background: transparent;
+  mix-blend-mode: difference;
+  /* Safari Fix */
   -webkit-transform: translate3d(0,0,0);
   transform: translate3d(0,0,0);
-  transition: transform 0.4s cubic-bezier(0.33, 1, 0.68, 1); /* ease-out: sanftes Ankommen */
-}
-header.header--hidden {
-  transform: translateY(-100%);
-  transition: transform 0.25s cubic-bezier(0.32, 0, 0.67, 0); /* ease-in: entschlossenes Verlassen */
 }
 .brand { cursor: pointer; text-transform: lowercase; }
 .menu-trigger {
@@ -276,13 +265,6 @@ header.header--hidden {
   user-select: none;
   white-space: nowrap;
   transition: opacity 0.4s ease;
-  /* Reset browser button defaults */
-  background: none;
-  border: none;
-  padding: 0;
-  font: inherit;
-  color: inherit;
-  text-align: right;
 }
 .menu-trigger.fade-out { opacity: 0; }
 
@@ -306,7 +288,7 @@ body.lang-fade-out [data-de] {
 body.lang-fade-in [data-en],
 body.lang-fade-in [data-de] {
   opacity: 1;
-  transition: opacity 0.4s cubic-bezier(0.33, 1, 0.68, 1); /* ease-out: Text erscheint direkt, klingt sanft aus */
+  transition: opacity 0.5s ease-in;
 }
 
 #menu-overlay {
@@ -385,7 +367,7 @@ body.lang-fade-in [data-de] {
   -webkit-overflow-scrolling: touch;
 }
 
-#page-home { background-color: #000; cursor: grab; user-select: none; -webkit-user-select: none; }
+#page-home { background-color: #000; cursor: grab; }
 #page-home:active { cursor: grabbing; }
 #page-home img,
 #page-home video { user-select: none; -webkit-user-drag: none; pointer-events: none; }
@@ -763,8 +745,9 @@ span.mobile-only { display: inline; }
 .service-body {
   max-height: 0;
   opacity: 0;
-  overflow: hidden;
-  /* Transition wird per JS gesteuert für pixelgenaue Höhenanimation */
+  overflow-y: hidden;
+  overflow-x: visible;
+  transition: max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, padding 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   padding-left: calc(var(--service-num-width) + var(--spacing-component-gap));
   padding-right: 20px;
   padding-top: 0;
@@ -784,9 +767,8 @@ p.type-contact-item.service-description {
   width: 100%;
   margin-bottom: 0;
 }
-/* Expanded-State als Fallback — JS übernimmt die eigentliche Animation */
 .service-row.expanded .service-body {
-  max-height: none;
+  max-height: 1000px;
   opacity: 1;
   padding-top: 20px;
   padding-bottom: 20px;
@@ -797,15 +779,13 @@ p.type-contact-item.service-description {
   bottom: 0; left: 0;
   width: 100%;
   padding: var(--ui-padding-top) var(--ui-padding-side);
-  /* Safe area: above home indicator on iPhone X+ */
-  padding-bottom: max(var(--ui-padding-top), env(safe-area-inset-bottom));
-  padding-left: max(var(--ui-padding-side), env(safe-area-inset-left));
-  padding-right: max(var(--ui-padding-side), env(safe-area-inset-right));
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
   z-index: 100;
-  transition: opacity 0.45s cubic-bezier(0.33, 1, 0.68, 1) 0.7s; /* ease-out: smooth reveal nach Slide */
+  mix-blend-mode: difference;
+  transition: opacity 0.4s ease 0.7s;
+  /* Safari Fix for Large Screens */
   -webkit-transform: translate3d(0,0,0);
   transform: translate3d(0,0,0);
 }
@@ -815,7 +795,7 @@ p.type-contact-item.service-description {
 .project-title { cursor: pointer; }
 
 @keyframes slideUpFade { 0% { opacity: 0; transform: translateY(var(--anim-translate-small)); } 100% { opacity: 1; transform: translateY(0); } }
-.text-anim { animation: slideUpFade 0.5s cubic-bezier(0.33, 1, 0.68, 1) 0.2s both; } /* delay 200ms: synced mit Slide-Ende bei 700ms */
+.text-anim { animation: slideUpFade 0.6s ease-out forwards; }
 
 @media (min-width: 768px) {
   :root {
@@ -1034,7 +1014,12 @@ p.type-contact-item.service-description {
   .case-header .type-about-headline {
     max-width: calc(6 * var(--grid-unit));
   }
-
+  .page-footer {
+    mix-blend-mode: difference;
+    /* Safari Fix for Large Screens */
+    -webkit-transform: translate3d(0,0,0);
+    transform: translate3d(0,0,0);
+  }
 }
 
 @media (min-width: 1920px) {
@@ -1042,26 +1027,4 @@ p.type-contact-item.service-description {
     --page-padding: 80px;
     --page-padding-top: 120px;
   }
-}
-
-/* ── Dynamische Textfarbe: Header & Home-Footer ─────────────────
-   Farbe wird direkt per JS inline style gesetzt (kein CSS-Variable-
-   Cascade, keine Spezifitätskonflikte). Nur die Transition hier.
-──────────────────────────────────────────────────────────────── */
-header .type-ui-text,
-#project-footer .type-ui-text,
-#project-footer .project-title,
-#project-footer .learn-more {
-  transition: color 0.4s ease;
-}
-/* ── Reduced Motion ─────────────────────────────────────────────── */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    transition-delay: 0ms !important;
-  }
-  .slide-section, .page-container, #menu-overlay { transition: none !important; }
-  .typewriter-char { opacity: 1 !important; animation: none !important; }
 }

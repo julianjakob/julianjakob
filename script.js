@@ -41,12 +41,10 @@ async function init() {
     hasSeenBanner = false,
     isMenuOpen = false,
     menuTimeout = null,
-    menuTextTimer = null,
     touchStartX = 0,
     touchStartY = 0,
     lastWheelTime = 0,
-    pendingAfterBanner = null,
-    queuedSlideDir = null;
+    pendingAfterBanner = null;
 
   const projects = await loadEnabledProjects();
   const homeSlides = await renderHomeSlides(pageHome, projects);
@@ -120,51 +118,12 @@ async function init() {
     toggleMenu();
   });
 
-  // ── Menu-Button Textanimation ────────────────────────────────
-  // Breite und Opacity werden gleichzeitig animiert —
-  // kein Layout-Snap, kein hartes Umschalten.
-  function animateMenuText(text) {
-    if (!menuBtn) return;
-    if (menuTextTimer) { clearTimeout(menuTextTimer); menuTextTimer = null; }
-    menuBtn.classList.remove("fade-out");
-
-    // Zielbreite mit unsichtbarem Klon messen
-    const probe = menuBtn.cloneNode(false);
-    Object.assign(probe.style, {
-      position: "absolute", visibility: "hidden",
-      width: "auto", minWidth: "0", whiteSpace: "nowrap", pointerEvents: "none"
-    });
-    probe.textContent = text;
-    document.body.appendChild(probe);
-    const newW = probe.getBoundingClientRect().width;
-    document.body.removeChild(probe);
-
-    const curW = menuBtn.getBoundingClientRect().width;
-
-    // Fade-out + Breite gleichzeitig: entschlossene Kurve
-    menuBtn.style.transition = "opacity 0.28s cubic-bezier(0.32, 0, 0.67, 0), width 0.32s cubic-bezier(0.32, 0, 0.67, 0)";
-    menuBtn.style.width      = curW + "px";
-    menuBtn.style.opacity    = "0";
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      menuBtn.style.width = newW + "px";
-    }));
-
-    // Text tauschen + Fade-in: sanfte Ankunft
-    menuTextTimer = setTimeout(() => {
-      menuBtn.innerText        = text;
-      menuBtn.style.transition = "opacity 0.32s cubic-bezier(0.33, 1, 0.68, 1)";
-      menuBtn.style.opacity    = "1";
-      menuTextTimer = setTimeout(() => {
-        menuBtn.style.transition = "";
-        menuBtn.style.opacity    = "";
-        menuBtn.style.width      = "";
-        menuTextTimer = null;
-      }, 340);
-    }, 300);
-  }
-
   function fadeMenuText(text) {
-    animateMenuText(text);
+    menuBtn.classList.add("fade-out");
+    setTimeout(() => {
+      menuBtn.innerText = text;
+      menuBtn.classList.remove("fade-out");
+    }, 400);
   }
 
   function toggleMenu(skipFadeToMenu = false) {
@@ -175,10 +134,6 @@ async function init() {
       if (menuTimeout) clearTimeout(menuTimeout);
       fadeMenuText((window.getCurrentLang && window.getCurrentLang() === "de") ? "Schließen" : "Close");
       if (window.setLangToggleVisible) window.setLangToggleVisible("menu");
-      // Menu offen → Header immer sichtbar
-      showHeader();
-      // Menu-Overlay ist schwarz → weißer Text
-      setUIColor('#ffffff');
       if (activePage) {
         activePage.style.transformOrigin = "bottom center";
         activePage.classList.remove("visible");
@@ -191,8 +146,6 @@ async function init() {
         fadeMenuText((window.getCurrentLang && window.getCurrentLang() === "de") ? "Menü" : "Menu");
       }
       if (window.setLangToggleVisible) window.setLangToggleVisible(currentPage);
-      // Farbe für aktuelle Seite wiederherstellen
-      updateUIColorForPage(currentPage);
       if (activePage) {
         activePage.style.transformOrigin = "bottom center";
         if (currentPage === "home") {
@@ -217,25 +170,31 @@ async function init() {
         activePage.classList.add("visible");
       }
     }
-    tLock.bump(900); // --page-speed 850ms + 50ms buffer
+    tLock.bump(950); // bump = cancel any in-flight timer + re-acquire
   }
 
   function flashMenuText(pageName) {
     if (menuTimeout) clearTimeout(menuTimeout);
+    // Read the translated page name from the nav link if available
     const lang = (window.getCurrentLang && window.getCurrentLang()) || "en";
     const navLink = document.querySelector(`.nav-link[data-dest="${pageName}"]`);
     const display = navLink
       ? (navLink.getAttribute(`data-${lang}`) || navLink.getAttribute("data-en") || pageName)
       : pageName.charAt(0).toUpperCase() + pageName.slice(1);
-
-    animateMenuText(display);
-
-    // Nach 2000ms sichtbarer Zeit wieder zu "Menu" zurück
-    menuTimeout = setTimeout(() => {
-      if (!isMenuOpen) {
-        animateMenuText((window.getCurrentLang && window.getCurrentLang() === "de") ? "Menü" : "Menu");
-      }
-    }, 2300); // 300ms (fade-out) + 2000ms sichtbar
+    menuBtn.classList.add("fade-out");
+    setTimeout(() => {
+      menuBtn.innerText = display;
+      menuBtn.classList.remove("fade-out");
+      menuTimeout = setTimeout(() => {
+        menuBtn.classList.add("fade-out");
+        setTimeout(() => {
+          if (!isMenuOpen) {
+            menuBtn.innerText = (window.getCurrentLang && window.getCurrentLang() === "de") ? "Menü" : "Menu";
+            menuBtn.classList.remove("fade-out");
+          }
+        }, 400);
+      }, 2000);
+    }, 400);
   }
 
   document.querySelectorAll(".nav-link").forEach((link) => {
@@ -332,7 +291,7 @@ async function init() {
       currentPage = dest;
       toggleMenu(dest !== "home"); // skip "Menu" label when navigating to a page
       // Flash page name after menu closes — no need to wait for "Menu" anymore
-      if (dest !== "home") setTimeout(() => flashMenuText(dest), 900); // nach Menu-Animation (850ms)
+      if (dest !== "home") setTimeout(() => flashMenuText(dest), 500);
       return;
     }
 
@@ -380,228 +339,16 @@ async function init() {
     currentPage = dest;
     updatePageTitle(dest, dest === "case" ? currentCaseSlot : null);
     if (window.setLangToggleVisible) window.setLangToggleVisible(dest);
-    tLock.acquire(900); // --page-speed 850ms + 50ms buffer
-    // Textfarbe für neue Seite setzen
-    updateUIColorForPage(dest);
-    // Header wieder einblenden + Scroll-Tracking zurücksetzen
-    showHeader();
-    resetScrollHeader();
-  }
-
-  // ── Header bei Scroll verstecken / zeigen ────────────────────
-  const mainHeader = document.getElementById("main-header");
-
-  function showHeader() {
-    mainHeader?.classList.remove("header--hidden");
-  }
-  function hideHeader() {
-    mainHeader?.classList.add("header--hidden");
-  }
-
-  // ── Gecachte Werte für den Scroll-Handler ───────────────────────
-  // offsetHeight erzwingt Layout-Reflow — nie im Scroll-Event messen.
-  // Einmal beim Laden / Seiten-Wechsel berechnen, bei Resize invalidieren.
-  let _headerH    = 0;
-  let _caseDims   = null;   // { imgH, caseTopH }
-  let _caseHeroColor = null; // "#000000" | "#ffffff"
-
-  function refreshHeaderH() {
-    _headerH = mainHeader ? mainHeader.offsetHeight : 60;
-  }
-  function invalidateCaseCache() {
-    _caseDims = null;
-    _caseHeroColor = null;
-  }
-  function refreshCaseDims() {
-    const caseTop  = document.querySelector("#page-case .case-top");
-    const caseHero = document.querySelector("#page-case .case-hero");
-    _caseDims = {
-      imgH:     caseHero ? caseHero.offsetHeight : 0,
-      caseTopH: caseTop  ? caseTop.offsetHeight  : 0,
-    };
-  }
-
-  // Bei Resize alles neu messen
-  window.addEventListener("resize", () => {
-    refreshHeaderH();
-    invalidateCaseCache();
-  }, { passive: true });
-  refreshHeaderH();
-
-  function initScrollHeader() {
-    let lastY = 0;
-    const THRESHOLD = 8;
-    const TOP_ZONE  = 80;
-
-    function onScroll() {
-      if (currentPage === "home" || isMenuOpen) return;
-      const y = this.scrollTop;
-
-      if (currentPage === "case") {
-        if (!_caseDims) refreshCaseDims();
-        const { imgH, caseTopH } = _caseDims;
-
-        if (caseTopH > 0) {
-          const imgExitPoint = imgH - _headerH;
-
-          if (y <= caseTopH) {
-            showHeader();
-            // Farbe nur setzen wenn sich die Zone geändert hat
-            if (y < imgExitPoint) {
-              if (_caseHeroColor) setUIColor(_caseHeroColor);
-            } else {
-              setUIColor("#000000");
-            }
-            lastY = y;
-            return;
-          }
-          setUIColor("#000000");
-        }
-      }
-
-      if (y < TOP_ZONE) {
-        showHeader();
-      } else if (y > lastY + THRESHOLD) {
-        hideHeader();
-      } else if (y < lastY - THRESHOLD) {
-        showHeader();
-      }
-      lastY = y;
-    }
-
-    document.querySelectorAll(".contact-container, .case-container").forEach(el => {
-      el.addEventListener("scroll", onScroll, { passive: true });
-    });
-
-    return function reset() { lastY = 0; };
-  }
-
-  const resetScrollHeader = initScrollHeader();
-
-  // Farbe des Case-Heroes messen und cachen — nur einmal pro Case-Load
-  function updateUiColorForCaseHero() {
-    if (_caseHeroColor) { setUIColor(_caseHeroColor); return; }
-
-    const heroImg = document.querySelector("#page-case .case-hero img");
-    if (!heroImg || !heroImg.complete || !heroImg.naturalWidth) {
-      setUIColor("#ffffff");
-      if (heroImg) {
-        heroImg.addEventListener("load", updateUiColorForCaseHero, { once: true });
-      }
-      return;
-    }
-    try {
-      const w = heroImg.naturalWidth, h = heroImg.naturalHeight;
-      const p = Math.max(30, Math.min(80, Math.floor(Math.min(w, h) * 0.08)));
-      const canvas = document.createElement("canvas");
-      canvas.width = p * 2; canvas.height = p * 2;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(heroImg,   0,   0, p, p,  0, 0, p, p);
-      ctx.drawImage(heroImg, w-p,   0, p, p,  p, 0, p, p);
-      ctx.drawImage(heroImg,   0, h-p, p, p,  0, p, p, p);
-      ctx.drawImage(heroImg, w-p, h-p, p, p,  p, p, p, p);
-      const data = ctx.getImageData(0, 0, p*2, p*2).data;
-      let lum = 0;
-      for (let i = 0; i < data.length; i += 4) {
-        lum += (0.2126 * data[i] + 0.7152 * data[i+1] + 0.0722 * data[i+2]) / 255;
-      }
-      _caseHeroColor = (lum / (data.length / 4)) > 0.5 ? "#000000" : "#ffffff";
-      setUIColor(_caseHeroColor);
-    } catch (e) {
-      setUIColor("#ffffff");
-    }
+    tLock.acquire(950);
   }
 
   initServicesAccordion();
   function initServicesAccordion() {
-    const OPEN_CURVE  = "cubic-bezier(0.76, 0, 0.24, 1)";
-    const CLOSE_CURVE = "cubic-bezier(0.76, 0, 0.24, 1)";
-    const DURATION    = 480; // ms
-
     document.querySelectorAll(".service-row").forEach((row) => {
-      const body   = row.querySelector(".service-body");
-      const toggle = row.querySelector(".service-toggle");
-      if (!body) return;
-
-      let runningAnim = null;
-
       row.addEventListener("click", () => {
-        const isExpanded = row.classList.contains("expanded");
-
-        // Aktuelle Höhe ermitteln — auch mitten in einer laufenden Animation
-        const fromHeight = body.getBoundingClientRect().height;
-
-        if (runningAnim) { runningAnim.cancel(); runningAnim = null; }
-
-        if (isExpanded) {
-          // ── Schließen ──────────────────────────────────────────
-          row.classList.remove("expanded");
-          if (toggle) toggle.textContent = "+";
-
-          body.style.overflow      = "hidden";
-          body.style.maxHeight     = fromHeight + "px";
-          body.style.paddingTop    = "20px";
-          body.style.paddingBottom = "20px";
-          body.style.opacity       = "1";
-
-          runningAnim = body.animate(
-            [
-              { maxHeight: fromHeight + "px", paddingTop: "20px", paddingBottom: "20px", opacity: "1" },
-              { maxHeight: "0px",             paddingTop: "0px",  paddingBottom: "0px",  opacity: "0" }
-            ],
-            { duration: DURATION, easing: CLOSE_CURVE, fill: "forwards" }
-          );
-
-          runningAnim.onfinish = () => {
-            const anim = runningAnim;
-            runningAnim = null;
-            anim.cancel();          // fill: forwards entfernen, CSS übernimmt
-            body.style.cssText = "";
-          };
-
-        } else {
-          // ── Öffnen ────────────────────────────────────────────
-          row.classList.add("expanded");
-          if (toggle) toggle.textContent = "−";
-
-          // Zielhöhe messen während CSS expanded aktiv ist
-          body.style.maxHeight     = "none";
-          body.style.paddingTop    = "20px";
-          body.style.paddingBottom = "20px";
-          const toHeight = body.scrollHeight;
-
-          // Auf Startzustand zurücksetzen für die Animation
-          body.style.overflow      = "hidden";
-          body.style.maxHeight     = fromHeight + "px";
-          body.style.paddingTop    = fromHeight > 0 ? "20px" : "0px";
-          body.style.paddingBottom = fromHeight > 0 ? "20px" : "0px";
-          body.style.opacity       = fromHeight > 0 ? "1"    : "0";
-
-          runningAnim = body.animate(
-            [
-              {
-                maxHeight:     fromHeight + "px",
-                paddingTop:    fromHeight > 0 ? "20px" : "0px",
-                paddingBottom: fromHeight > 0 ? "20px" : "0px",
-                opacity:       fromHeight > 0 ? "1"    : "0"
-              },
-              {
-                maxHeight:     toHeight + "px",
-                paddingTop:    "20px",
-                paddingBottom: "20px",
-                opacity:       "1"
-              }
-            ],
-            { duration: DURATION, easing: OPEN_CURVE, fill: "forwards" }
-          );
-
-          runningAnim.onfinish = () => {
-            const anim = runningAnim;
-            runningAnim = null;
-            anim.cancel();          // fill: forwards entfernen, CSS übernimmt
-            body.style.cssText = "";
-          };
-        }
+        row.classList.toggle("expanded");
+        const toggle = row.querySelector(".service-toggle");
+        if (toggle) toggle.textContent = row.classList.contains("expanded") ? "−" : "+";
       });
     });
   }
@@ -715,27 +462,28 @@ async function init() {
   }
 
   function changeSlide(direction) {
-    abortPeek();
-    if (currentPage !== "home" || (!hasSeenBanner && banner) || isMenuOpen || homeSlides.length <= 1) return;
-
-    if (isAnimating) {
-      // Queue: nächste Richtung merken, wird am Ende der Animation ausgeführt
-      queuedSlideDir = direction;
+    abortPeek(); // cancel any running peek hint immediately
+    if (
+      currentPage !== "home" ||
+      isAnimating ||
+      (!hasSeenBanner && banner) ||
+      isMenuOpen ||
+      homeSlides.length <= 1
+    )
       return;
-    }
-    queuedSlideDir = null;
 
-    const prevIndex = currentIndex;
-    // currentIndex sofort updaten — rapid swipes berechnen so immer korrekt
+    let nextIndex;
     if (direction === "next") {
-      currentIndex = (currentIndex + 1) % homeSlides.length;
+      nextIndex = currentIndex + 1;
+      if (nextIndex >= homeSlides.length) nextIndex = 0;
     } else {
-      currentIndex = (currentIndex - 1 + homeSlides.length) % homeSlides.length;
+      nextIndex = currentIndex - 1;
+      if (nextIndex < 0) nextIndex = homeSlides.length - 1;
     }
 
-    tLock.acquire(700); // exakt --anim-speed, Cleanup und Lock released gleichzeitig
-    const currentSlide = homeSlides[prevIndex];
-    const nextSlide    = homeSlides[currentIndex];
+    tLock.acquire(950);
+    const currentSlide = homeSlides[currentIndex],
+      nextSlide = homeSlides[nextIndex];
 
     if (direction === "next") {
       currentSlide.style.transformOrigin = "top center";
@@ -754,13 +502,8 @@ async function init() {
     updateFooter(nextSlide);
     setTimeout(() => {
       currentSlide.classList.remove("exit");
-      // Wenn der User während der Animation geswiped hat → sofort ausführen
-      if (queuedSlideDir) {
-        const dir = queuedSlideDir;
-        queuedSlideDir = null;
-        requestAnimationFrame(() => changeSlide(dir));
-      }
-    }, 700); // exakt am Animationsende (--anim-speed: 0.7s)
+      currentIndex = nextIndex;
+    }, 800);
   }
 
   function updateFooter(slide) {
@@ -781,92 +524,6 @@ async function init() {
     // Title is only interactive when a case page exists
     footerTitle.style.cursor        = hasCase ? "pointer" : "default";
     footerTitle.style.pointerEvents = hasCase ? "auto"    : "none";
-    // Textfarbe dynamisch setzen basierend auf Slide-Helligkeit
-    updateUIColorForSlide(slide);
-  }
-
-  // ── UI Color System ─────────────────────────────────────────────
-  // Steuert --ui-color (Header + Home-Footer) für alle Browser.
-  // Aufgerufen bei: Slide-Wechsel, Seiten-Wechsel, Menu öffnen/schließen.
-
-  function setUIColor(color) {
-    // Setzt Textfarbe in Header und Footer basierend auf Bild-Helligkeit
-    document.querySelectorAll(
-      'header .type-ui-text, #project-footer .type-ui-text'
-    ).forEach(el => { el.style.color = color; });
-  }
-
-  function getSlideTheme(slide) {
-    // Portrait- und Row-Slides haben immer weißen Hintergrund
-    if (slide.classList.contains('is-portrait') || slide.classList.contains('is-row')) {
-      return 'light';
-    }
-
-    // Vollbild-Slides: die 4 Ecken des Bildes samplen.
-    // Genau dort wo Header (oben) und Footer (unten) sitzen.
-    const img = slide.querySelector('img');
-    if (img && img.complete && img.naturalWidth > 0) {
-      try {
-        const w = img.naturalWidth;
-        const h = img.naturalHeight;
-        // Patch-Größe: ca. 8% der kleinsten Bildseite, min 30px max 80px
-        const p = Math.max(30, Math.min(80, Math.floor(Math.min(w, h) * 0.08)));
-
-        const canvas = document.createElement('canvas');
-        canvas.width  = p * 2;
-        canvas.height = p * 2;
-        const ctx = canvas.getContext('2d');
-
-        // Oben-links, oben-rechts, unten-links, unten-rechts
-        ctx.drawImage(img,   0,     0,     p, p,  0, 0, p, p);
-        ctx.drawImage(img, w-p,     0,     p, p,  p, 0, p, p);
-        ctx.drawImage(img,   0,   h-p,     p, p,  0, p, p, p);
-        ctx.drawImage(img, w-p,   h-p,     p, p,  p, p, p, p);
-
-        const data = ctx.getImageData(0, 0, p * 2, p * 2).data;
-        let lum = 0;
-        for (let i = 0; i < data.length; i += 4) {
-          lum += (0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2]) / 255;
-        }
-        return (lum / (data.length / 4)) > 0.5 ? 'light' : 'dark';
-      } catch (e) {
-        // CORS oder anderer Fehler — sicherer Fallback
-      }
-    }
-
-    // Video oder Bild noch nicht geladen: Vollbild = dunkel (sicherer Default)
-    return 'dark';
-  }
-
-  function updateUIColorForSlide(slide) {
-    if (!slide) return;
-    const theme = getSlideTheme(slide);
-    setUIColor(theme === 'light' ? '#000000' : '#ffffff');
-
-    // Falls Bild noch lädt: nochmals prüfen sobald es fertig ist
-    if (theme === 'dark') {
-      const img = slide.querySelector('img');
-      if (img && !img.complete) {
-        img.addEventListener('load', () => {
-          // Nur updaten wenn dieser Slide noch aktiv ist
-          if (homeSlides[currentIndex] === slide) {
-            setUIColor(getSlideTheme(slide) === 'light' ? '#000000' : '#ffffff');
-          }
-        }, { once: true });
-      }
-    }
-  }
-
-  function updateUIColorForPage(page) {
-    if (page === 'home') {
-      updateUIColorForSlide(homeSlides[currentIndex]);
-    } else if (page === 'case') {
-      // Case-Seite: Hero-Farbe messen (Scroll ist 0 beim Navigieren)
-      updateUiColorForCaseHero();
-    } else {
-      // Alle anderen Seiten haben weißen Hintergrund
-      setUIColor('#000000');
-    }
   }
 
   window.addEventListener("touchstart", (e) => {
@@ -875,6 +532,7 @@ async function init() {
   }, { passive: true });
 
   window.addEventListener("touchend", (e) => {
+    if (isAnimating) return;
     const touchEndX = e.changedTouches[0].clientX;
     const touchEndY = e.changedTouches[0].clientY;
     const diffX = Math.abs(touchStartX - touchEndX);
@@ -899,9 +557,8 @@ async function init() {
   let mouseDragging   = false;
 
   window.addEventListener("mousedown", (e) => {
-    if (currentPage !== "home" || isMenuOpen) return;
+    if (currentPage !== "home" || isMenuOpen || isAnimating) return;
     if (e.button !== 0) return;
-    e.preventDefault(); // Verhindert Text/Bild-Selektion beim Drag
     mouseDragStartY = e.clientY;
     mouseDragging   = false;
   });
@@ -923,7 +580,7 @@ async function init() {
     if (!mouseDragging) return;
     mouseDragging = false;
 
-    if (currentPage !== "home" || isMenuOpen) return;
+    if (currentPage !== "home" || isMenuOpen || isAnimating) return;
     if (Math.abs(diffY) > 20) {
       if (diffY > 0) changeSlide("next");
       else changeSlide("prev");
@@ -939,7 +596,8 @@ async function init() {
 
   window.addEventListener("wheel", (e) => {
     const now = Date.now();
-    if (now - lastWheelTime < 600) return;
+    if (isAnimating) return;
+    if (now - lastWheelTime < 950) return;
     if (isMenuOpen) {
       if (Math.abs(e.deltaY) > 50) {
         lastWheelTime = now;
@@ -1027,9 +685,6 @@ async function init() {
     }
 
     if (currentPage !== "case") navigateTo("case", "next");
-    // Cache invalidieren + Farbe des neuen Heroes setzen
-    invalidateCaseCache();
-    updateUiColorForCaseHero();
   }
 
   // Transitions between case pages.
@@ -1066,9 +721,6 @@ async function init() {
     casePage.style.transformOrigin = "bottom center";
     casePage.classList.remove("hidden");
     casePage.classList.add("visible");
-    // Cache invalidieren + Farbe des neuen Heroes setzen
-    invalidateCaseCache();
-    updateUiColorForCaseHero();
 
     await openCaseInPlace(slot, caseProjects);
   }
@@ -1088,47 +740,43 @@ async function init() {
   }
 } // end init()
 
-/* Project + Manifest loader — 1 einziger Request für alle Daten */
+/* Project loader — lädt alles in einem Request via projects-data.json */
 let _projectsData = null;
 
-async function loadProjectsData() {
-  if (_projectsData) return _projectsData;
+async function loadEnabledProjects() {
+  // Versuche zuerst projects-data.json (1 Request für alles)
   try {
     const res = await fetch("projects-data.json", { cache: "default" });
-    if (res.ok) { _projectsData = await res.json(); return _projectsData; }
+    if (res.ok) {
+      _projectsData = await res.json();
+      return _projectsData;
+    }
   } catch {}
-  return null;
-}
 
-async function loadEnabledProjects() {
-  const data = await loadProjectsData();
-  if (data) return data;
-  const slots = ["01","02","03","04","05","06","07","08"];
+  // Fallback: einzelne project.json Dateien
+  const slots = ["01", "02", "03", "04", "05", "06", "07", "08"];
   const results = await Promise.all(slots.map(async slot => {
     try {
       const res = await fetch(`projects/${slot}/project.json`, { cache: "default" });
       if (!res.ok) return null;
-      const d = await res.json();
-      if (!d || !d.enabled) return null;
-      return { slot, title: (d.title || `Project ${slot}`).trim(),
-               title_de: d.title_de ? d.title_de.trim() : null,
-               slug: (d.slug || `project-${slot}`).trim(), manifest: null };
+      const data = await res.json();
+      if (!data || !data.enabled) return null;
+      return {
+        slot,
+        title: (data.title || `Project ${slot}`).trim(),
+        title_de: data.title_de ? data.title_de.trim() : null,
+        slug: (data.slug || `project-${slot}`).trim(),
+        manifest: null,
+      };
     } catch { return null; }
   }));
   return results.filter(Boolean);
 }
 
-async function loadManifest(slot) {
-  const data = await loadProjectsData();
-  if (data) {
-    const project = data.find(p => p.slot === slot);
-    return project ? project.manifest : null;
-  }
-  try {
-    const res = await fetch(`projects/${slot}/manifest.json`, { cache: "default" });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch { return null; }
+function getManifest(slot) {
+  if (!_projectsData) return null;
+  const p = _projectsData.find(p => p.slot === slot);
+  return p ? p.manifest : null;
 }
 
 /* Home render */
@@ -1138,15 +786,13 @@ async function renderHomeSlides(pageHome, projects) {
   pageHome.querySelectorAll(".slide-section").forEach((el) => el.remove());
 
   const slidesToRender = [];
-  const manifests = await Promise.all(projects.map(p => loadManifest(p.slot)));
-
-  for (let pi = 0; pi < projects.length; pi++) {
-    const project  = projects[pi];
-    const manifest = manifests[pi];
+  for (const project of projects) {
     const homeBase = `projects/${project.slot}/home/`;
     const caseBase = `projects/${project.slot}/case/`;
+    const manifest = getManifest(project.slot);
 
     if (manifest) {
+      // Manifest vorhanden: kein HEAD-Request nötig
       const hasCase = !!(manifest.case && (manifest.case.hasIntro || manifest.case.hero));
       for (const item of (manifest.home || [])) {
         let block;
@@ -1164,6 +810,7 @@ async function renderHomeSlides(pageHome, projects) {
         slidesToRender.push({ title: project.title, link: `#case=${project.slot}`, hasCase, block });
       }
     } else {
+      // Fallback: HEAD-Requests
       const hasCase = await urlExists(`${caseBase}intro.txt`);
       for (let i = 1; i <= 99; i++) {
         const block = await findNumberedBlock(homeBase, i, { allowText: false });
@@ -1298,19 +945,8 @@ async function renderHomeSlides(pageHome, projects) {
  * the existing language swap system handles switching instantly.
  * Images are language-neutral and rendered once.
  */
-// Render Lock
-let _renderLock = false;
-let _pendingRender = null;
-
 async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
   if (!titleEl || !contentEl) return;
-  if (_renderLock) {
-    _pendingRender = { slot, projects, titleEl, contentEl, caseFooterLeft };
-    return;
-  }
-  _renderLock = true;
-
-  try {
 
   const project = projects.find((p) => p.slot === slot);
   const base    = `projects/${slot}/case/`;
@@ -1347,13 +983,8 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
   wrapper.querySelectorAll(".case-top,.case-intro,.case-category,.case-ending").forEach((n) => n.remove());
   if (header.parentElement !== wrapper) wrapper.insertBefore(header, wrapper.firstChild);
 
-  // ── Manifest ──
-  const manifest = await loadManifest(slot);
-
   // ── Hero (language-neutral) ──
-  const heroMedia = manifest && manifest.case && manifest.case.hero
-    ? { kind: /\.(mp4|webm)$/i.test(manifest.case.hero) ? "video" : "image", src: `${base}${manifest.case.hero}` }
-    : await findMediaByStem(base, "hero");
+  const heroMedia = await findMediaByStem(base, "hero");
   let topEl = null;
   if (heroMedia) {
     topEl = document.createElement("div");
@@ -1367,9 +998,7 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
   }
 
   // ── Intro text ──
-  const intro = manifest && manifest.case
-    ? (manifest.case.hasIntro ? await loadBoth("intro.txt") : { en: "", de: "" })
-    : await loadBoth("intro.txt");
+  const intro = await loadBoth("intro.txt");
   let introDiv = null;
   if (intro.en) {
     introDiv = document.createElement("div");
@@ -1383,9 +1012,7 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
   }
 
   // ── Category label ──
-  const category = manifest && manifest.case
-    ? (manifest.case.hasCategory ? await loadBoth("category.txt") : { en: "", de: "" })
-    : await loadBoth("category.txt");
+  const category = await loadBoth("category.txt");
   if (category.en) {
     const cat = document.createElement("div");
     cat.className = "case-category type-contact-item";
@@ -1397,12 +1024,9 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
 
   // ── Numbered content blocks ──
   let foundAny = false;
-  const caseBlocks = manifest && manifest.case && manifest.case.blocks
-    ? manifest.case.blocks
-    : await buildBlockListFromNetwork(base);
-
-  for (const block of caseBlocks) {
-    if (!block) continue;
+  for (let i = 1; i <= 199; i++) {
+    const block = await findNumberedBlock(base, i);
+    if (!block) break;
     foundAny = true;
 
     const blockEl = document.createElement("div");
@@ -1412,7 +1036,7 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
 
     if (block.type === "text") {
       // Load both language versions of the text block
-      const num  = block.num || pad2(caseBlocks.indexOf(block) + 1);
+      const num  = pad2(i);
       const texts = await loadBoth(`${num}.txt`);
       blockEl.classList.add("is-text");
       const textEl = document.createElement("div");
@@ -1428,12 +1052,9 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
       const row = document.createElement("div");
       row.className = block.items.length >= 3 ? "media-row row-scroll" : "media-row row-fit";
       block.items.forEach((media) => {
-        const mediaObj = typeof media === "string"
-          ? { kind: /\.(mp4|webm)$/i.test(media) ? "video" : "image", src: `${base}${media}` }
-          : media;
         const itemWrap = document.createElement("div");
         itemWrap.className = "media-item";
-        itemWrap.appendChild(createMediaElement(mediaObj, { context: "case" }));
+        itemWrap.appendChild(createMediaElement(media, { context: "case" }));
         row.appendChild(itemWrap);
       });
       inner.appendChild(row);
@@ -1445,22 +1066,15 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
     inner.classList.add("single");
     const singleWrap = document.createElement("div");
     singleWrap.className = "case-media-single";
-    const singleMedia = block.item || (block.src
-      ? { kind: /\.(mp4|webm)$/i.test(block.src) ? "video" : "image", src: `${base}${block.src}` }
-      : null);
-    singleWrap.appendChild(createMediaElement(singleMedia, { context: "case" }));
+    singleWrap.appendChild(createMediaElement(block.item, { context: "case" }));
     inner.appendChild(singleWrap);
     blockEl.appendChild(inner);
     contentEl.appendChild(blockEl);
   }
 
   // ── Outro + credits ──
-  const outro  = manifest && manifest.case
-    ? (manifest.case.hasOutro  ? await loadBoth("outro.txt")  : { en: "", de: "" })
-    : await loadBoth("outro.txt");
-  const credit = manifest && manifest.case
-    ? (manifest.case.hasCredit ? await loadBoth("credit.txt") : { en: "", de: "" })
-    : await loadBoth("credit.txt");
+  const outro  = await loadBoth("outro.txt");
+  const credit = await loadBoth("credit.txt");
   if (outro.en || credit.en) {
     const ending = document.createElement("div");
     ending.className = "case-ending";
@@ -1498,16 +1112,6 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
     msgBlock.appendChild(inner);
     contentEl.appendChild(msgBlock);
   }
-
-  } finally {
-    _renderLock = false;
-  }
-
-  if (_pendingRender) {
-    const next = _pendingRender;
-    _pendingRender = null;
-    await renderCase(next.slot, next.projects, next.titleEl, next.contentEl, next.caseFooterLeft);
-  }
 }
 
 async function loadTextFile(base, filename) {
@@ -1518,16 +1122,6 @@ async function loadTextFile(base, filename) {
     if (!res.ok) return "";
     return ((await res.text()) || "").trim();
   } catch { return ""; }
-}
-
-async function buildBlockListFromNetwork(base) {
-  const blocks = [];
-  for (let i = 1; i <= 199; i++) {
-    const block = await findNumberedBlock(base, i);
-    if (!block) break;
-    blocks.push(block);
-  }
-  return blocks;
 }
 
 async function findNumberedBlock(base, n) {
@@ -1552,14 +1146,9 @@ async function findNumberedBlock(base, n) {
 }
 
 async function findMediaByStem(base, stem) {
-  const imageExts = ["jpg", "jpeg", "png", "webp"];
-  const imageExtsArr = imageExts;
-
-  // Safari kann kein WebM — MP4 zuerst für Safari, WebM zuerst für andere
-  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-  const videoExts = isSafari ? ["mp4", "webm"] : ["webm", "mp4"];
-
-  for (const ext of imageExtsArr) {
+  const imageExts = ["webp", "jpg", "jpeg", "png"];
+  const videoExts = ["webm", "mp4"];
+  for (const ext of imageExts) {
     const url = `${base}${stem}.${ext}`;
     if (await urlExists(url)) return { kind: "image", src: url };
   }
@@ -1570,64 +1159,22 @@ async function findMediaByStem(base, stem) {
   return null;
 }
 
-// ── Safari: Einfacher rAF-Loop für Case/Hero-Videos ─────────────────
-// Kein Double-Buffer (kein DOM-Eingriff) — nur nahtloses Loopen
-// mit Auto-Resume falls Safari das Video extern pausiert.
-function setupSafariSimpleLoop(v) {
-  let seeking = false;
-
-  function tick() {
-    if (v.duration && !isNaN(v.duration) && isFinite(v.duration)) {
-      // Auto-resume bei externer Pause (Low Power Mode, Background-Tab)
-      if (v.paused && !seeking && document.visibilityState !== "hidden") {
-        v.play().catch(() => {});
-      }
-
-      if (!v.paused && !seeking && v.currentTime >= v.duration - 0.15) {
-        seeking = true;
-        v.currentTime = 0;
-        v.play().catch(() => {});
-        v.addEventListener("seeked", () => { seeking = false; }, { once: true });
-      }
-    }
-    requestAnimationFrame(tick);
-  }
-
-  // Ended-Fallback
-  v.addEventListener("ended", () => {
-    seeking = false;
-    v.currentTime = 0;
-    v.play().catch(() => {});
-  });
-
-  // rAF starten sobald Metadaten geladen
-  if (v.readyState >= 1) {
-    requestAnimationFrame(tick);
-  } else {
-    v.addEventListener("loadedmetadata", () => requestAnimationFrame(tick), { once: true });
-  }
-}
-
-// ── Safari: Simple loop for case/hero videos ─────────────────────
 function setupSafariSimpleLoop(v) {
   let seeking = false;
   function tick() {
     if (v.duration && !isNaN(v.duration) && isFinite(v.duration)) {
-      if (v.paused && !seeking && document.visibilityState !== "hidden") {
-        v.play().catch(() => {});
-      }
+      if (v.paused && !seeking && document.visibilityState !== "hidden") v.play().catch(() => {});
       if (!v.paused && !seeking && v.currentTime >= v.duration - 0.15) {
         seeking = true;
-        v.currentTime = 0;
-        v.play().catch(() => {});
+        v.currentTime = 0; v.play().catch(() => {});
         v.addEventListener("seeked", () => { seeking = false; }, { once: true });
       }
     }
     requestAnimationFrame(tick);
   }
   v.addEventListener("ended", () => { seeking = false; v.currentTime = 0; v.play().catch(() => {}); });
-  if (v.readyState >= 1) { requestAnimationFrame(tick); }
-  else { v.addEventListener("loadedmetadata", () => requestAnimationFrame(tick), { once: true }); }
+  if (v.readyState >= 1) requestAnimationFrame(tick);
+  else v.addEventListener("loadedmetadata", () => requestAnimationFrame(tick), { once: true });
 }
 
 function createMediaElement(media, { context }) {
@@ -1645,90 +1192,49 @@ function createMediaElement(media, { context }) {
 
     v.src = media.src;
 
-    // ── Safari Video Loop ──────────────────────────────────────────
-    // Safari unterstützt kein nahtloses natives loop.
-    // Home-Slides: Double-Buffer (zwei Videos wechseln sich ab, kein Frame-Gap)
-    // Case/Hero:   Simpler rAF-Loop mit Auto-Resume bei externer Pause
+    // Safari: natives loop hat Frame-Gap — eigene Loop-Logik nötig
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
     if (isSafari) {
       v.loop = false;
-
       if (context === "home") {
-        // ── Double-Buffer: nur für Home-Slides ─────────────────────
+        // Double-Buffer für Home-Slides: kein Frame-Gap beim Loop
         v.addEventListener("loadedmetadata", function setupLoop() {
           v.removeEventListener("loadedmetadata", setupLoop);
           const parent = v.parentNode;
           if (!parent) { setupSafariSimpleLoop(v); return; }
-
           const vB = document.createElement("video");
-          vB.src = v.src;
-          vB.muted = true; vB.playsInline = true; vB.preload = "none";
+          vB.src = v.src; vB.muted = true; vB.playsInline = true; vB.preload = "none";
           vB.setAttribute("playsinline", ""); vB.setAttribute("muted", "");
           vB.dataset.loopStandby = "";
           vB.style.cssText = "position:absolute;inset:0;width:100%;height:100%;opacity:0;pointer-events:none;";
-
           if (getComputedStyle(parent).position === "static") parent.style.position = "relative";
           parent.appendChild(vB);
-
-          const PREP = 0.4;  // Standby 400ms vor Ende starten
-          const SWAP = 0.06; // Überblenden bei 60ms vor Ende
-          let vids = [v, vB]; // [aktiv, standby] — wird bei jedem Loop getauscht
-          let inSwap = false;
-          let prepped = false;
-
+          const PREP = 0.4, SWAP = 0.06;
+          let vids = [v, vB], inSwap = false, prepped = false;
           function tick() {
             const [curr, next] = vids;
-
             if (!inSwap && curr.duration && !isNaN(curr.duration) && isFinite(curr.duration)) {
-              // Auto-resume falls Safari das aktive Video extern pausiert hat
-              if (curr.paused && !inSwap && document.visibilityState !== "hidden") {
-                curr.play().catch(() => {});
-              }
-
+              if (curr.paused && document.visibilityState !== "hidden") curr.play().catch(() => {});
               const rem = curr.duration - curr.currentTime;
-
               if (rem <= PREP && !prepped && !curr.paused) {
-                prepped = true;
-                next.currentTime = 0;
-                next.play().catch(() => {});
+                prepped = true; next.currentTime = 0; next.play().catch(() => {});
               }
-
-              if (rem <= SWAP && !inSwap && !curr.paused) {
+              if (rem <= SWAP && !curr.paused) {
                 inSwap = true;
-                const finishing = curr;  // explizite Referenz vor dem Swap
-                curr.style.opacity  = "0";
-                next.style.opacity  = "1";
-                vids = [next, finishing]; // Rollen korrekt tauschen
-
-                setTimeout(() => {
-                  finishing.pause();
-                  finishing.currentTime = 0;
-                  prepped = false;
-                  inSwap = false;
-                }, 300);
+                const done = curr;
+                curr.style.opacity = "0"; next.style.opacity = "1";
+                vids = [next, done];
+                setTimeout(() => { done.pause(); done.currentTime = 0; prepped = false; inSwap = false; }, 300);
               }
             }
-
-            requestAnimationFrame(tick); // läuft immer — kein Start/Stop-Chaos
+            requestAnimationFrame(tick);
           }
-
-          // Ended-Fallback auf BEIDEN Videos
-          [v, vB].forEach(vid => {
-            vid.addEventListener("ended", () => {
-              vid.currentTime = 0;
-              vid.play().catch(() => {});
-            });
-          });
-
-          // rAF sofort starten (v spielt bereits via autoplay)
+          [v, vB].forEach(vid => vid.addEventListener("ended", () => { vid.currentTime = 0; vid.play().catch(() => {}); }));
           requestAnimationFrame(tick);
         });
-
       } else {
-        // ── Einfacher robuster Loop: Case-Page und Hero ─────────────
         setupSafariSimpleLoop(v);
       }
-
     } else {
       v.loop = true;
     }
@@ -1804,16 +1310,6 @@ const _urlCache = new Map();
 
 async function urlExists(url) {
   if (_urlCache.has(url)) return _urlCache.get(url);
-  if (_urlCache.has(url + "__pending")) {
-    return new Promise(resolve => {
-      const check = () => {
-        if (_urlCache.has(url)) { resolve(_urlCache.get(url)); return; }
-        setTimeout(check, 20);
-      };
-      check();
-    });
-  }
-  _urlCache.set(url + "__pending", true);
   let result = false;
   try {
     const head = await fetch(url, { method: "HEAD", cache: "default" });
@@ -1831,7 +1327,6 @@ async function urlExists(url) {
       if (get.body) get.body.cancel();
     } catch { result = false; }
   }
-  _urlCache.delete(url + "__pending");
   _urlCache.set(url, result);
   return result;
 }
@@ -1908,7 +1403,7 @@ function applyTypewriterEffect(elements) {
     // Per-character spans on justified text create huge gaps because the browser
     // distributes justification spacing between individual letter spans.
     // Word spans preserve correct justification while keeping the cascading feel.
-    if (el.matches("p.type-contact-item, .case-text, .case-intro-text, .case-outro")) {
+    if (el.matches("p.type-contact-item, p.case-text, p.case-intro-text, p.case-outro")) {
       const wordDelay = 18; // ms per word — feels alive without being slow
 
       function revealWords(node, wordIndex) {
