@@ -174,7 +174,6 @@ async function init() {
       menuOverlay.classList.add("open");
       if (menuTimeout) clearTimeout(menuTimeout);
       fadeMenuText((window.getCurrentLang && window.getCurrentLang() === "de") ? "Schließen" : "Close");
-      if (menuBtn) menuBtn.setAttribute("aria-expanded", "true");
       if (window.setLangToggleVisible) window.setLangToggleVisible("menu");
       // Menu offen → Header immer sichtbar
       showHeader();
@@ -191,7 +190,6 @@ async function init() {
       if (!skipFadeToMenu) {
         fadeMenuText((window.getCurrentLang && window.getCurrentLang() === "de") ? "Menü" : "Menu");
       }
-      if (menuBtn) menuBtn.setAttribute("aria-expanded", "false");
       if (window.setLangToggleVisible) window.setLangToggleVisible(currentPage);
       // Farbe für aktuelle Seite wiederherstellen
       updateUIColorForPage(currentPage);
@@ -797,8 +795,7 @@ async function init() {
       'header .type-ui-text, #project-footer .type-ui-text'
     ).forEach(el => { el.style.color = color; });
 
-    // Safari theme-color dynamisch anpassen:
-    // dunkles Bild → schwarze Browser-UI, helles Bild → weiße Browser-UI
+    // Safari theme-color dynamisch: dunkles Bild → schwarze UI, helles Bild → weiße UI
     const themeColor = color === '#ffffff' ? '#000000' : '#ffffff';
     let meta = document.querySelector('meta[name="theme-color"]');
     if (!meta) {
@@ -1101,54 +1098,28 @@ async function init() {
   }
 } // end init()
 
-/* Project + Manifest loader — 1 einziger Request für alle Daten */
-let _projectsData = null;
-
-async function loadProjectsData() {
-  if (_projectsData) return _projectsData;
-  try {
-    const res = await fetch("projects-data.json", { cache: "default" });
-    if (res.ok) {
-      _projectsData = await res.json();
-      return _projectsData;
-    }
-  } catch {}
-  return null;
-}
-
+/* Project loader */
 async function loadEnabledProjects() {
-  const data = await loadProjectsData();
-  if (data) return data; // projects-data.json vorhanden — fertig
-
-  // Fallback: einzelne project.json Dateien laden (langsam)
-  const slots = ["01","02","03","04","05","06","07","08"];
-  const results = await Promise.all(slots.map(async slot => {
+  const slots = ["01", "02", "03", "04", "05", "06", "07", "08"],
+    enabled = [];
+  for (const slot of slots) {
+    const url = `projects/${slot}/project.json`;
     try {
-      const res = await fetch(`projects/${slot}/project.json`, { cache: "default" });
-      if (!res.ok) return null;
-      const d = await res.json();
-      if (!d || !d.enabled) return null;
-      return { slot, title: (d.title || `Project ${slot}`).trim(),
-               title_de: d.title_de ? d.title_de.trim() : null,
-               slug: (d.slug || `project-${slot}`).trim(), manifest: null };
-    } catch { return null; }
-  }));
-  return results.filter(Boolean);
-}
-
-async function loadManifest(slot) {
-  // Erst aus gecachten projects-data.json lesen
-  const data = await loadProjectsData();
-  if (data) {
-    const project = data.find(p => p.slot === slot);
-    return project ? project.manifest : null;
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (!data || !data.enabled) continue;
+      enabled.push({
+        slot,
+        title: (data.title || `Project ${slot}`).trim(),
+        title_de: data.title_de ? data.title_de.trim() : null,
+        slug: (data.slug || `project-${slot}`).trim(),
+      });
+    } catch (e) {
+      console.warn(`Skipping slot ${slot}:`, e);
+    }
   }
-  // Fallback: einzelne manifest.json
-  try {
-    const res = await fetch(`projects/${slot}/manifest.json`, { cache: "default" });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch { return null; }
+  return enabled;
 }
 
 /* Home render */
@@ -1158,44 +1129,20 @@ async function renderHomeSlides(pageHome, projects) {
   pageHome.querySelectorAll(".slide-section").forEach((el) => el.remove());
 
   const slidesToRender = [];
-
-  // Alle Manifests parallel laden — 1 fetch pro Projekt
-  const manifests = await Promise.all(projects.map(p => loadManifest(p.slot)));
-
-  for (let pi = 0; pi < projects.length; pi++) {
-    const project  = projects[pi];
-    const manifest = manifests[pi];
+  for (const project of projects) {
     const homeBase = `projects/${project.slot}/home/`;
     const caseBase = `projects/${project.slot}/case/`;
-
-    if (manifest) {
-      // ── Manifest vorhanden: kein einziger HEAD-Request nötig ──
-      const hasCase = !!(manifest.case && (manifest.case.hasIntro || manifest.case.hero));
-      for (const item of (manifest.home || [])) {
-        let block;
-        if (item.type === "row") {
-          block = { type: "row", items: (item.items || []).map(f => ({
-            kind: /\.(mp4|webm)$/i.test(f) ? "video" : "image",
-            src: `${homeBase}${f}`
-          }))};
-        } else if (item.type === "single" && item.src) {
-          block = { type: "single", item: {
-            kind: /\.(mp4|webm)$/i.test(item.src) ? "video" : "image",
-            src: `${homeBase}${item.src}`
-          }};
-        } else {
-          continue; // unbekanntes Format überspringen
-        }
-        slidesToRender.push({ title: project.title, link: `#case=${project.slot}`, hasCase, block });
-      }
-    } else {
-      // ── Kein Manifest: Fallback auf HEAD-Requests ──────────────
-      const hasCase = await urlExists(`${caseBase}intro.txt`);
-      for (let i = 1; i <= 99; i++) {
-        const block = await findNumberedBlock(homeBase, i, { allowText: false });
-        if (!block) break;
-        slidesToRender.push({ title: project.title, link: `#case=${project.slot}`, hasCase, block });
-      }
+    // intro.txt is the canonical signal — every case study has one
+    const hasCase = await urlExists(`${caseBase}intro.txt`);
+    for (let i = 1; i <= 99; i++) {
+      const block = await findNumberedBlock(homeBase, i, { allowText: false });
+      if (!block) break;
+      slidesToRender.push({
+        title: project.title,
+        link: `#case=${project.slot}`,
+        hasCase,
+        block,
+      });
     }
   }
 
@@ -1324,19 +1271,8 @@ async function renderHomeSlides(pageHome, projects) {
  * the existing language swap system handles switching instantly.
  * Images are language-neutral and rendered once.
  */
-// Render Lock — verhindert dass renderCase gleichzeitig zweimal läuft
-let _renderLock = false;
-let _pendingRender = null;
-
 async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
   if (!titleEl || !contentEl) return;
-
-  // Falls gerade ein Render läuft: diesen als "als nächstes" merken
-  if (_renderLock) {
-    _pendingRender = { slot, projects, titleEl, contentEl, caseFooterLeft };
-    return;
-  }
-  _renderLock = true;
 
   const project = projects.find((p) => p.slot === slot);
   const base    = `projects/${slot}/case/`;
@@ -1373,13 +1309,8 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
   wrapper.querySelectorAll(".case-top,.case-intro,.case-category,.case-ending").forEach((n) => n.remove());
   if (header.parentElement !== wrapper) wrapper.insertBefore(header, wrapper.firstChild);
 
-  // ── Manifest laden falls vorhanden ──
-  const manifest = await loadManifest(slot);
-
   // ── Hero (language-neutral) ──
-  const heroMedia = manifest && manifest.case && manifest.case.hero
-    ? { kind: manifest.case.hero.match(/\.(mp4|webm)$/i) ? "video" : "image", src: `${base}${manifest.case.hero}` }
-    : await findMediaByStem(base, "hero");
+  const heroMedia = await findMediaByStem(base, "hero");
   let topEl = null;
   if (heroMedia) {
     topEl = document.createElement("div");
@@ -1393,9 +1324,7 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
   }
 
   // ── Intro text ──
-  const intro = manifest && manifest.case
-    ? (manifest.case.hasIntro ? await loadBoth("intro.txt") : { en: "", de: "" })
-    : await loadBoth("intro.txt");
+  const intro = await loadBoth("intro.txt");
   let introDiv = null;
   if (intro.en) {
     introDiv = document.createElement("div");
@@ -1409,9 +1338,7 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
   }
 
   // ── Category label ──
-  const category = manifest && manifest.case
-    ? (manifest.case.hasCategory ? await loadBoth("category.txt") : { en: "", de: "" })
-    : await loadBoth("category.txt");
+  const category = await loadBoth("category.txt");
   if (category.en) {
     const cat = document.createElement("div");
     cat.className = "case-category type-contact-item";
@@ -1423,12 +1350,9 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
 
   // ── Numbered content blocks ──
   let foundAny = false;
-  const caseBlocks = manifest && manifest.case && manifest.case.blocks
-    ? manifest.case.blocks  // Manifest: direkt verwenden
-    : await buildBlockListFromNetwork(base); // Fallback: HEAD-Requests
-
-  for (const block of caseBlocks) {
-    if (!block) continue;
+  for (let i = 1; i <= 199; i++) {
+    const block = await findNumberedBlock(base, i);
+    if (!block) break;
     foundAny = true;
 
     const blockEl = document.createElement("div");
@@ -1438,7 +1362,7 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
 
     if (block.type === "text") {
       // Load both language versions of the text block
-      const num  = block.num || pad2(block.index || caseBlocks.indexOf(block) + 1);
+      const num  = pad2(i);
       const texts = await loadBoth(`${num}.txt`);
       blockEl.classList.add("is-text");
       const textEl = document.createElement("div");
@@ -1454,13 +1378,9 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
       const row = document.createElement("div");
       row.className = block.items.length >= 3 ? "media-row row-scroll" : "media-row row-fit";
       block.items.forEach((media) => {
-        // Manifest: items sind Strings; Network: items sind {kind, src} Objekte
-        const mediaObj = typeof media === "string"
-          ? { kind: media.match(/\.(mp4|webm)$/i) ? "video" : "image", src: `${base}${media}` }
-          : media;
         const itemWrap = document.createElement("div");
         itemWrap.className = "media-item";
-        itemWrap.appendChild(createMediaElement(mediaObj, { context: "case" }));
+        itemWrap.appendChild(createMediaElement(media, { context: "case" }));
         row.appendChild(itemWrap);
       });
       inner.appendChild(row);
@@ -1472,23 +1392,15 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
     inner.classList.add("single");
     const singleWrap = document.createElement("div");
     singleWrap.className = "case-media-single";
-    // Manifest: block.src ist ein String; Network: block.item ist {kind, src}
-    const singleMedia = block.item || (block.src
-      ? { kind: block.src.match(/\.(mp4|webm)$/i) ? "video" : "image", src: `${base}${block.src}` }
-      : null);
-    singleWrap.appendChild(createMediaElement(singleMedia, { context: "case" }));
+    singleWrap.appendChild(createMediaElement(block.item, { context: "case" }));
     inner.appendChild(singleWrap);
     blockEl.appendChild(inner);
     contentEl.appendChild(blockEl);
   }
 
   // ── Outro + credits ──
-  const outro  = manifest && manifest.case
-    ? (manifest.case.hasOutro  ? await loadBoth("outro.txt")  : { en: "", de: "" })
-    : await loadBoth("outro.txt");
-  const credit = manifest && manifest.case
-    ? (manifest.case.hasCredit ? await loadBoth("credit.txt") : { en: "", de: "" })
-    : await loadBoth("credit.txt");
+  const outro  = await loadBoth("outro.txt");
+  const credit = await loadBoth("credit.txt");
   if (outro.en || credit.en) {
     const ending = document.createElement("div");
     ending.className = "case-ending";
@@ -1526,14 +1438,6 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
     msgBlock.appendChild(inner);
     contentEl.appendChild(msgBlock);
   }
-
-  // Lock freigeben + ggf. gepufferten Render ausführen
-  _renderLock = false;
-  if (_pendingRender) {
-    const next = _pendingRender;
-    _pendingRender = null;
-    await renderCase(next.slot, next.projects, next.titleEl, next.contentEl, next.caseFooterLeft);
-  }
 }
 
 async function loadTextFile(base, filename) {
@@ -1544,17 +1448,6 @@ async function loadTextFile(base, filename) {
     if (!res.ok) return "";
     return ((await res.text()) || "").trim();
   } catch { return ""; }
-}
-
-// Fallback: baut Blockliste via HEAD-Requests (langsam, nur ohne Manifest)
-async function buildBlockListFromNetwork(base) {
-  const blocks = [];
-  for (let i = 1; i <= 199; i++) {
-    const block = await findNumberedBlock(base, i);
-    if (!block) break;
-    blocks.push(block);
-  }
-  return blocks;
 }
 
 async function findNumberedBlock(base, n) {
@@ -1579,7 +1472,7 @@ async function findNumberedBlock(base, n) {
 }
 
 async function findMediaByStem(base, stem) {
-  const imageExts = ["webp", "jpg", "jpeg", "png"]; // WebP zuerst — kleinste Dateigröße
+  const imageExts = ["jpg", "jpeg", "png", "webp"];
   const imageExtsArr = imageExts;
 
   // Safari kann kein WebM — MP4 zuerst für Safari, WebM zuerst für andere
@@ -1805,47 +1698,16 @@ function getMediaDims(el) {
 
 function pad2(n) { return String(n).padStart(2, "0"); }
 
-// ── URL Existence Cache ──────────────────────────────────────────
-// Jede URL wird maximal einmal geprüft — Ergebnis wird gecacht.
-// Verhindert hunderte doppelte Requests beim Laden.
-const _urlCache = new Map();
-
 async function urlExists(url) {
-  if (_urlCache.has(url)) return _urlCache.get(url);
-
-  // Falls dieselbe URL gerade geprüft wird, warten statt doppelt zu fetchen
-  if (_urlCache.has(url + "__pending")) {
-    return new Promise(resolve => {
-      const check = () => {
-        if (_urlCache.has(url)) { resolve(_urlCache.get(url)); return; }
-        setTimeout(check, 20);
-      };
-      check();
-    });
-  }
-  _urlCache.set(url + "__pending", true);
-
-  let result = false;
   try {
-    const head = await fetch(url, { method: "HEAD", cache: "default" });
-    if (head.ok) {
-      const ct = head.headers.get("content-type") || "";
-      result = !ct.startsWith("text/html");
+    const head = await fetch(url, { method: "HEAD", cache: "no-store" });
+    if (head.ok) return true;
+    if (head.status === 405 || head.status === 403) {
+      const get = await fetch(url, { method: "GET", cache: "no-store", headers: { Range: "bytes=0-0" } });
+      if (get.ok) { if (get.body) get.body.cancel(); return true; }
     }
-  } catch {
-    try {
-      const get = await fetch(url, { method: "GET", cache: "default", headers: { Range: "bytes=0-0" } });
-      if (get.ok) {
-        const ct = get.headers.get("content-type") || "";
-        result = !ct.startsWith("text/html");
-      }
-      if (get.body) get.body.cancel();
-    } catch { result = false; }
-  }
-
-  _urlCache.delete(url + "__pending");
-  _urlCache.set(url, result);
-  return result;
+    return false;
+  } catch { return false; }
 }
 
 // ── Peek hint visibility ─────────────────────────────────────
