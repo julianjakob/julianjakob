@@ -796,6 +796,17 @@ async function init() {
     document.querySelectorAll(
       'header .type-ui-text, #project-footer .type-ui-text'
     ).forEach(el => { el.style.color = color; });
+
+    // Safari theme-color dynamisch anpassen:
+    // dunkles Bild → schwarze Browser-UI, helles Bild → weiße Browser-UI
+    const themeColor = color === '#ffffff' ? '#000000' : '#ffffff';
+    let meta = document.querySelector('meta[name="theme-color"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = 'theme-color';
+      document.head.appendChild(meta);
+    }
+    meta.setAttribute('content', themeColor);
   }
 
   function getSlideTheme(slide) {
