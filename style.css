@@ -38,7 +38,7 @@
   --page-speed: 0.85s;
   --page-curve: cubic-bezier(0.65, 0, 0.15, 1); /* asymmetrisch: schneller raus, gewichtiger rein */
 
-  --layout-width: 75%;
+  --layout-width: 100%;  /* Mobile: full width */
 
   --spacing-macro: 200px;
   --spacing-footer-gap: 150px;
