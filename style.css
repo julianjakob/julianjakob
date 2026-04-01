@@ -95,9 +95,16 @@
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html, body {
+html {
+  height: 100%;
+  height: -webkit-fill-available; /* iOS Safari: viewport excludes browser chrome */
+}
+body {
   margin: 0; padding: 0;
-  height: 100%; width: 100%;
+  height: 100%;
+  min-height: 100%;
+  min-height: -webkit-fill-available;
+  width: 100%;
   overflow: hidden;
   font-family: var(--font-main);
   -webkit-font-smoothing: antialiased;
@@ -319,9 +326,10 @@ body.lang-fade-in [data-de] {
   width: 100%;
   transition: opacity 0.3s ease;
   position: absolute;
-  bottom: var(--ui-padding-top);
+  bottom: calc(var(--ui-padding-top) + env(safe-area-inset-bottom, 0px));
   left: 0;
   padding: 0 var(--ui-padding-side);
+  padding-bottom: max(var(--ui-padding-top), 20px);
 }
 .menu-intro-link {
   display: flex;
@@ -350,7 +358,7 @@ body.lang-fade-in [data-de] {
 .contact-container {
   background-color: #fff;
   overflow-y: auto;
-  padding: var(--spacing-contact-vertical) var(--ui-padding-side) 0px var(--ui-padding-side);
+  padding: var(--spacing-contact-vertical) var(--ui-padding-side) 100px var(--ui-padding-side);
   display: flex;
   flex-direction: column;
   overscroll-behavior-y: none;
@@ -360,7 +368,7 @@ body.lang-fade-in [data-de] {
 .case-container {
   background-color: #fff;
   overflow-y: auto;
-  padding: 0 var(--ui-padding-side) 0 var(--ui-padding-side);
+  padding: 0 var(--ui-padding-side) 100px var(--ui-padding-side);
   display: flex;
   flex-direction: column;
   overscroll-behavior-y: none;
@@ -694,7 +702,7 @@ span.mobile-only { display: inline; }
   position: relative;
   width: 100%;
   margin-top: var(--spacing-footer-gap);
-  padding-bottom: 20px;
+  padding-bottom: 30px;
   display: flex;
   justify-content: space-between;
   mix-blend-mode: normal;
