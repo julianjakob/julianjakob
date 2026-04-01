@@ -795,7 +795,7 @@ async function init() {
       'header .type-ui-text, #project-footer .type-ui-text'
     ).forEach(el => { el.style.color = color; });
 
-    // Safari theme-color dynamisch: dunkles Bild → schwarze UI, helles Bild → weiße UI
+    // Safari theme-color: schwarz bei dunklem Inhalt, weiß bei hellem
     const themeColor = color === '#ffffff' ? '#000000' : '#ffffff';
     let meta = document.querySelector('meta[name="theme-color"]');
     if (!meta) {
@@ -1098,28 +1098,47 @@ async function init() {
   }
 } // end init()
 
-/* Project loader */
+/* Project + Manifest loader — 1 einziger Request für alle Daten */
+let _projectsData = null;
+
+async function loadProjectsData() {
+  if (_projectsData) return _projectsData;
+  try {
+    const res = await fetch("projects-data.json", { cache: "default" });
+    if (res.ok) { _projectsData = await res.json(); return _projectsData; }
+  } catch {}
+  return null;
+}
+
 async function loadEnabledProjects() {
-  const slots = ["01", "02", "03", "04", "05", "06", "07", "08"],
-    enabled = [];
-  for (const slot of slots) {
-    const url = `projects/${slot}/project.json`;
+  const data = await loadProjectsData();
+  if (data) return data;
+  const slots = ["01","02","03","04","05","06","07","08"];
+  const results = await Promise.all(slots.map(async slot => {
     try {
-      const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok) continue;
-      const data = await res.json();
-      if (!data || !data.enabled) continue;
-      enabled.push({
-        slot,
-        title: (data.title || `Project ${slot}`).trim(),
-        title_de: data.title_de ? data.title_de.trim() : null,
-        slug: (data.slug || `project-${slot}`).trim(),
-      });
-    } catch (e) {
-      console.warn(`Skipping slot ${slot}:`, e);
-    }
+      const res = await fetch(`projects/${slot}/project.json`, { cache: "default" });
+      if (!res.ok) return null;
+      const d = await res.json();
+      if (!d || !d.enabled) return null;
+      return { slot, title: (d.title || `Project ${slot}`).trim(),
+               title_de: d.title_de ? d.title_de.trim() : null,
+               slug: (d.slug || `project-${slot}`).trim(), manifest: null };
+    } catch { return null; }
+  }));
+  return results.filter(Boolean);
+}
+
+async function loadManifest(slot) {
+  const data = await loadProjectsData();
+  if (data) {
+    const project = data.find(p => p.slot === slot);
+    return project ? project.manifest : null;
   }
-  return enabled;
+  try {
+    const res = await fetch(`projects/${slot}/manifest.json`, { cache: "default" });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch { return null; }
 }
 
 /* Home render */
@@ -1129,20 +1148,38 @@ async function renderHomeSlides(pageHome, projects) {
   pageHome.querySelectorAll(".slide-section").forEach((el) => el.remove());
 
   const slidesToRender = [];
-  for (const project of projects) {
+  const manifests = await Promise.all(projects.map(p => loadManifest(p.slot)));
+
+  for (let pi = 0; pi < projects.length; pi++) {
+    const project  = projects[pi];
+    const manifest = manifests[pi];
     const homeBase = `projects/${project.slot}/home/`;
     const caseBase = `projects/${project.slot}/case/`;
-    // intro.txt is the canonical signal — every case study has one
-    const hasCase = await urlExists(`${caseBase}intro.txt`);
-    for (let i = 1; i <= 99; i++) {
-      const block = await findNumberedBlock(homeBase, i, { allowText: false });
-      if (!block) break;
-      slidesToRender.push({
-        title: project.title,
-        link: `#case=${project.slot}`,
-        hasCase,
-        block,
-      });
+
+    if (manifest) {
+      const hasCase = !!(manifest.case && (manifest.case.hasIntro || manifest.case.hero));
+      for (const item of (manifest.home || [])) {
+        let block;
+        if (item.type === "row") {
+          block = { type: "row", items: (item.items || []).map(f => ({
+            kind: /\.(mp4|webm)$/i.test(f) ? "video" : "image",
+            src: `${homeBase}${f}`
+          }))};
+        } else if (item.type === "single" && item.src) {
+          block = { type: "single", item: {
+            kind: /\.(mp4|webm)$/i.test(item.src) ? "video" : "image",
+            src: `${homeBase}${item.src}`
+          }};
+        } else { continue; }
+        slidesToRender.push({ title: project.title, link: `#case=${project.slot}`, hasCase, block });
+      }
+    } else {
+      const hasCase = await urlExists(`${caseBase}intro.txt`);
+      for (let i = 1; i <= 99; i++) {
+        const block = await findNumberedBlock(homeBase, i, { allowText: false });
+        if (!block) break;
+        slidesToRender.push({ title: project.title, link: `#case=${project.slot}`, hasCase, block });
+      }
     }
   }
 
@@ -1271,8 +1308,19 @@ async function renderHomeSlides(pageHome, projects) {
  * the existing language swap system handles switching instantly.
  * Images are language-neutral and rendered once.
  */
+// Render Lock
+let _renderLock = false;
+let _pendingRender = null;
+
 async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
   if (!titleEl || !contentEl) return;
+  if (_renderLock) {
+    _pendingRender = { slot, projects, titleEl, contentEl, caseFooterLeft };
+    return;
+  }
+  _renderLock = true;
+
+  try {
 
   const project = projects.find((p) => p.slot === slot);
   const base    = `projects/${slot}/case/`;
@@ -1309,8 +1357,13 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
   wrapper.querySelectorAll(".case-top,.case-intro,.case-category,.case-ending").forEach((n) => n.remove());
   if (header.parentElement !== wrapper) wrapper.insertBefore(header, wrapper.firstChild);
 
+  // ── Manifest ──
+  const manifest = await loadManifest(slot);
+
   // ── Hero (language-neutral) ──
-  const heroMedia = await findMediaByStem(base, "hero");
+  const heroMedia = manifest && manifest.case && manifest.case.hero
+    ? { kind: /\.(mp4|webm)$/i.test(manifest.case.hero) ? "video" : "image", src: `${base}${manifest.case.hero}` }
+    : await findMediaByStem(base, "hero");
   let topEl = null;
   if (heroMedia) {
     topEl = document.createElement("div");
@@ -1324,7 +1377,9 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
   }
 
   // ── Intro text ──
-  const intro = await loadBoth("intro.txt");
+  const intro = manifest && manifest.case
+    ? (manifest.case.hasIntro ? await loadBoth("intro.txt") : { en: "", de: "" })
+    : await loadBoth("intro.txt");
   let introDiv = null;
   if (intro.en) {
     introDiv = document.createElement("div");
@@ -1338,7 +1393,9 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
   }
 
   // ── Category label ──
-  const category = await loadBoth("category.txt");
+  const category = manifest && manifest.case
+    ? (manifest.case.hasCategory ? await loadBoth("category.txt") : { en: "", de: "" })
+    : await loadBoth("category.txt");
   if (category.en) {
     const cat = document.createElement("div");
     cat.className = "case-category type-contact-item";
@@ -1350,9 +1407,12 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
 
   // ── Numbered content blocks ──
   let foundAny = false;
-  for (let i = 1; i <= 199; i++) {
-    const block = await findNumberedBlock(base, i);
-    if (!block) break;
+  const caseBlocks = manifest && manifest.case && manifest.case.blocks
+    ? manifest.case.blocks
+    : await buildBlockListFromNetwork(base);
+
+  for (const block of caseBlocks) {
+    if (!block) continue;
     foundAny = true;
 
     const blockEl = document.createElement("div");
@@ -1362,7 +1422,7 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
 
     if (block.type === "text") {
       // Load both language versions of the text block
-      const num  = pad2(i);
+      const num  = block.num || pad2(caseBlocks.indexOf(block) + 1);
       const texts = await loadBoth(`${num}.txt`);
       blockEl.classList.add("is-text");
       const textEl = document.createElement("div");
@@ -1378,9 +1438,12 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
       const row = document.createElement("div");
       row.className = block.items.length >= 3 ? "media-row row-scroll" : "media-row row-fit";
       block.items.forEach((media) => {
+        const mediaObj = typeof media === "string"
+          ? { kind: /\.(mp4|webm)$/i.test(media) ? "video" : "image", src: `${base}${media}` }
+          : media;
         const itemWrap = document.createElement("div");
         itemWrap.className = "media-item";
-        itemWrap.appendChild(createMediaElement(media, { context: "case" }));
+        itemWrap.appendChild(createMediaElement(mediaObj, { context: "case" }));
         row.appendChild(itemWrap);
       });
       inner.appendChild(row);
@@ -1392,15 +1455,22 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
     inner.classList.add("single");
     const singleWrap = document.createElement("div");
     singleWrap.className = "case-media-single";
-    singleWrap.appendChild(createMediaElement(block.item, { context: "case" }));
+    const singleMedia = block.item || (block.src
+      ? { kind: /\.(mp4|webm)$/i.test(block.src) ? "video" : "image", src: `${base}${block.src}` }
+      : null);
+    singleWrap.appendChild(createMediaElement(singleMedia, { context: "case" }));
     inner.appendChild(singleWrap);
     blockEl.appendChild(inner);
     contentEl.appendChild(blockEl);
   }
 
   // ── Outro + credits ──
-  const outro  = await loadBoth("outro.txt");
-  const credit = await loadBoth("credit.txt");
+  const outro  = manifest && manifest.case
+    ? (manifest.case.hasOutro  ? await loadBoth("outro.txt")  : { en: "", de: "" })
+    : await loadBoth("outro.txt");
+  const credit = manifest && manifest.case
+    ? (manifest.case.hasCredit ? await loadBoth("credit.txt") : { en: "", de: "" })
+    : await loadBoth("credit.txt");
   if (outro.en || credit.en) {
     const ending = document.createElement("div");
     ending.className = "case-ending";
@@ -1438,6 +1508,16 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
     msgBlock.appendChild(inner);
     contentEl.appendChild(msgBlock);
   }
+
+  } finally {
+    _renderLock = false;
+  }
+
+  if (_pendingRender) {
+    const next = _pendingRender;
+    _pendingRender = null;
+    await renderCase(next.slot, next.projects, next.titleEl, next.contentEl, next.caseFooterLeft);
+  }
 }
 
 async function loadTextFile(base, filename) {
@@ -1448,6 +1528,16 @@ async function loadTextFile(base, filename) {
     if (!res.ok) return "";
     return ((await res.text()) || "").trim();
   } catch { return ""; }
+}
+
+async function buildBlockListFromNetwork(base) {
+  const blocks = [];
+  for (let i = 1; i <= 199; i++) {
+    const block = await findNumberedBlock(base, i);
+    if (!block) break;
+    blocks.push(block);
+  }
+  return blocks;
 }
 
 async function findNumberedBlock(base, n) {
@@ -1526,6 +1616,28 @@ function setupSafariSimpleLoop(v) {
   } else {
     v.addEventListener("loadedmetadata", () => requestAnimationFrame(tick), { once: true });
   }
+}
+
+// ── Safari: Simple loop for case/hero videos ─────────────────────
+function setupSafariSimpleLoop(v) {
+  let seeking = false;
+  function tick() {
+    if (v.duration && !isNaN(v.duration) && isFinite(v.duration)) {
+      if (v.paused && !seeking && document.visibilityState !== "hidden") {
+        v.play().catch(() => {});
+      }
+      if (!v.paused && !seeking && v.currentTime >= v.duration - 0.15) {
+        seeking = true;
+        v.currentTime = 0;
+        v.play().catch(() => {});
+        v.addEventListener("seeked", () => { seeking = false; }, { once: true });
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+  v.addEventListener("ended", () => { seeking = false; v.currentTime = 0; v.play().catch(() => {}); });
+  if (v.readyState >= 1) { requestAnimationFrame(tick); }
+  else { v.addEventListener("loadedmetadata", () => requestAnimationFrame(tick), { once: true }); }
 }
 
 function createMediaElement(media, { context }) {
@@ -1698,16 +1810,40 @@ function getMediaDims(el) {
 
 function pad2(n) { return String(n).padStart(2, "0"); }
 
+const _urlCache = new Map();
+
 async function urlExists(url) {
+  if (_urlCache.has(url)) return _urlCache.get(url);
+  if (_urlCache.has(url + "__pending")) {
+    return new Promise(resolve => {
+      const check = () => {
+        if (_urlCache.has(url)) { resolve(_urlCache.get(url)); return; }
+        setTimeout(check, 20);
+      };
+      check();
+    });
+  }
+  _urlCache.set(url + "__pending", true);
+  let result = false;
   try {
-    const head = await fetch(url, { method: "HEAD", cache: "no-store" });
-    if (head.ok) return true;
-    if (head.status === 405 || head.status === 403) {
-      const get = await fetch(url, { method: "GET", cache: "no-store", headers: { Range: "bytes=0-0" } });
-      if (get.ok) { if (get.body) get.body.cancel(); return true; }
+    const head = await fetch(url, { method: "HEAD", cache: "default" });
+    if (head.ok) {
+      const ct = head.headers.get("content-type") || "";
+      result = !ct.startsWith("text/html");
     }
-    return false;
-  } catch { return false; }
+  } catch {
+    try {
+      const get = await fetch(url, { method: "GET", cache: "default", headers: { Range: "bytes=0-0" } });
+      if (get.ok) {
+        const ct = get.headers.get("content-type") || "";
+        result = !ct.startsWith("text/html");
+      }
+      if (get.body) get.body.cancel();
+    } catch { result = false; }
+  }
+  _urlCache.delete(url + "__pending");
+  _urlCache.set(url, result);
+  return result;
 }
 
 // ── Peek hint visibility ─────────────────────────────────────
