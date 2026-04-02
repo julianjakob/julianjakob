@@ -950,11 +950,19 @@ async function renderHomeSlides(pageHome, projects) {
  * the existing language swap system handles switching instantly.
  * Images are language-neutral and rendered once.
  */
+let _caseRenderSeq = 0;
+
 async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
   if (!titleEl || !contentEl) return;
 
+  // Abort guard: if a newer render starts while we await, bail out.
+  const seq = ++_caseRenderSeq;
+  const stale = () => seq !== _caseRenderSeq;
+
   const project = projects.find((p) => p.slot === slot);
   const base    = `projects/${slot}/case/`;
+  const manifest    = getManifest(slot);
+  const caseManifest = manifest ? manifest.case : null;
 
   // ── Helper: load both language versions of a text file in parallel ──
   async function loadBoth(filename) {
@@ -967,20 +975,28 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
   }
 
   // ── Helper: set data-en/data-de and apply current language ──
-  function setLang(el, en, de, isText = false) {
+  function setLang(el, en, de) {
     el.setAttribute("data-en", en);
     el.setAttribute("data-de", de);
     const lang = (window.getCurrentLang && window.getCurrentLang()) || "en";
     el.textContent = lang === "de" ? de : en;
   }
 
-  // ── Title ──
-  const titleEn = project ? project.title       : `Project ${slot}`;
-  const titleDe = project ? (project.title_de || project.title) : `Project ${slot}`;
+  // ── Helper: derive media object from filename ──
+  function fileToMedia(filename) {
+    return {
+      kind: /\.(mp4|webm)$/i.test(filename) ? "video" : "image",
+      src: `${base}${filename}`,
+    };
+  }
+
+  // ── Title (sync) ──
+  const titleEn = project ? project.title                         : `Project ${slot}`;
+  const titleDe = project ? (project.title_de || project.title)  : `Project ${slot}`;
   setLang(titleEl, titleEn, titleDe);
   if (caseFooterLeft) setLang(caseFooterLeft, titleEn, titleDe);
 
-  // ── Reset DOM ──
+  // ── Reset DOM (sync) ──
   contentEl.innerHTML = "";
   const wrapper = document.querySelector("#page-case .case-wrapper");
   const header  = wrapper ? wrapper.querySelector(".case-header") : null;
@@ -988,13 +1004,22 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
   wrapper.querySelectorAll(".case-top,.case-intro,.case-category,.case-ending").forEach((n) => n.remove());
   if (header.parentElement !== wrapper) wrapper.insertBefore(header, wrapper.firstChild);
 
-  // ── Hero + intro + category — all independent, fetch in parallel ──
-  const [heroMedia, intro, category] = await Promise.all([
-    findMediaByStem(base, "hero"),
-    loadBoth("intro.txt"),
-    loadBoth("category.txt"),
+  // ── Resolve hero from manifest (no HEAD request) ──
+  const heroMedia = caseManifest && caseManifest.hero
+    ? fileToMedia(caseManifest.hero)
+    : await findMediaByStem(base, "hero");
+
+  if (stale()) return;
+
+  // ── Intro + category text (fast text fetches) ──
+  const [intro, category] = await Promise.all([
+    (caseManifest && !caseManifest.hasIntro)    ? Promise.resolve({ en: "", de: "" }) : loadBoth("intro.txt"),
+    (caseManifest && !caseManifest.hasCategory) ? Promise.resolve({ en: "", de: "" }) : loadBoth("category.txt"),
   ]);
 
+  if (stale()) return;
+
+  // ── Build top section ──
   let topEl = null;
   if (heroMedia) {
     topEl = document.createElement("div");
@@ -1007,97 +1032,126 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
     wrapper.insertBefore(topEl, wrapper.firstChild);
   }
 
-  // ── Intro text ──
   let introDiv = null;
   if (intro.en) {
     introDiv = document.createElement("div");
     introDiv.className = "case-intro";
     const textDiv = document.createElement("div");
     textDiv.className = "case-intro-text type-contact-item";
-    setLang(textDiv, intro.en, intro.de, true);
+    setLang(textDiv, intro.en, intro.de);
     introDiv.appendChild(textDiv);
     if (topEl) topEl.insertAdjacentElement("afterend", introDiv);
     else header.insertAdjacentElement("afterend", introDiv);
   }
 
-  // ── Category label ──
   if (category.en) {
     const cat = document.createElement("div");
     cat.className = "case-category type-contact-item";
-    setLang(cat, category.en, category.de, true);
+    setLang(cat, category.en, category.de);
     if (introDiv) introDiv.insertAdjacentElement("afterend", cat);
     else if (topEl) topEl.insertAdjacentElement("afterend", cat);
     else header.insertAdjacentElement("afterend", cat);
   }
 
-  // ── Numbered content blocks ──
+  // ── Content blocks — use manifest (zero HEAD requests) with HEAD fallback ──
   let foundAny = false;
-  for (let i = 1; i <= 199; i++) {
-    const block = await findNumberedBlock(base, i);
-    if (!block) break;
+  if (caseManifest && caseManifest.blocks && caseManifest.blocks.length > 0) {
     foundAny = true;
+    for (const block of caseManifest.blocks) {
+      const blockEl = document.createElement("div");
+      blockEl.className = "case-block";
+      const inner = document.createElement("div");
+      inner.className = "case-block-inner";
 
-    const blockEl = document.createElement("div");
-    blockEl.className = "case-block";
-    const inner = document.createElement("div");
-    inner.className = "case-block-inner";
+      if (block.type === "row") {
+        const items = (block.items || []).map(fileToMedia);
+        const row = document.createElement("div");
+        row.className = items.length >= 3 ? "media-row row-scroll" : "media-row row-fit";
+        items.forEach((media) => {
+          const itemWrap = document.createElement("div");
+          itemWrap.className = "media-item";
+          itemWrap.appendChild(createMediaElement(media, { context: "case" }));
+          row.appendChild(itemWrap);
+        });
+        inner.appendChild(row);
+      } else if (block.type === "single" && block.src) {
+        inner.classList.add("single");
+        const singleWrap = document.createElement("div");
+        singleWrap.className = "case-media-single";
+        singleWrap.appendChild(createMediaElement(fileToMedia(block.src), { context: "case" }));
+        inner.appendChild(singleWrap);
+      } else {
+        continue;
+      }
 
-    if (block.type === "text") {
-      // Load both language versions of the text block
-      const num  = pad2(i);
-      const texts = await loadBoth(`${num}.txt`);
-      blockEl.classList.add("is-text");
-      const textEl = document.createElement("div");
-      textEl.className = "case-text type-contact-item";
-      setLang(textEl, texts.en, texts.de, true);
-      inner.appendChild(textEl);
       blockEl.appendChild(inner);
       contentEl.appendChild(blockEl);
-      continue;
     }
+  } else {
+    // Fallback: HEAD-request discovery (used when manifest has no blocks)
+    for (let i = 1; i <= 199; i++) {
+      const block = await findNumberedBlock(base, i);
+      if (!block) break;
+      if (stale()) return;
+      foundAny = true;
 
-    if (block.type === "row") {
-      const row = document.createElement("div");
-      row.className = block.items.length >= 3 ? "media-row row-scroll" : "media-row row-fit";
-      block.items.forEach((media) => {
-        const itemWrap = document.createElement("div");
-        itemWrap.className = "media-item";
-        itemWrap.appendChild(createMediaElement(media, { context: "case" }));
-        row.appendChild(itemWrap);
-      });
-      inner.appendChild(row);
+      const blockEl = document.createElement("div");
+      blockEl.className = "case-block";
+      const inner = document.createElement("div");
+      inner.className = "case-block-inner";
+
+      if (block.type === "text") {
+        const texts = await loadBoth(`${pad2(i)}.txt`);
+        if (stale()) return;
+        blockEl.classList.add("is-text");
+        const textEl = document.createElement("div");
+        textEl.className = "case-text type-contact-item";
+        setLang(textEl, texts.en, texts.de);
+        inner.appendChild(textEl);
+      } else if (block.type === "row") {
+        const row = document.createElement("div");
+        row.className = block.items.length >= 3 ? "media-row row-scroll" : "media-row row-fit";
+        block.items.forEach((media) => {
+          const itemWrap = document.createElement("div");
+          itemWrap.className = "media-item";
+          itemWrap.appendChild(createMediaElement(media, { context: "case" }));
+          row.appendChild(itemWrap);
+        });
+        inner.appendChild(row);
+      } else {
+        inner.classList.add("single");
+        const singleWrap = document.createElement("div");
+        singleWrap.className = "case-media-single";
+        singleWrap.appendChild(createMediaElement(block.item, { context: "case" }));
+        inner.appendChild(singleWrap);
+      }
+
       blockEl.appendChild(inner);
       contentEl.appendChild(blockEl);
-      continue;
     }
-
-    inner.classList.add("single");
-    const singleWrap = document.createElement("div");
-    singleWrap.className = "case-media-single";
-    singleWrap.appendChild(createMediaElement(block.item, { context: "case" }));
-    inner.appendChild(singleWrap);
-    blockEl.appendChild(inner);
-    contentEl.appendChild(blockEl);
   }
 
-  // ── Outro + credits — independent, fetch in parallel ──
+  // ── Outro + credits ──
   const [outro, credit] = await Promise.all([
-    loadBoth("outro.txt"),
-    loadBoth("credit.txt"),
+    (caseManifest && !caseManifest.hasOutro)  ? Promise.resolve({ en: "", de: "" }) : loadBoth("outro.txt"),
+    (caseManifest && !caseManifest.hasCredit) ? Promise.resolve({ en: "", de: "" }) : loadBoth("credit.txt"),
   ]);
+
+  if (stale()) return;
+
   if (outro.en || credit.en) {
     const ending = document.createElement("div");
     ending.className = "case-ending";
     if (outro.en) {
       const outroEl = document.createElement("div");
       outroEl.className = "case-outro type-contact-item";
-      setLang(outroEl, outro.en, outro.de, true);
+      setLang(outroEl, outro.en, outro.de);
       ending.appendChild(outroEl);
     }
     if (credit.en) {
       const creditEl = document.createElement("div");
       creditEl.className = "case-credit type-contact-item";
-      setLang(creditEl, credit.en, credit.de, true);
+      setLang(creditEl, credit.en, credit.de);
       ending.appendChild(creditEl);
     }
     const endingBlock = document.createElement("div");
@@ -1113,9 +1167,9 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
   if (!foundAny) {
     const msgBlock = document.createElement("div");
     msgBlock.className = "case-block is-text";
-    const inner   = document.createElement("div");
+    const inner = document.createElement("div");
     inner.className = "case-block-inner";
-    const msg     = document.createElement("div");
+    const msg = document.createElement("div");
     msg.className = "case-text type-contact-item";
     msg.textContent = `No case content found yet. Add files to projects/${slot}/case/.`;
     inner.appendChild(msg);
