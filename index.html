@@ -438,23 +438,32 @@
         localStorage.setItem(STORAGE_KEY, lang);
         document.documentElement.lang = lang === "de" ? "de" : "en";
 
-        // ── Clean up any typewriter spans before swapping ──
+        // ── Step 1: Strip ALL typewriter spans before snapshot ──
+        // Restores every [data-en][data-de] element to clean HTML so FLIP
+        // measures accurate pre-swap heights (typewriter spans inflate height).
         var prevLang = lang === "de" ? "en" : "de";
-        document.querySelectorAll(".case-text, .case-intro-text, .case-outro, p.type-contact-item").forEach(function (el) {
+        document.querySelectorAll("[data-en][data-de]").forEach(function (el) {
           var clean = el.getAttribute("data-" + prevLang) || el.getAttribute("data-en");
           if (!clean) return;
           if (clean.indexOf("<") !== -1 || clean.indexOf("&") !== -1) { el.innerHTML = clean; }
           else { el.textContent = clean; }
         });
 
-        // ── FLIP: snapshot positions of elements that may shift ──
-        var flipTargets = [
-          document.getElementById("lang-toggle"),
-          document.querySelector(".about-portrait")
-        ].filter(Boolean);
+        // ── Step 2: FLIP snapshot — positions of elements that may shift ──
+        var flipTargets = [document.getElementById("lang-toggle")].filter(Boolean);
+        var visiblePage = document.querySelector(".page-container.visible");
+        if (visiblePage) {
+          visiblePage.querySelectorAll(
+            ".contact-group, .about-portrait, .page-footer, " +
+            ".case-intro, .case-category, .case-ending"
+          ).forEach(function (el) {
+            var r = el.getBoundingClientRect();
+            if (r.top < window.innerHeight && r.bottom > 0) flipTargets.push(el);
+          });
+        }
         var before = flipTargets.map(function (el) { return el.getBoundingClientRect(); });
 
-        // ── Instant content swap ──
+        // ── Step 3: Instant content swap ──
         document.querySelectorAll("[data-en][data-de]").forEach(function (el) {
           var text = el.getAttribute("data-" + lang) || el.getAttribute("data-en");
           if (!text) return;
@@ -480,12 +489,17 @@
           : "Austrian brand designer with international experience for companies such as Spotify, Meta and Sony Music."
         );
         if (typeof updatePageTitle === "function") {
-          var activePage = document.querySelector(".page-container.visible");
-          var pageId = activePage ? activePage.id.replace("page-", "") : "home";
+          var ap = document.querySelector(".page-container.visible");
+          var pageId = ap ? ap.id.replace("page-", "") : "home";
           updatePageTitle(pageId, window._currentCaseSlot || null);
         }
 
-        // ── FLIP: animate elements that moved to their new position ──
+        // ── Step 4: Typewriter on the active page ──
+        if (animate && typeof applyTypewriterEffect === "function" && visiblePage) {
+          applyTypewriterEffect(visiblePage.querySelectorAll("[data-en][data-de]"));
+        }
+
+        // ── Step 5: FLIP-animate elements that moved ──
         if (animate) {
           flipTargets.forEach(function (el, i) {
             var after = el.getBoundingClientRect();
