@@ -1264,6 +1264,12 @@ async function applySlideOrientationClasses(slides) {
       return;
     }
 
+    // Already classified during render (video slides get is-landscape/is-full-bleed immediately).
+    // Skip them — waiting for loadedmetadata on a large video can hang init forever on mobile.
+    if (slide.classList.contains("is-landscape") || slide.classList.contains("is-full-bleed")) {
+      return;
+    }
+
     const imgs = Array.from(slide.querySelectorAll("img")),
       vids = Array.from(slide.querySelectorAll("video:not([data-loop-standby])"));
     const mediaEls = [...imgs, ...vids];
@@ -1295,15 +1301,17 @@ function getMediaDims(el) {
     if (el.tagName.toLowerCase() === "img") {
       const img = el;
       if (img.complete && img.naturalWidth > 0) return resolve({ w: img.naturalWidth, h: img.naturalHeight });
-      img.addEventListener("load",  () => resolve({ w: img.naturalWidth,  h: img.naturalHeight }), { once: true });
-      img.addEventListener("error", () => resolve({ w: 0, h: 0 }),                                  { once: true });
+      const timer = setTimeout(() => resolve({ w: 0, h: 0 }), 8000);
+      img.addEventListener("load",  () => { clearTimeout(timer); resolve({ w: img.naturalWidth,  h: img.naturalHeight }); }, { once: true });
+      img.addEventListener("error", () => { clearTimeout(timer); resolve({ w: 0, h: 0 }); },                                { once: true });
       return;
     }
     if (el.tagName.toLowerCase() === "video") {
       const v = el;
       if (v.videoWidth > 0) return resolve({ w: v.videoWidth, h: v.videoHeight });
-      v.addEventListener("loadedmetadata", () => resolve({ w: v.videoWidth, h: v.videoHeight }), { once: true });
-      v.addEventListener("error",          () => resolve({ w: 0, h: 0 }),                        { once: true });
+      const timer = setTimeout(() => resolve({ w: 0, h: 0 }), 8000);
+      v.addEventListener("loadedmetadata", () => { clearTimeout(timer); resolve({ w: v.videoWidth, h: v.videoHeight }); }, { once: true });
+      v.addEventListener("error",          () => { clearTimeout(timer); resolve({ w: 0, h: 0 }); },                        { once: true });
       return;
     }
     resolve({ w: 0, h: 0 });
@@ -1317,8 +1325,10 @@ const _urlCache = new Map();
 async function urlExists(url) {
   if (_urlCache.has(url)) return _urlCache.get(url);
   let result = false;
+  let gotResponse = false;
   try {
     const head = await fetch(url, { method: "HEAD", cache: "default" });
+    gotResponse = true;
     if (head.ok) {
       const ct = head.headers.get("content-type") || "";
       result = !ct.startsWith("text/html");
@@ -1326,6 +1336,7 @@ async function urlExists(url) {
   } catch {
     try {
       const get = await fetch(url, { method: "GET", cache: "default", headers: { Range: "bytes=0-0" } });
+      gotResponse = true;
       if (get.ok) {
         const ct = get.headers.get("content-type") || "";
         result = !ct.startsWith("text/html");
@@ -1333,7 +1344,9 @@ async function urlExists(url) {
       if (get.body) get.body.cancel();
     } catch { result = false; }
   }
-  _urlCache.set(url, result);
+  // Only cache when we got a real server response — not on network errors,
+  // so a transient mobile timeout doesn't permanently mark a file as missing.
+  if (gotResponse) _urlCache.set(url, result);
   return result;
 }
 
