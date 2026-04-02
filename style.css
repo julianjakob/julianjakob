@@ -30,11 +30,11 @@
   --col-width: calc(2.9 * var(--grid-unit)); 
   --col-gutter: calc(0.2 * var(--grid-unit)); 
 
-  --anim-speed: 0.65s;
-  --anim-curve: cubic-bezier(0.22, 1, 0.36, 1);
+  --anim-speed: 0.7s;
+  --anim-curve: cubic-bezier(0.80, 0, 0.20, 1);
 
   --page-speed: 0.85s;
-  --page-curve: cubic-bezier(0.22, 1, 0.36, 1);
+  --page-curve: cubic-bezier(0.65, 0, 0.20, 1);
 
   --layout-width: 75%;
 
@@ -63,8 +63,8 @@
   --icon-size-base: 20px;
   --icon-gap: 8px;                  
 
-  --anim-translate-micro: 5px;
-  --anim-translate-small: 12px;
+  --anim-translate-micro: 8px;
+  --anim-translate-small: 20px;
 
   --line-height-body: 140%;
 
@@ -125,7 +125,7 @@ a { text-decoration: none; color: inherit; }
 
 .typewriter-char {
   opacity: 0;
-  animation: typewriter-char 0.22s cubic-bezier(0.25, 0, 0, 1) forwards;
+  animation: typewriter-char 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   display: inline;
 }
 
@@ -282,12 +282,17 @@ header {
 body.lang-fade-out [data-en],
 body.lang-fade-out [data-de] {
   opacity: 0;
-  transition: opacity 0.18s cubic-bezier(0.4, 0, 1, 1);
+  transform: translateY(-5px);
+  transition: opacity 0.18s ease-out, transform 0.18s ease-out;
+}
+
+@keyframes lang-slide-in {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 body.lang-fade-in [data-en],
 body.lang-fade-in [data-de] {
-  opacity: 1;
-  transition: opacity 0.4s cubic-bezier(0, 0, 0.2, 1);
+  animation: lang-slide-in 0.35s cubic-bezier(0.25, 0, 0.2, 1) forwards;
 }
 
 #menu-overlay {
@@ -796,7 +801,7 @@ p.type-contact-item.service-description {
 .project-title { cursor: pointer; }
 
 @keyframes slideUpFade { 0% { opacity: 0; transform: translateY(var(--anim-translate-small)); } 100% { opacity: 1; transform: translateY(0); } }
-.text-anim { animation: slideUpFade 0.5s cubic-bezier(0.25, 0, 0, 1) forwards; }
+.text-anim { animation: slideUpFade 0.6s ease-out forwards; }
 
 @media (min-width: 768px) {
   :root {
