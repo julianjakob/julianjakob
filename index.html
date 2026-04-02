@@ -433,16 +433,22 @@
         }
       };
 
-      function updateToggleLabel(lang) {
+      function updateToggleLabel(lang, animate) {
         const toggle = document.getElementById("lang-toggle");
         if (!toggle) return;
-        toggle.style.transition = "opacity 0.3s ease";
-        toggle.style.opacity = "0";
-        setTimeout(function () {
-          toggle.textContent = lang === "de" ? "EN" : "DE";
-          toggle.style.opacity = "";
+        toggle.textContent = lang === "de" ? "EN" : "DE";
+        if (animate) {
+          // Slide in from below, matching lang-slide-in keyframe
+          toggle.style.opacity = "0";
+          toggle.style.transform = "translateY(5px)";
           toggle.style.transition = "";
-        }, 300);
+          // Force reflow so the browser registers the start state
+          toggle.offsetHeight;
+          toggle.style.transition = "opacity 0.35s cubic-bezier(0.25, 0, 0.2, 1), transform 0.35s cubic-bezier(0.25, 0, 0.2, 1)";
+          toggle.style.opacity = "";
+          toggle.style.transform = "";
+          setTimeout(function () { toggle.style.transition = ""; }, 400);
+        }
       }
 
       function applyLang(lang, animate) {
@@ -469,7 +475,7 @@
           if (menuOverlay && menuBtn && menuOverlay.classList.contains("open")) {
             menuBtn.textContent = lang === "de" ? "Schließen" : "Close";
           }
-          updateToggleLabel(lang);
+          updateToggleLabel(lang, animate);
           const desc = document.querySelector('meta[name="description"]');
           if (desc) {
             desc.setAttribute("content", lang === "de"
@@ -488,6 +494,14 @@
         if (animate) {
           body.style.pointerEvents = "none";
           body.classList.add("lang-fade-out");
+
+          // Pre-fade the lang toggle in sync with [data-en][data-de] elements
+          var toggleEl = document.getElementById("lang-toggle");
+          if (toggleEl) {
+            toggleEl.style.transition = "opacity 0.18s ease-out, transform 0.18s ease-out";
+            toggleEl.style.opacity = "0";
+            toggleEl.style.transform = "translateY(-5px)";
+          }
 
           setTimeout(function () {
             // Page is now faded out — restore justified paragraphs to clean HTML

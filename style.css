@@ -39,7 +39,7 @@
   --layout-width: 75%;
 
   --spacing-macro: 200px;
-  --spacing-footer-gap: 150px;
+  --spacing-footer-gap: 80px;
 
   --spacing-xs: 10px;
   --spacing-sm: 18px;
@@ -357,19 +357,21 @@ body.lang-fade-in [data-de] {
 .contact-container {
   background-color: #fff;
   overflow-y: auto;
-  padding: var(--spacing-contact-vertical) var(--ui-padding-side) 100px var(--ui-padding-side);
+  padding: var(--spacing-contact-vertical) var(--ui-padding-side) 0 var(--ui-padding-side);
   display: flex;
   flex-direction: column;
   overscroll-behavior-y: none;
+  contain: paint;
 }
 
 .case-container {
   background-color: #fff;
   overflow-y: auto;
-  padding: 0 var(--ui-padding-side) 100px var(--ui-padding-side);
+  padding: 0 var(--ui-padding-side) 0 var(--ui-padding-side);
   display: flex;
   flex-direction: column;
   overscroll-behavior-y: none;
+  contain: paint;
 }
 
 #page-home { background-color: #000; cursor: grab; }
@@ -700,7 +702,7 @@ span.mobile-only { display: inline; }
   position: relative;
   width: 100%;
   margin-top: var(--spacing-footer-gap);
-  padding-bottom: 30px;
+  padding-bottom: max(var(--ui-padding-top), env(safe-area-inset-bottom, 0px));
   display: flex;
   justify-content: space-between;
   mix-blend-mode: normal;
@@ -807,7 +809,7 @@ p.type-contact-item.service-description {
   :root {
     --page-padding: 30px;
     --page-padding-top: 45px;
-    --spacing-footer-gap: 180px;
+    --spacing-footer-gap: 100px;
   }
   .type-ui-text { font-size: var(--type-ui); }
   .menu-bottom { margin-bottom: 120px; }
@@ -818,7 +820,7 @@ p.type-contact-item.service-description {
     --page-padding: 40px;
     --page-padding-top: 60px;
     --layout-width: 65%;
-    --spacing-footer-gap: 200px;
+    --spacing-footer-gap: 120px;
     --spacing-macro: 220px;
   }
   .banner-overlay {

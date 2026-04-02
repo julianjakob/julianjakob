@@ -340,6 +340,15 @@ async function init() {
     updatePageTitle(dest, dest === "case" ? currentCaseSlot : null);
     if (window.setLangToggleVisible) window.setLangToggleVisible(dest);
     tLock.acquire(950);
+
+    // Typewriter on page entry — starts mid-transition so text appears as page unfolds
+    if (dest !== "home" && typeof applyTypewriterEffect === "function") {
+      const pg = pages[dest];
+      if (pg) setTimeout(() => {
+        if (currentPage !== dest) return;
+        applyTypewriterEffect(pg.querySelectorAll("[data-en][data-de]"));
+      }, 500);
+    }
   }
 
   initServicesAccordion();
@@ -352,6 +361,33 @@ async function init() {
       });
     });
   }
+
+  // ── Subtle mouse parallax drag ─────────────────────────────────────────────
+  // Very light "weight" feel on home slides. Max displacement ~4px, slow lerp.
+  const _drag = { x: 0, y: 0, tx: 0, ty: 0, raf: null };
+  const DRAG_FACTOR = 0.005;
+  const DRAG_LERP   = 0.055;
+
+  function _dragTick() {
+    const dx = _drag.tx - _drag.x;
+    const dy = _drag.ty - _drag.y;
+    _drag.x += dx * DRAG_LERP;
+    _drag.y += dy * DRAG_LERP;
+
+    const slide = homeSlides[currentIndex];
+    const inner = slide && slide.querySelector(".content-single, .media-row");
+    if (inner) inner.style.transform = `translate(${_drag.x.toFixed(2)}px, ${_drag.y.toFixed(2)}px)`;
+
+    if (Math.abs(dx) < 0.01 && Math.abs(dy) < 0.01) { _drag.raf = null; return; }
+    _drag.raf = requestAnimationFrame(_dragTick);
+  }
+
+  document.addEventListener("mousemove", (e) => {
+    if (currentPage !== "home" || isMenuOpen) return;
+    _drag.tx = (e.clientX - innerWidth  / 2) * DRAG_FACTOR;
+    _drag.ty = (e.clientY - innerHeight / 2) * DRAG_FACTOR;
+    if (!_drag.raf) _drag.raf = requestAnimationFrame(_dragTick);
+  }, { passive: true });
 
   // Abort token for runPeekHint — lets changeSlide cancel it instantly
   let peekController = null;
