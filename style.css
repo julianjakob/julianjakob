@@ -710,7 +710,6 @@ span.mobile-only { display: inline; }
   display: flex;
   justify-content: space-between;
   mix-blend-mode: normal;
-  position: relative;
   z-index: 10;
 }
 .page-footer .type-ui-text { color: #000; }

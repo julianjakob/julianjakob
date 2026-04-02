@@ -669,11 +669,11 @@ async function init() {
 
     // ── Wire up "Next project" link ──
     const nextLink = document.getElementById("case-next-link");
-    // Only cycle through projects that have a case page (intro.txt = canonical signal)
-    const caseProjects = [];
-    for (const p of projects) {
-      if (await urlExists(`projects/${p.slot}/case/intro.txt`)) caseProjects.push(p);
-    }
+    // Only cycle through projects that have a case page — use manifest data to avoid HEAD requests
+    const caseProjects = projects.filter(p => {
+      const m = getManifest(p.slot);
+      return m && m.case && (m.case.hasIntro || m.case.hero || (m.case.blocks && m.case.blocks.length > 0));
+    });
     if (nextLink && caseProjects.length > 1) {
       const idx     = caseProjects.findIndex(p => p.slot === slot);
       const nextIdx = (idx + 1) % caseProjects.length;
@@ -1123,7 +1123,7 @@ async function loadTextFile(base, filename) {
   const url = base + filename;
   if (!(await urlExists(url))) return "";
   try {
-    const res = await fetch(url, { cache: "no-store" });
+    const res = await fetch(url, { cache: "default" });
     if (!res.ok) return "";
     return ((await res.text()) || "").trim();
   } catch { return ""; }
