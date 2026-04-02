@@ -690,7 +690,6 @@ span.mobile-only { display: inline; }
   padding-bottom: env(safe-area-inset-bottom, 0px);
   display: flex;
   justify-content: space-between;
-  mix-blend-mode: normal;
   z-index: 10;
 }
 .page-footer .type-ui-text { color: #000; }
@@ -1005,7 +1004,6 @@ p.type-contact-item.service-description {
     max-width: calc(6 * var(--grid-unit));
   }
   .page-footer {
-    mix-blend-mode: difference;
     /* Safari Fix for Large Screens */
     -webkit-transform: translate3d(0,0,0);
     transform: translate3d(0,0,0);

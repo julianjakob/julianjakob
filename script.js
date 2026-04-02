@@ -45,6 +45,7 @@ async function init() {
     pendingAfterBanner = null;
 
   const projects = await loadEnabledProjects();
+  window._projects = projects; // expose for setHash slug lookup
   const homeSlides = await renderHomeSlides(pageHome, projects);
 
   
@@ -128,6 +129,7 @@ async function init() {
     isMenuOpen = !isMenuOpen;
     const activePage = pages[currentPage];
     if (isMenuOpen) {
+      setHash("menu");
       menuOverlay.classList.add("open");
       if (menuTimeout) clearTimeout(menuTimeout);
       fadeMenuText((window.getCurrentLang && window.getCurrentLang() === "de") ? "Schließen" : "Close");
@@ -138,6 +140,11 @@ async function init() {
         activePage.classList.add("hidden");
       }
     } else {
+      // Restore URL for current page when menu closes
+      const restoreHash = currentPage === "case" && currentCaseSlot
+        ? "case=" + currentCaseSlot
+        : currentPage || "";
+      setHash(restoreHash);
       menuOverlay.classList.remove("open");
       // Only fade to "Menu" if we're not about to flash a page name
       if (!skipFadeToMenu) {
@@ -264,9 +271,14 @@ async function init() {
     setMeta('meta[name="twitter:title"]',   "content", title);
     const canonicalBase = "https://julianjakob.at";
     const pathMap = { about: "/about", process: "/process", pricing: "/pricing", contact: "/contact", legal: "/legal" };
-    const ogUrl = page === "case" && slot
-      ? `${canonicalBase}/#case=${slot}`
-      : `${canonicalBase}${pathMap[page] || "/"}`;
+    let ogUrl;
+    if (page === "case" && slot) {
+      const proj = window._projects && window._projects.find(p => p.slot === slot);
+      const caseSlug = proj ? slugify(proj.title) : slot;
+      ogUrl = `${canonicalBase}/${caseSlug}`;
+    } else {
+      ogUrl = `${canonicalBase}${pathMap[page] || "/"}`;
+    }
     setMeta('meta[property="og:url"]', "content", ogUrl);
     const canonicalEl = document.querySelector('link[rel="canonical"]');
     if (canonicalEl) canonicalEl.setAttribute("href", ogUrl);
@@ -644,29 +656,44 @@ async function init() {
     const value = path || hash;
     if (!value) return;
 
-    // /case/01  or  #case=01
+    // Legacy slot format: /case/01 or #case=01
     const caseMatch = value.match(/^case[=/](.+)$/);
     if (caseMatch) {
       const slot = caseMatch[1];
       if (!slot) return;
       await renderCase(slot, projects, caseTitleEl, caseContentEl, caseFooterLeft);
-      setHash("case=" + slot);
+      setHash("case=" + slot); // upgrades to slug URL
       if (currentPage !== "case") {
-        if (hasSeenBanner) {
-          navigateTo("case", "next");
-        } else {
-          pendingAfterBanner = () => navigateTo("case", "next");
-        }
+        if (hasSeenBanner) navigateTo("case", "next");
+        else pendingAfterBanner = () => navigateTo("case", "next");
       }
       return;
     }
 
+    // Menu URL: /menu opens the menu overlay
+    if (value === "menu") {
+      if (hasSeenBanner) toggleMenu();
+      else pendingAfterBanner = () => toggleMenu();
+      return;
+    }
+
+    // Known page names: /about, /process, etc.
     if (pages[value] && value !== currentPage) {
-      if (hasSeenBanner) {
-        navigateTo(value, "next");
-      } else {
-        pendingAfterBanner = () => navigateTo(value, "next");
+      if (hasSeenBanner) navigateTo(value, "next");
+      else pendingAfterBanner = () => navigateTo(value, "next");
+      return;
+    }
+
+    // Slug-based case page: /makhulo, /sony-music-2amdm, etc.
+    const matchedProject = projects.find(p => slugify(p.title) === value);
+    if (matchedProject) {
+      await renderCase(matchedProject.slot, projects, caseTitleEl, caseContentEl, caseFooterLeft);
+      setHash("case=" + matchedProject.slot);
+      if (currentPage !== "case") {
+        if (hasSeenBanner) navigateTo("case", "next");
+        else pendingAfterBanner = () => navigateTo("case", "next");
       }
+      return;
     }
   }
 
@@ -1463,6 +1490,14 @@ function markPeekShown() {
   try { localStorage.setItem(PEEK_STORAGE_KEY, String(Date.now())); } catch {}
 }
 
+function slugify(title) {
+  return title
+    .toLowerCase()
+    .replace(/ä/g, "a").replace(/ö/g, "o").replace(/ü/g, "u").replace(/ß/g, "ss")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 function setHash(value) {
   // Map page names to clean URL paths
   const pathMap = {
@@ -1471,22 +1506,22 @@ function setHash(value) {
     "pricing": "/pricing",
     "contact": "/contact",
     "legal":   "/legal",
+    "menu":    "/menu",
   };
   let next;
   if (!value) {
-    // Clear both pathname and any hash (e.g. #case=01 left over from case page)
+    // Clear both pathname and any hash
     next = "/";
     if (window.location.pathname !== next || window.location.hash) {
       history.replaceState(null, "", next);
     }
     return;
   } else if (value.startsWith("case=")) {
-    // Case pages are client-side rendered — keep as hash so server refresh works
+    // Case pages use slug-based clean paths: /makhulo, /sony-music-2amdm, etc.
     const slot = value.split("=").pop();
-    if (window.location.hash !== `#case=${slot}`) {
-      history.replaceState(null, "", `#case=${slot}`);
-    }
-    return;
+    const proj = window._projects && window._projects.find(p => p.slot === slot);
+    const slug = proj ? slugify(proj.title) : slot;
+    next = "/" + slug;
   } else if (pathMap[value]) {
     next = pathMap[value];
   } else {
