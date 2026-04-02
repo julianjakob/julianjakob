@@ -61,6 +61,13 @@
     <!-- ── Favicon ── -->
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 
+    <!-- ── Theme color (mobile browser chrome) ── -->
+    <meta name="theme-color" content="#000000">
+
+    <!-- ── Font preload (eliminates FOUT, improves LCP) ── -->
+    <link rel="preload" href="assets/fonts/Inter_18pt-Regular.woff" as="font" type="font/woff" crossorigin="anonymous">
+    <link rel="preload" href="assets/fonts/Inter_18pt-Medium.woff" as="font" type="font/woff" crossorigin="anonymous">
+
     <!-- ── Styles & Fonts ── -->
     <link rel="stylesheet" href="style.css">
     <!-- Inter self-hosted via @font-face in style.css -->
@@ -499,20 +506,6 @@
               }
             });
 
-            var allEls = Array.from(document.querySelectorAll(
-              ".contact-group, .contact-wrapper, .page-footer, #project-footer, " +
-              ".menu-list, .menu-bottom, .menu-footer, " +
-              ".case-wrapper, .case-content, .case-header, .case-block, " +
-              ".service-row, .about-portrait, " +
-              ".home-loading, " +
-              "img, video, [data-en], [data-de]"
-            )).filter((el, index, self) => self.indexOf(el) === index);
-
-            var rects = allEls.map(function (el) {
-              var r = el.getBoundingClientRect();
-              return { el: el, top: r.top, height: r.height };
-            });
-
             swap();
 
             // Apply typewriter animation to all elements with language data
@@ -520,43 +513,14 @@
               applyTypewriterEffect(document.querySelectorAll("[data-en][data-de]"));
             }
 
-            allEls.forEach(function (el, i) {
-              var oldRect = rects[i];
-              var newRect = el.getBoundingClientRect();
-              var dy = oldRect.top - newRect.top;
-              
-              if (Math.abs(dy) < 0.5) return;
-
-              // Skip FLIP on justified text — setting/clearing inline transform
-              // on these elements corrupts the browser's hyphenation cache
-              if (el.matches("p.type-contact-item, .case-text, .case-intro-text, .case-outro")) return;
-
-              el.style.transition = "none";
-
-              requestAnimationFrame(function () {
-                requestAnimationFrame(function () {
-                  el.style.transition = "transform 0.5s ease-in-out";
-                  el.style.transform = "translateY(0)";
-                  
-                  el.addEventListener("transitionend", function cleanup(e) {
-                    if (e.propertyName === "transform") {
-                      el.style.transform = "";
-                      el.style.transition = "";
-                      el.removeEventListener("transitionend", cleanup);
-                    }
-                  }, { once: true });
-                });
-              });
-            });
-
             body.classList.remove("lang-fade-out");
             body.classList.add("lang-fade-in");
-            
+
             setTimeout(function () {
               body.classList.remove("lang-fade-in");
               body.style.pointerEvents = "auto";
-            }, 500);
-          }, 220);
+            }, 420);
+          }, 200);
         } else {
           swap();
         }

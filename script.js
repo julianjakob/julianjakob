@@ -32,8 +32,6 @@ async function init() {
     pricing: pagePricing,
     legal: pageLegal,
   };
-  const pageOrder = ["about", "process"];
-
   let currentPage = "home",
     currentIndex = 0,
     currentCaseSlot = null,
@@ -270,6 +268,8 @@ async function init() {
       ? `${canonicalBase}/#case=${slot}`
       : `${canonicalBase}${pathMap[page] || "/"}`;
     setMeta('meta[property="og:url"]', "content", ogUrl);
+    const canonicalEl = document.querySelector('link[rel="canonical"]');
+    if (canonicalEl) canonicalEl.setAttribute("href", ogUrl);
   }
 
   function navigateTo(dest, direction = "next") {
@@ -988,8 +988,13 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
   wrapper.querySelectorAll(".case-top,.case-intro,.case-category,.case-ending").forEach((n) => n.remove());
   if (header.parentElement !== wrapper) wrapper.insertBefore(header, wrapper.firstChild);
 
-  // ── Hero (language-neutral) ──
-  const heroMedia = await findMediaByStem(base, "hero");
+  // ── Hero + intro + category — all independent, fetch in parallel ──
+  const [heroMedia, intro, category] = await Promise.all([
+    findMediaByStem(base, "hero"),
+    loadBoth("intro.txt"),
+    loadBoth("category.txt"),
+  ]);
+
   let topEl = null;
   if (heroMedia) {
     topEl = document.createElement("div");
@@ -1003,7 +1008,6 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
   }
 
   // ── Intro text ──
-  const intro = await loadBoth("intro.txt");
   let introDiv = null;
   if (intro.en) {
     introDiv = document.createElement("div");
@@ -1017,7 +1021,6 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
   }
 
   // ── Category label ──
-  const category = await loadBoth("category.txt");
   if (category.en) {
     const cat = document.createElement("div");
     cat.className = "case-category type-contact-item";
@@ -1077,9 +1080,11 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
     contentEl.appendChild(blockEl);
   }
 
-  // ── Outro + credits ──
-  const outro  = await loadBoth("outro.txt");
-  const credit = await loadBoth("credit.txt");
+  // ── Outro + credits — independent, fetch in parallel ──
+  const [outro, credit] = await Promise.all([
+    loadBoth("outro.txt"),
+    loadBoth("credit.txt"),
+  ]);
   if (outro.en || credit.en) {
     const ending = document.createElement("div");
     ending.className = "case-ending";
@@ -1121,9 +1126,9 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
 
 async function loadTextFile(base, filename) {
   const url = base + filename;
-  if (!(await urlExists(url))) return "";
   try {
     const res = await fetch(url, { cache: "default" });
+    _urlCache.set(url, res.ok); // keep urlCache consistent for any later urlExists calls
     if (!res.ok) return "";
     return ((await res.text()) || "").trim();
   } catch { return ""; }
@@ -1166,20 +1171,41 @@ async function findMediaByStem(base, stem) {
 
 function setupSafariSimpleLoop(v) {
   let seeking = false;
+  let rafId = null;
+  let running = false;
+
   function tick() {
-    if (v.duration && !isNaN(v.duration) && isFinite(v.duration)) {
-      if (v.paused && !seeking && document.visibilityState !== "hidden") v.play().catch(() => {});
+    if (!running) { rafId = null; return; }
+    if (document.visibilityState !== "hidden" && v.duration && !isNaN(v.duration) && isFinite(v.duration)) {
+      if (v.paused && !seeking) v.play().catch(() => {});
       if (!v.paused && !seeking && v.currentTime >= v.duration - 0.15) {
         seeking = true;
         v.currentTime = 0; v.play().catch(() => {});
         v.addEventListener("seeked", () => { seeking = false; }, { once: true });
       }
     }
-    requestAnimationFrame(tick);
+    rafId = requestAnimationFrame(tick);
   }
+
+  function start() {
+    if (running) return;
+    running = true;
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function stop() {
+    running = false;
+    if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
+  }
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") stop();
+    else start();
+  });
+
   v.addEventListener("ended", () => { seeking = false; v.currentTime = 0; v.play().catch(() => {}); });
-  if (v.readyState >= 1) requestAnimationFrame(tick);
-  else v.addEventListener("loadedmetadata", () => requestAnimationFrame(tick), { once: true });
+  if (v.readyState >= 1) start();
+  else v.addEventListener("loadedmetadata", start, { once: true });
 }
 
 function createMediaElement(media, { context }) {
@@ -1190,7 +1216,9 @@ function createMediaElement(media, { context }) {
     v.muted       = true;
     v.autoplay    = true;
     v.playsInline = true;
-    v.preload     = "auto";
+    // Home slides: preload fully so the video is ready before the slide animates in.
+    // Case/hero: preload only metadata — videos are below the fold and load on demand.
+    v.preload     = context === "home" ? "auto" : "metadata";
     v.setAttribute("playsinline", "");
     v.setAttribute("muted", "");
     v.setAttribute("autoplay", "");

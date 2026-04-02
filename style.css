@@ -16,8 +16,6 @@
 
 /* style.css */
 :root {
-  --bg-color: #ffffff;
-  --text-color: #000000;
   --text-grey: #999999;
   --line-color: #000000;
   --line-thickness: 0.5px;
@@ -32,11 +30,11 @@
   --col-width: calc(2.9 * var(--grid-unit)); 
   --col-gutter: calc(0.2 * var(--grid-unit)); 
 
-  --anim-speed: 0.7s;
-  --anim-curve: cubic-bezier(0.80, 0, 0.20, 1); 
+  --anim-speed: 0.65s;
+  --anim-curve: cubic-bezier(0.22, 1, 0.36, 1);
 
   --page-speed: 0.85s;
-  --page-curve: cubic-bezier(0.65, 0, 0.20, 1); 
+  --page-curve: cubic-bezier(0.22, 1, 0.36, 1);
 
   --layout-width: 75%;
 
@@ -62,17 +60,11 @@
   --letter-space-normal: -0.5px;    
   --letter-space-loose: -0.32px;    
 
-  --icon-size-base: 20px;           
-  --icon-size-small: 12px;          
+  --icon-size-base: 20px;
   --icon-gap: 8px;                  
 
-  --anim-translate-micro: 8px;      
-  --anim-translate-small: 20px;     
-
-  --bp-tablet: 768px;
-  --bp-desktop: 839px;
-  --bp-large: 1440px;
-  --bp-xl: 1920px;
+  --anim-translate-micro: 5px;
+  --anim-translate-small: 12px;
 
   --line-height-body: 140%;
 
@@ -133,7 +125,7 @@ a { text-decoration: none; color: inherit; }
 
 .typewriter-char {
   opacity: 0;
-  animation: typewriter-char 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: typewriter-char 0.22s cubic-bezier(0.25, 0, 0, 1) forwards;
   display: inline;
 }
 
@@ -290,12 +282,12 @@ header {
 body.lang-fade-out [data-en],
 body.lang-fade-out [data-de] {
   opacity: 0;
-  transition: opacity 0.2s ease-out;
+  transition: opacity 0.18s cubic-bezier(0.4, 0, 1, 1);
 }
 body.lang-fade-in [data-en],
 body.lang-fade-in [data-de] {
   opacity: 1;
-  transition: opacity 0.5s ease-in;
+  transition: opacity 0.4s cubic-bezier(0, 0, 0.2, 1);
 }
 
 #menu-overlay {
@@ -364,7 +356,6 @@ body.lang-fade-in [data-de] {
   display: flex;
   flex-direction: column;
   overscroll-behavior-y: none;
-  -webkit-overflow-scrolling: touch;
 }
 
 .case-container {
@@ -374,7 +365,6 @@ body.lang-fade-in [data-de] {
   display: flex;
   flex-direction: column;
   overscroll-behavior-y: none;
-  -webkit-overflow-scrolling: touch;
 }
 
 #page-home { background-color: #000; cursor: grab; }
@@ -502,7 +492,6 @@ body.lang-fade-in [data-de] {
 .media-row.row-scroll {
   overflow-x: auto;
   overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
   scroll-snap-type: x mandatory;
   padding-bottom: 2px;
 }
@@ -807,7 +796,7 @@ p.type-contact-item.service-description {
 .project-title { cursor: pointer; }
 
 @keyframes slideUpFade { 0% { opacity: 0; transform: translateY(var(--anim-translate-small)); } 100% { opacity: 1; transform: translateY(0); } }
-.text-anim { animation: slideUpFade 0.6s ease-out forwards; }
+.text-anim { animation: slideUpFade 0.5s cubic-bezier(0.25, 0, 0, 1) forwards; }
 
 @media (min-width: 768px) {
   :root {
@@ -912,7 +901,11 @@ p.type-contact-item.service-description {
   }
   #page-case .case-block.is-text .case-text {
     max-width: 100%;
-    column-count: 1;
+    column-count: 2;
+    column-gap: var(--col-gutter);
+    column-width: var(--col-width);
+    orphans: 3;
+    widows: 3;
   }
   .case-ending {
     max-width: 100%;
@@ -922,13 +915,6 @@ p.type-contact-item.service-description {
   }
   #page-case .media-row {
     gap: clamp(16px, 2vw, 32px) !important;
-  }
-  #page-case .case-block.is-text .case-text {
-    column-count: 2;
-    column-gap: var(--col-gutter);
-    column-width: var(--col-width);
-    orphans: 3;
-    widows: 3;
   }
   #page-case .case-intro-text {
     column-count: 2;
