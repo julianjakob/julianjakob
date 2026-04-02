@@ -341,8 +341,8 @@ async function init() {
     if (window.setLangToggleVisible) window.setLangToggleVisible(dest);
     tLock.acquire(950);
 
-    // Typewriter on page entry — starts mid-transition so text appears as page unfolds
-    if (dest !== "home" && typeof applyTypewriterEffect === "function") {
+    // Typewriter on page entry (not home, not case — case text should already be there)
+    if (dest !== "home" && dest !== "case" && typeof applyTypewriterEffect === "function") {
       const pg = pages[dest];
       if (pg) setTimeout(() => {
         if (currentPage !== dest) return;
@@ -1496,17 +1496,18 @@ function setHash(value) {
 }
 
 // Typewriter animation for language changes
-function applyTypewriterEffect(elements) {
+// containerOverride: pass a different root (e.g. #menu-overlay) to bypass active-page check
+function applyTypewriterEffect(elements, containerOverride) {
   // Find the currently active/visible page
-  const activePage = document.querySelector(".page-container.visible");
-  
+  const activePage = containerOverride || document.querySelector(".page-container.visible");
+
   elements.forEach(el => {
     // Skip if element has data-typewriter="false"
     if (el.getAttribute("data-typewriter") === "false") return;
-    
-    // Only animate if element is on the currently active page
+
+    // Only animate if element is in the expected container
     if (activePage && !activePage.contains(el)) return;
-    
+
     // Skip if element is not visible
     if (el.offsetParent === null) return;
 

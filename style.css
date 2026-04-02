@@ -342,7 +342,7 @@ header {
 .contact-container {
   background-color: #fff;
   overflow-y: auto;
-  padding: var(--spacing-contact-vertical) var(--ui-padding-side) 0 var(--ui-padding-side);
+  padding: var(--spacing-contact-vertical) var(--ui-padding-side) var(--ui-padding-top) var(--ui-padding-side);
   display: flex;
   flex-direction: column;
   overscroll-behavior-y: none;
@@ -352,7 +352,7 @@ header {
 .case-container {
   background-color: #fff;
   overflow-y: auto;
-  padding: 0 var(--ui-padding-side) 0 var(--ui-padding-side);
+  padding: 0 var(--ui-padding-side) var(--ui-padding-top) var(--ui-padding-side);
   display: flex;
   flex-direction: column;
   overscroll-behavior-y: none;
@@ -687,7 +687,7 @@ span.mobile-only { display: inline; }
   position: relative;
   width: 100%;
   margin-top: var(--spacing-footer-gap);
-  padding-bottom: max(var(--ui-padding-top), env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   display: flex;
   justify-content: space-between;
   mix-blend-mode: normal;

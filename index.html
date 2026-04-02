@@ -494,9 +494,19 @@
           updatePageTitle(pageId, window._currentCaseSlot || null);
         }
 
-        // ── Step 4: Typewriter on the active page ──
-        if (animate && typeof applyTypewriterEffect === "function" && visiblePage) {
-          applyTypewriterEffect(visiblePage.querySelectorAll("[data-en][data-de]"));
+        // ── Step 4: Typewriter on the active page + header + menu (if open) ──
+        if (animate && typeof applyTypewriterEffect === "function") {
+          if (visiblePage) {
+            applyTypewriterEffect(visiblePage.querySelectorAll("[data-en][data-de]"));
+          }
+          // Header items (menu-btn "Menu"/"Menü" etc.)
+          var header = document.getElementById("main-header");
+          if (header) applyTypewriterEffect(header.querySelectorAll("[data-en][data-de]"), header);
+          // Menu overlay items when open
+          var menuOverlayEl = document.getElementById("menu-overlay");
+          if (menuOverlayEl && menuOverlayEl.classList.contains("open")) {
+            applyTypewriterEffect(menuOverlayEl.querySelectorAll("[data-en][data-de]"), menuOverlayEl);
+          }
         }
 
         // ── Step 5: FLIP-animate elements that moved ──
