@@ -433,105 +433,78 @@
         }
       };
 
-      function updateToggleLabel(lang, animate) {
-        const toggle = document.getElementById("lang-toggle");
-        if (!toggle) return;
-        toggle.textContent = lang === "de" ? "EN" : "DE";
-        if (animate) {
-          // At this point toggle is at opacity:0 from the pre-fade.
-          // Add transition, then remove inline opacity so CSS class value applies.
-          toggle.style.transition = "opacity 0.35s cubic-bezier(0.25, 0, 0.2, 1)";
-          toggle.offsetHeight; // force reflow so browser registers current opacity:0
-          toggle.style.opacity = ""; // CSS class now defines target: 0.4 if visible, 0 if not
-          setTimeout(function () { toggle.style.transition = ""; }, 400);
-        }
-      }
-
       function applyLang(lang, animate) {
         currentLang = lang;
         localStorage.setItem(STORAGE_KEY, lang);
         document.documentElement.lang = lang === "de" ? "de" : "en";
 
-        const body = document.body;
+        // ── Clean up any typewriter spans before swapping ──
+        var prevLang = lang === "de" ? "en" : "de";
+        document.querySelectorAll(".case-text, .case-intro-text, .case-outro, p.type-contact-item").forEach(function (el) {
+          var clean = el.getAttribute("data-" + prevLang) || el.getAttribute("data-en");
+          if (!clean) return;
+          if (clean.indexOf("<") !== -1 || clean.indexOf("&") !== -1) { el.innerHTML = clean; }
+          else { el.textContent = clean; }
+        });
 
-        function swap() {
-          document.querySelectorAll("[data-en][data-de]").forEach(function (el) {
-            const text = el.getAttribute("data-" + lang) || el.getAttribute("data-en");
-            if (!text) return;
-            if (text.indexOf("<") !== -1 || text.indexOf("&") !== -1) {
-              el.innerHTML = text;
-            } else {
-              el.textContent = text;
-            }
-          });
-          // If the menu is currently open, swap() just overwrote "Close"/"Schließen"
-          // with "Menu"/"Menü". Correct it immediately.
-          const menuOverlay = document.getElementById("menu-overlay");
-          const menuBtn     = document.getElementById("menu-btn");
-          if (menuOverlay && menuBtn && menuOverlay.classList.contains("open")) {
-            menuBtn.textContent = lang === "de" ? "Schließen" : "Close";
-          }
-          updateToggleLabel(lang, animate);
-          const desc = document.querySelector('meta[name="description"]');
-          if (desc) {
-            desc.setAttribute("content", lang === "de"
-              ? "Brand Designer mit internationaler Erfahrung für Firmen wie Spotify, Meta und Sony Music."
-              : "Austrian brand designer with international experience for companies such as Spotify, Meta and Sony Music."
-            );
-          }
-          // Refresh page title in new language
-          if (typeof updatePageTitle === "function") {
-            const activePage = document.querySelector(".page-container.visible");
-            const pageId = activePage ? activePage.id.replace("page-", "") : "home";
-            updatePageTitle(pageId, window._currentCaseSlot || null);
-          }
+        // ── FLIP: snapshot positions of elements that may shift ──
+        var flipTargets = [
+          document.getElementById("lang-toggle"),
+          document.querySelector(".about-portrait")
+        ].filter(Boolean);
+        var before = flipTargets.map(function (el) { return el.getBoundingClientRect(); });
+
+        // ── Instant content swap ──
+        document.querySelectorAll("[data-en][data-de]").forEach(function (el) {
+          var text = el.getAttribute("data-" + lang) || el.getAttribute("data-en");
+          if (!text) return;
+          if (text.indexOf("<") !== -1 || text.indexOf("&") !== -1) { el.innerHTML = text; }
+          else { el.textContent = text; }
+        });
+
+        // Toggle label shows the OTHER language (what you'd switch TO)
+        var toggle = document.getElementById("lang-toggle");
+        if (toggle) toggle.textContent = lang === "de" ? "EN" : "DE";
+
+        // Menu open: fix "Menu"→"Schließen"/"Close"
+        var menuOverlay = document.getElementById("menu-overlay");
+        var menuBtn     = document.getElementById("menu-btn");
+        if (menuOverlay && menuBtn && menuOverlay.classList.contains("open")) {
+          menuBtn.textContent = lang === "de" ? "Schließen" : "Close";
         }
 
+        // Meta + title
+        var desc = document.querySelector('meta[name="description"]');
+        if (desc) desc.setAttribute("content", lang === "de"
+          ? "Brand Designer mit internationaler Erfahrung für Firmen wie Spotify, Meta und Sony Music."
+          : "Austrian brand designer with international experience for companies such as Spotify, Meta and Sony Music."
+        );
+        if (typeof updatePageTitle === "function") {
+          var activePage = document.querySelector(".page-container.visible");
+          var pageId = activePage ? activePage.id.replace("page-", "") : "home";
+          updatePageTitle(pageId, window._currentCaseSlot || null);
+        }
+
+        // ── FLIP: animate elements that moved to their new position ──
         if (animate) {
-          body.style.pointerEvents = "none";
-          body.classList.add("lang-fade-out");
-
-          // Pre-fade the lang toggle in sync with [data-en][data-de] elements
-          var toggleEl = document.getElementById("lang-toggle");
-          if (toggleEl) {
-            toggleEl.style.transition = "opacity 0.18s ease-out";
-            toggleEl.style.opacity = "0";
-          }
-
-          setTimeout(function () {
-            // Page is now faded out — restore justified paragraphs to clean HTML
-            // before anything else runs. Character spans from the previous
-            // typewriter animation are wiped while everything is invisible.
-            var prevLang = lang === "de" ? "en" : "de";
-            document.querySelectorAll(
-              "p.type-contact-item, .case-text, .case-intro-text, .case-outro"
-            ).forEach(function (el) {
-              var clean = el.getAttribute("data-" + prevLang) || el.getAttribute("data-en");
-              if (!clean) return;
-              if (clean.indexOf("<") !== -1 || clean.indexOf("&") !== -1) {
-                el.innerHTML = clean;
-              } else {
-                el.textContent = clean;
-              }
+          flipTargets.forEach(function (el, i) {
+            var after = el.getBoundingClientRect();
+            var dx = before[i].left - after.left;
+            var dy = before[i].top  - after.top;
+            if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
+            el.style.transition = "none";
+            el.style.transform  = "translate(" + dx + "px," + dy + "px)";
+            requestAnimationFrame(function () {
+              requestAnimationFrame(function () {
+                el.style.transition = "transform 0.35s cubic-bezier(0.25, 0, 0.2, 1)";
+                el.style.transform  = "";
+                setTimeout(function () {
+                  el.style.transition = "";
+                  el.style.transform  = "";
+                }, 380);
+              });
             });
-
-            swap();
-
-            // Apply typewriter animation to all elements with language data
-            if (typeof applyTypewriterEffect === "function") {
-              applyTypewriterEffect(document.querySelectorAll("[data-en][data-de]"));
-            }
-
-            body.classList.remove("lang-fade-out");
-            body.classList.add("lang-fade-in");
-
-            setTimeout(function () {
-              body.classList.remove("lang-fade-in");
-              body.style.pointerEvents = "auto";
-            }, 370);
-          }, 200);
-        } else {
-          swap();
+          });
         }
       }
 
