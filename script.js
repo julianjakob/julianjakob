@@ -362,32 +362,6 @@ async function init() {
     });
   }
 
-  // ── Subtle mouse parallax drag ─────────────────────────────────────────────
-  // Very light "weight" feel on home slides. Max displacement ~4px, slow lerp.
-  const _drag = { x: 0, y: 0, tx: 0, ty: 0, raf: null };
-  const DRAG_FACTOR = 0.005;
-  const DRAG_LERP   = 0.055;
-
-  function _dragTick() {
-    const dx = _drag.tx - _drag.x;
-    const dy = _drag.ty - _drag.y;
-    _drag.x += dx * DRAG_LERP;
-    _drag.y += dy * DRAG_LERP;
-
-    const slide = homeSlides[currentIndex];
-    const inner = slide && slide.querySelector(".content-single, .media-row");
-    if (inner) inner.style.transform = `translate(${_drag.x.toFixed(2)}px, ${_drag.y.toFixed(2)}px)`;
-
-    if (Math.abs(dx) < 0.01 && Math.abs(dy) < 0.01) { _drag.raf = null; return; }
-    _drag.raf = requestAnimationFrame(_dragTick);
-  }
-
-  document.addEventListener("mousemove", (e) => {
-    if (currentPage !== "home" || isMenuOpen) return;
-    _drag.tx = (e.clientX - innerWidth  / 2) * DRAG_FACTOR;
-    _drag.ty = (e.clientY - innerHeight / 2) * DRAG_FACTOR;
-    if (!_drag.raf) _drag.raf = requestAnimationFrame(_dragTick);
-  }, { passive: true });
 
   // Abort token for runPeekHint — lets changeSlide cancel it instantly
   let peekController = null;
@@ -1540,7 +1514,7 @@ function applyTypewriterEffect(elements) {
     // Per-character spans on justified text create huge gaps because the browser
     // distributes justification spacing between individual letter spans.
     // Word spans preserve correct justification while keeping the cascading feel.
-    if (el.matches("p.type-contact-item, p.case-text, p.case-intro-text, p.case-outro")) {
+    if (el.matches("p.type-contact-item, .case-text, .case-intro-text, .case-outro, p.service-description")) {
       const wordDelay = 18; // ms per word — feels alive without being slow
 
       function revealWords(node, wordIndex) {
