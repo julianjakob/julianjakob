@@ -407,8 +407,10 @@ async function init() {
 
     const ctrl = { cancelled: false };
     peekController = ctrl;
-    // total: (480+180+680) + 300 + (40+480+180+680) = ~3020ms
-    tLock.acquire(2600);
+    // NOTE: No tLock.acquire() here — the peek must not block user input.
+    // If the user swipes/scrolls during the hint, changeSlide() calls
+    // abortPeek() first, which cancels this animation and clears peekController,
+    // then proceeds with the real slide transition normally.
 
     const nextIdx  = (currentIndex + 1) % homeSlides.length;
     const prevIdx  = (currentIndex - 1 + homeSlides.length) % homeSlides.length;
@@ -480,7 +482,6 @@ async function init() {
     resetPeek(prevSlide);
 
     peekController = null;
-    tLock.release();
   }
 
   function changeSlide(direction) {
