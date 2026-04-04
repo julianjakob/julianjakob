@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <!-- ── SPA redirect restore (GitHub Pages 404 fix) ── -->
+    <script>
+      (function () {
+        var redirect = sessionStorage.getItem('spa_redirect');
+        if (redirect && redirect !== '/') {
+          sessionStorage.removeItem('spa_redirect');
+          window.history.replaceState(null, null, redirect);
+        }
+      })();
+    </script>
+
     <!-- ── Primary SEO ── -->
     <title>Julian Jakob — Global Brand Designer</title>
     <meta name="description" content="Austrian brand designer with international experience for companies such as Spotify, Meta and Sony Music.">
@@ -102,7 +113,7 @@
 
         <div class="menu-bottom">
             <a href="#" data-dest="contact" class="type-menu-item nav-link pair-gap" data-en="Contact" data-de="Kontakt">Contact</a>
-            <a href="https://cal.com/julian-jakob-ro0eik/15min" target="_blank" class="type-menu-item menu-intro-link">
+            <a href="https://cal.com/julian-jakob-ro0eik/30min" target="_blank" class="type-menu-item menu-intro-link">
                 <span data-en="Intro call" data-de="Erstgespräch">Intro call</span>
             </a>
         </div>
@@ -145,8 +156,8 @@
                         <span class="type-contact-item">hello@julianjakob.at</span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
                     </a>
-                    <a href="https://cal.com/julian-jakob-ro0eik/15min" target="_blank" class="contact-row">
-                        <span class="type-contact-item" data-en="Intro call (15 minutes)" data-de="Erstgespräch (15 Minuten)">Intro call (15 minutes)</span>
+                    <a href="https://cal.com/julian-jakob-ro0eik/30min" target="_blank" class="contact-row">
+                        <span class="type-contact-item" data-en="Intro call (30 minutes)" data-de="Erstgespräch (30 Minuten)">Intro call (30 minutes)</span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
                     </a>
                 </div>
@@ -240,8 +251,8 @@
                         <span class="type-contact-item">hello@julianjakob.at</span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
                     </a>
-                    <a href="https://cal.com/julian-jakob-ro0eik/15min" target="_blank" class="contact-row">
-                        <span class="type-contact-item" data-en="Intro call (15 minutes)" data-de="Erstgespräch (15 Minuten)">Intro call (15 minutes)</span>
+                    <a href="https://cal.com/julian-jakob-ro0eik/30min" target="_blank" class="contact-row">
+                        <span class="type-contact-item" data-en="Intro call (30 minutes)" data-de="Erstgespräch (30 Minuten)">Intro call (30 minutes)</span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
                     </a>
                 </div>

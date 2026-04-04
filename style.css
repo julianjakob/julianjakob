@@ -84,6 +84,7 @@
   text-align-last: left;
   text-wrap: pretty;
   word-spacing: -0.01em;
+  hyphens: auto;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -567,7 +568,7 @@ header {
 .case-top .case-header .type-about-headline { margin-bottom: 0; }
 
 .case-intro {
-  max-width: var(--layout-width);
+  max-width: 100%;
   margin-bottom: 0;
   padding-top: clamp(30px, 4vh, 50px);
 }
@@ -585,7 +586,7 @@ header {
 #page-case .case-readmore-inline { display: none !important; }
 
 .case-category {
-  max-width: var(--layout-width);
+  max-width: 100%;
   margin-top: 15px;
   margin-bottom: clamp(80px, 12vh, 150px);
   color: var(--text-grey);
@@ -632,19 +633,19 @@ header {
 }
 
 .case-text {
-  max-width: var(--layout-width);
+  max-width: 100%;
   white-space: pre-wrap;
   text-align: left;
 }
 
 #page-case .case-block.is-text { justify-content: flex-start; }
 #page-case .case-block.is-text .case-block-inner { justify-content: flex-start; }
-#page-case .case-block.is-text .case-text { width: 100%; max-width: var(--layout-width); }
+#page-case .case-block.is-text .case-text { width: 100%; max-width: 100%; }
 
 #page-case .case-block.is-text { margin-top: clamp(20px, 4vw, 60px); margin-bottom: clamp(10px, 2vw, 30px); }
 
 .case-ending {
-  max-width: var(--layout-width);
+  max-width: 100%;
   margin-top: clamp(80px, 12vh, 150px);
   margin-bottom: 0;
 }
@@ -652,7 +653,7 @@ header {
 .case-credit { white-space: pre-wrap; color: var(--text-grey); margin-top: var(--spacing-md); }
 
 .contact-wrapper { display: flex; flex-direction: column; gap: var(--spacing-contact-vertical); flex: 1; width: 100%; }
-p.type-contact-item { max-width: var(--layout-width); margin-bottom: var(--spacing-xl); text-align: left; }
+p.type-contact-item { max-width: 100%; margin-bottom: var(--spacing-xl); text-align: left; }
 #page-legal p.type-contact-item { text-align: left; text-align-last: left; hyphens: none; }
 
 .desktop-only { display: none; }
@@ -696,9 +697,10 @@ span.mobile-only { display: inline; }
 #case-next-link { color: #000; text-decoration: none; cursor: pointer; }
 #case-next-link:hover { opacity: 0.5; transition: opacity 0.2s ease; }
 
+/* ── Client grid: single column on mobile, two columns on desktop ── */
 .client-grid {
   display: grid;
-  grid-template-columns: auto auto;
+  grid-template-columns: auto;
   column-gap: var(--spacing-component-gap);
   row-gap: 2px;
   width: auto;
@@ -740,7 +742,7 @@ span.mobile-only { display: inline; }
   overflow-x: visible;
   transition: max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, padding 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   padding-left: calc(var(--service-num-width) + var(--spacing-component-gap));
-  padding-right: 20px;
+  padding-right: 0;
   padding-top: 0;
   padding-bottom: 0;
 }
@@ -898,7 +900,9 @@ p.type-contact-item.service-description {
     orphans: 3;
     widows: 3;
   }
+  /* Force .case-ending to fill its flex parent so .case-outro has room for 2 columns */
   .case-ending {
+    width: 100%;
     max-width: 100%;
   }
   .case-content {
@@ -928,6 +932,7 @@ p.type-contact-item.service-description {
     hyphens: auto;
     word-spacing: -0.01em;
   }
+  /* Two-column layout for body paragraphs on contact/about/process pages */
   p.type-contact-item {
     margin-bottom: calc(0.4 * var(--grid-unit));
     max-width: calc(2 * var(--col-width) + var(--col-gutter));
@@ -936,6 +941,21 @@ p.type-contact-item.service-description {
     column-width: var(--col-width);
     orphans: 3;
     widows: 3;
+  }
+  /* Two-column layout for case outro.
+     Kept separate from p.type-contact-item — the outro is a div inside a flex
+     container, so it needs explicit width: 100% and no restrictive max-width
+     to allow the columns to actually render. white-space: normal overrides the
+     base pre-wrap which would otherwise collapse columns to one. */
+  .case-outro {
+    width: 100%;
+    max-width: 100%;
+    column-count: 2;
+    column-gap: var(--col-gutter);
+    column-width: var(--col-width);
+    orphans: 3;
+    widows: 3;
+    white-space: normal;
   }
   #page-legal p.type-contact-item {
     column-count: 1;
