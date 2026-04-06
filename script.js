@@ -1050,7 +1050,7 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
     topEl.className = "case-top";
     const heroEl = document.createElement("div");
     heroEl.className = "case-hero";
-    heroEl.appendChild(createMediaElement(heroMedia, { context: "hero" }));
+    heroEl.appendChild(createMediaElement(heroMedia, { context: "hero", alt: project ? project.title + " — Julian Jakob" : "" }));
     topEl.appendChild(heroEl);
     topEl.appendChild(header);
     wrapper.insertBefore(topEl, wrapper.firstChild);
@@ -1094,7 +1094,7 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
         items.forEach((media) => {
           const itemWrap = document.createElement("div");
           itemWrap.className = "media-item";
-          itemWrap.appendChild(createMediaElement(media, { context: "case" }));
+          itemWrap.appendChild(createMediaElement(media, { context: "case", alt: project ? project.title + " — Julian Jakob" : "" }));
           row.appendChild(itemWrap);
         });
         inner.appendChild(row);
@@ -1102,7 +1102,7 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
         inner.classList.add("single");
         const singleWrap = document.createElement("div");
         singleWrap.className = "case-media-single";
-        singleWrap.appendChild(createMediaElement(fileToMedia(block.src), { context: "case" }));
+        singleWrap.appendChild(createMediaElement(fileToMedia(block.src), { context: "case", alt: project ? project.title + " — Julian Jakob" : "" }));
         inner.appendChild(singleWrap);
       } else {
         continue;
@@ -1138,7 +1138,7 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
         block.items.forEach((media) => {
           const itemWrap = document.createElement("div");
           itemWrap.className = "media-item";
-          itemWrap.appendChild(createMediaElement(media, { context: "case" }));
+          itemWrap.appendChild(createMediaElement(media, { context: "case", alt: project ? project.title + " — Julian Jakob" : "" }));
           row.appendChild(itemWrap);
         });
         inner.appendChild(row);
@@ -1146,7 +1146,7 @@ async function renderCase(slot, projects, titleEl, contentEl, caseFooterLeft) {
         inner.classList.add("single");
         const singleWrap = document.createElement("div");
         singleWrap.className = "case-media-single";
-        singleWrap.appendChild(createMediaElement(block.item, { context: "case" }));
+        singleWrap.appendChild(createMediaElement(block.item, { context: "case", alt: project ? project.title + " — Julian Jakob" : "" }));
         inner.appendChild(singleWrap);
       }
 
@@ -1286,7 +1286,7 @@ function setupSafariSimpleLoop(v) {
   else v.addEventListener("loadedmetadata", start, { once: true });
 }
 
-function createMediaElement(media, { context }) {
+function createMediaElement(media, { context, alt = "" }) {
   if (!media) return document.createElement("div");
 
   if (media.kind === "video") {
@@ -1356,7 +1356,7 @@ function createMediaElement(media, { context }) {
 
   const img = document.createElement("img");
   img.src = media.src;
-  img.alt = "";
+  img.alt = alt;
   img.loading = context === "home" ? "eager" : "lazy";
   return img;
 }

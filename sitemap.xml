@@ -4,7 +4,7 @@
 
   <url>
     <loc>https://julianjakob.at/</loc>
-    <lastmod>2026-03-29</lastmod>
+    <lastmod>2026-04-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://julianjakob.at/"/>
@@ -14,7 +14,7 @@
 
   <url>
     <loc>https://julianjakob.at/about</loc>
-    <lastmod>2026-03-29</lastmod>
+    <lastmod>2026-04-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://julianjakob.at/about"/>
@@ -24,7 +24,7 @@
 
   <url>
     <loc>https://julianjakob.at/process</loc>
-    <lastmod>2026-03-29</lastmod>
+    <lastmod>2026-04-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://julianjakob.at/process"/>
@@ -34,7 +34,7 @@
 
   <url>
     <loc>https://julianjakob.at/pricing</loc>
-    <lastmod>2026-03-29</lastmod>
+    <lastmod>2026-04-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://julianjakob.at/pricing"/>
@@ -44,7 +44,7 @@
 
   <url>
     <loc>https://julianjakob.at/contact</loc>
-    <lastmod>2026-03-29</lastmod>
+    <lastmod>2026-04-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://julianjakob.at/contact"/>
@@ -52,9 +52,70 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://julianjakob.at/contact"/>
   </url>
 
+  <!-- Case studies -->
+  <url>
+    <loc>https://julianjakob.at/sony-music-2amdm</loc>
+    <lastmod>2026-04-06</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://julianjakob.at/sony-music-2amdm"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://julianjakob.at/sony-music-2amdm"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://julianjakob.at/sony-music-2amdm"/>
+  </url>
+
+  <url>
+    <loc>https://julianjakob.at/suck-club</loc>
+    <lastmod>2026-04-06</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://julianjakob.at/suck-club"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://julianjakob.at/suck-club"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://julianjakob.at/suck-club"/>
+  </url>
+
+  <url>
+    <loc>https://julianjakob.at/makhulo</loc>
+    <lastmod>2026-04-06</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://julianjakob.at/makhulo"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://julianjakob.at/makhulo"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://julianjakob.at/makhulo"/>
+  </url>
+
+  <url>
+    <loc>https://julianjakob.at/spotify-japan</loc>
+    <lastmod>2026-04-06</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://julianjakob.at/spotify-japan"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://julianjakob.at/spotify-japan"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://julianjakob.at/spotify-japan"/>
+  </url>
+
+  <url>
+    <loc>https://julianjakob.at/florian</loc>
+    <lastmod>2026-04-06</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://julianjakob.at/florian"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://julianjakob.at/florian"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://julianjakob.at/florian"/>
+  </url>
+
+  <url>
+    <loc>https://julianjakob.at/mercedes-maybach</loc>
+    <lastmod>2026-04-06</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://julianjakob.at/mercedes-maybach"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://julianjakob.at/mercedes-maybach"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://julianjakob.at/mercedes-maybach"/>
+  </url>
+
   <url>
     <loc>https://julianjakob.at/legal</loc>
-    <lastmod>2026-03-29</lastmod>
+    <lastmod>2026-04-06</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://julianjakob.at/legal"/>
