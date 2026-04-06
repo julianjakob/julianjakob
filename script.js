@@ -210,8 +210,7 @@ async function init() {
         if (isMenuOpen) toggleMenu();
         return;
       }
-      if (dest !== "case") setHash("");
-      navigateTo(dest, "next");
+      navigateTo(dest, "next"); // push = true (default) — adds a real history entry
     });
   });
 
@@ -284,7 +283,7 @@ async function init() {
     if (canonicalEl) canonicalEl.setAttribute("href", ogUrl);
   }
 
-  function navigateTo(dest, direction = "next") {
+  function navigateTo(dest, direction = "next", push = true) {
     if (!pages[dest] || isAnimating) return;
     const oldPage = pages[currentPage],
       newPage = pages[dest];
@@ -345,8 +344,8 @@ async function init() {
     }
 
     if (dest !== "home") flashMenuText(dest);
-    if (dest !== "home" && dest !== "case") setHash(dest);
-    if (dest === "home") setHash("");
+    if (dest !== "home" && dest !== "case") setHash(dest, push);
+    if (dest === "home") setHash("", push);
     updateMenuLinks(dest);
     currentPage = dest;
     updatePageTitle(dest, dest === "case" ? currentCaseSlot : null);
@@ -648,14 +647,20 @@ async function init() {
   });
 
   window.addEventListener("hashchange", () => { handleHash().catch(console.error); });
+  window.addEventListener("popstate",   () => { handleHash().catch(console.error); });
   await handleHash();
 
   async function handleHash() {
-    // Support both legacy hash (#about) and clean path (/about) URLs
+    // Responds to URL state — never pushes new history entries (push = false throughout)
     const path  = window.location.pathname.replace(/^\//, "").trim();
     const hash  = (window.location.hash || "").replace(/^#/, "").trim();
     const value = path || hash;
-    if (!value) return;
+
+    // Empty path = home (e.g. back button from /about to /)
+    if (!value) {
+      if (currentPage !== "home") navigateTo("home", "next", false);
+      return;
+    }
 
     // Legacy slot format: /case/01 or #case=01
     const caseMatch = value.match(/^case[=/](.+)$/);
@@ -663,10 +668,10 @@ async function init() {
       const slot = caseMatch[1];
       if (!slot) return;
       await renderCase(slot, projects, caseTitleEl, caseContentEl, caseFooterLeft);
-      setHash("case=" + slot); // upgrades to slug URL
+      setHash("case=" + slot, false); // replaceState — upgrade format only
       if (currentPage !== "case") {
-        if (hasSeenBanner) navigateTo("case", "next");
-        else pendingAfterBanner = () => navigateTo("case", "next");
+        if (hasSeenBanner) navigateTo("case", "next", false);
+        else pendingAfterBanner = () => navigateTo("case", "next", false);
       }
       return;
     }
@@ -680,8 +685,8 @@ async function init() {
 
     // Known page names: /about, /process, etc.
     if (pages[value] && value !== currentPage) {
-      if (hasSeenBanner) navigateTo(value, "next");
-      else pendingAfterBanner = () => navigateTo(value, "next");
+      if (hasSeenBanner) navigateTo(value, "next", false);
+      else pendingAfterBanner = () => navigateTo(value, "next", false);
       return;
     }
 
@@ -689,10 +694,10 @@ async function init() {
     const matchedProject = projects.find(p => slugify(p.title) === value);
     if (matchedProject) {
       await renderCase(matchedProject.slot, projects, caseTitleEl, caseContentEl, caseFooterLeft);
-      setHash("case=" + matchedProject.slot);
+      setHash("case=" + matchedProject.slot, false); // replaceState — already at this URL
       if (currentPage !== "case") {
-        if (hasSeenBanner) navigateTo("case", "next");
-        else pendingAfterBanner = () => navigateTo("case", "next");
+        if (hasSeenBanner) navigateTo("case", "next", false);
+        else pendingAfterBanner = () => navigateTo("case", "next", false);
       }
       return;
     }
@@ -701,7 +706,7 @@ async function init() {
   async function openCase(slot) {
     currentCaseSlot = slot;
     await renderCase(slot, projects, caseTitleEl, caseContentEl, caseFooterLeft);
-    setHash(`case=${slot}`);
+    setHash(`case=${slot}`, true); // push — user clicked a project, add history entry
     updatePageTitle("case", slot);
     window._currentCaseSlot = slot;
 
@@ -750,7 +755,7 @@ async function init() {
 
     // Update state while page is fully folded and invisible
     currentCaseSlot = slot;
-    setHash(`case=${slot}`);
+    setHash(`case=${slot}`, true); // push — user clicked "next project"
     updatePageTitle("case", slot);
     window._currentCaseSlot = slot;
     casePage.scrollTop = 0; // safe — page is scaleY(0), user sees nothing
@@ -1499,7 +1504,7 @@ function slugify(title) {
     .replace(/^-+|-+$/g, "");
 }
 
-function setHash(value) {
+function setHash(value, push = false) {
   // Map page names to clean URL paths
   const pathMap = {
     "about":   "/about",
@@ -1511,12 +1516,7 @@ function setHash(value) {
   };
   let next;
   if (!value) {
-    // Clear both pathname and any hash
     next = "/";
-    if (window.location.pathname !== next || window.location.hash) {
-      history.replaceState(null, "", next);
-    }
-    return;
   } else if (value.startsWith("case=")) {
     // Case pages use slug-based clean paths: /makhulo, /sony-music-2amdm, etc.
     const slot = value.split("=").pop();
@@ -1528,7 +1528,11 @@ function setHash(value) {
   } else {
     next = "/" + value;
   }
-  if (window.location.pathname !== next) history.replaceState(null, "", next);
+  const alreadyThere = window.location.pathname === next && !window.location.hash;
+  if (!alreadyThere) {
+    if (push) history.pushState(null, "", next);
+    else      history.replaceState(null, "", next);
+  }
 }
 
 // Typewriter animation for language changes
