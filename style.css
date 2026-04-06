@@ -1016,7 +1016,7 @@ p.type-contact-item.service-description {
     gap: var(--spacing-component-gap-large);
   }
   .service-body {
-    padding-left: var(--service-body-indent);
+    padding-left: calc(var(--service-num-width) + var(--spacing-component-gap-large));
     padding-right: 0;
   }
 }
@@ -1032,7 +1032,7 @@ p.type-contact-item.service-description {
     gap: var(--spacing-component-gap-xl);
   }
   .service-body {
-    padding-left: var(--service-body-indent);
+    padding-left: calc(var(--service-num-width) + var(--spacing-component-gap-xl));
     padding-right: 0;
   }
   .case-header .type-about-headline {

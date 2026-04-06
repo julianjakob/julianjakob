@@ -347,14 +347,7 @@ async function init() {
     if (window.setLangToggleVisible) window.setLangToggleVisible(dest);
     tLock.acquire(950);
 
-    // Typewriter on page entry (not home, not case — case text should already be there)
-    if (dest !== "home" && dest !== "case" && typeof applyTypewriterEffect === "function") {
-      const pg = pages[dest];
-      if (pg) setTimeout(() => {
-        if (currentPage !== dest) return;
-        applyTypewriterEffect(pg.querySelectorAll("[data-en][data-de]"));
-      }, 500);
-    }
+
   }
 
   initServicesAccordion();
