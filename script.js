@@ -129,7 +129,6 @@ async function init() {
     isMenuOpen = !isMenuOpen;
     const activePage = pages[currentPage];
     if (isMenuOpen) {
-      setHash("menu");
       menuOverlay.classList.add("open");
       if (menuTimeout) clearTimeout(menuTimeout);
       fadeMenuText((window.getCurrentLang && window.getCurrentLang() === "de") ? "Schließen" : "Close");
@@ -140,11 +139,6 @@ async function init() {
         activePage.classList.add("hidden");
       }
     } else {
-      // Restore URL for current page when menu closes
-      const restoreHash = currentPage === "case" && currentCaseSlot
-        ? "case=" + currentCaseSlot
-        : currentPage || "";
-      setHash(restoreHash);
       menuOverlay.classList.remove("open");
       // Only fade to "Menu" if we're not about to flash a page name
       if (!skipFadeToMenu) {
@@ -300,6 +294,7 @@ async function init() {
       }
       updateMenuLinks(dest);
       currentPage = dest;
+      if (dest !== "case") setHash(dest === "home" ? "" : dest, push); // push real history entry
       toggleMenu(dest !== "home"); // skip "Menu" label when navigating to a page
       // Flash page name after menu closes — no need to wait for "Menu" anymore
       if (dest !== "home") setTimeout(() => flashMenuText(dest), 500);
@@ -673,13 +668,6 @@ async function init() {
         if (hasSeenBanner) navigateTo("case", "next", false);
         else pendingAfterBanner = () => navigateTo("case", "next", false);
       }
-      return;
-    }
-
-    // Menu URL: /menu opens the menu overlay
-    if (value === "menu") {
-      if (hasSeenBanner) toggleMenu();
-      else pendingAfterBanner = () => toggleMenu();
       return;
     }
 
@@ -1512,7 +1500,6 @@ function setHash(value, push = false) {
     "pricing": "/pricing",
     "contact": "/contact",
     "legal":   "/legal",
-    "menu":    "/menu",
   };
   let next;
   if (!value) {
