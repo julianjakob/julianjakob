@@ -3,17 +3,53 @@
     {
       "type": "row",
       "items": [
-        "01a.webp",
-        "01b.webp"
+        {
+          "src": "01a.webp",
+          "w": 2160,
+          "h": 2700,
+          "sizes": [
+            {
+              "w": 640,
+              "src": "sizes/01a-640.webp"
+            },
+            {
+              "w": 960,
+              "src": "sizes/01a-960.webp"
+            },
+            {
+              "w": 1280,
+              "src": "sizes/01a-1280.webp"
+            },
+            {
+              "w": 1920,
+              "src": "sizes/01a-1920.webp"
+            }
+          ]
+        },
+        {
+          "src": "01b.webp",
+          "w": 2160,
+          "h": 2700,
+          "sizes": [
+            {
+              "w": 640,
+              "src": "sizes/01b-640.webp"
+            },
+            {
+              "w": 960,
+              "src": "sizes/01b-960.webp"
+            },
+            {
+              "w": 1280,
+              "src": "sizes/01b-1280.webp"
+            },
+            {
+              "w": 1920,
+              "src": "sizes/01b-1920.webp"
+            }
+          ]
+        }
       ]
     }
-  ],
-  "case": {
-    "hero": null,
-    "hasIntro": false,
-    "hasCategory": false,
-    "hasOutro": false,
-    "hasCredit": false,
-    "blocks": []
-  }
+  ]
 }

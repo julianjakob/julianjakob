@@ -2,5 +2,22 @@
   "enabled": true,
   "title": "Spotify Japan",
   "title_de": "Spotify Japan",
-  "slug": "Spotify Japan"
+  "slug": "Spotify Japan",
+  "details": {
+    "type": {
+      "en": "Studio Project",
+      "de": "Studioprojekt"
+    },
+    "studio": "Studio Herrström",
+    "responsibilities": {
+      "en": [
+        "Concept Development",
+        "Visual System Development"
+      ],
+      "de": [
+        "Konzeptentwicklung",
+        "Entwicklung des visuellen Systems"
+      ]
+    }
+  }
 }

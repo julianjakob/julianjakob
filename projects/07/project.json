@@ -2,5 +2,20 @@
   "enabled": true,
   "title": "Mercedes Maybach",
   "title_de": "Mercedes Maybach",
-  "slug": "Mercedes Maybach"
+  "slug": "Mercedes Maybach",
+  "details": {
+    "type": {
+      "en": "Studio Project",
+      "de": "Studioprojekt"
+    },
+    "studio": "Studio Herrström",
+    "responsibilities": {
+      "en": [
+        "Layout Development"
+      ],
+      "de": [
+        "Layoutentwicklung"
+      ]
+    }
+  }
 }

@@ -1,14 +1,14 @@
 /* ── Self-hosted Inter ─────────────────────────────────────────── */
 @font-face {
   font-family: "Inter";
-  src: url("assets/fonts/Inter_18pt-Regular.woff") format("woff");
+  src: url("assets/fonts/Inter-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "Inter";
-  src: url("assets/fonts/Inter_18pt-Medium.woff") format("woff");
+  src: url("assets/fonts/Inter-Medium.woff2") format("woff2");
   font-weight: 500;
   font-style: normal;
   font-display: swap;
@@ -22,8 +22,6 @@
   --font-main: "Inter", "Helvetica Neue", Arial, sans-serif;
 
   --header-height: 60px;
-  --page-padding: 20px;
-  --page-padding-top: 30px;
   --ui-padding-side: 20px;
   --ui-padding-top: 30px;
   --grid-unit: calc(100vw / 12);
@@ -44,15 +42,13 @@
   --spacing-xs: 10px;
   --spacing-sm: 18px;
   --spacing-md: 20px;
-  --spacing-lg: 45px;
   --spacing-xl: 50px;
 
   --spacing-section-vertical: 135px;
-  --spacing-contact-vertical: 150px;
+  --spacing-contact-vertical: min(150px, 22vh); /* shrinks only on very short screens (landscape phones) */
   --spacing-component-gap: 30px;
   --spacing-component-gap-large: 40px;
   --spacing-component-gap-xl: 50px;
-  --spacing-component-gap-grid: 90px;
 
   --service-num-width: 25px;
   --service-body-indent: calc(var(--service-num-width) + var(--spacing-component-gap));
@@ -61,11 +57,12 @@
   --letter-space-normal: -0.5px;
   --letter-space-loose: -0.32px;
 
-  --icon-size-base: 20px;
-  --icon-gap: 8px;
 
   --anim-translate-micro: 8px;
-  --anim-translate-small: 20px;
+
+  /* Dimmed text: hover feedback / the inactive option (other language, current page) */
+  --dim-hover: 0.5;
+  --dim-inactive: 0.4;
 
   /* Transition shorthands */
   --transition-fast:   0.2s ease;
@@ -75,28 +72,46 @@
   --line-height-body:    140%;
   --line-height-heading: 120%;
 
-  /* Case page rhythm */
-  --case-block-gap:   clamp(16px, 2vw, 32px);
-  --case-section-gap: clamp(80px, 12vh, 150px);
-
-  --type-base:    clamp(18px, calc(0.25vw + 14px), 22px);
-  --type-display: clamp(22px, calc(1.0vw + 18px), 52px);
-  --type-menu:    clamp(45px, calc(1.25vw + 40px), 85px);
-  --type-ui:      var(--type-base);
-  --type-body:    var(--type-base);
-  --type-label:   14px;
+  /* Type scale — five sizes, nothing else:
+       display   headlines, the name on the CV
+       menu      menu items
+       base      UI (logo, Menu, DE/EN, Details, titles), section headers
+       running   all text under a header: paragraphs, lists, rows, tags, details
+       small     corner labels, details on phones
+     The first three are fluid, anchored on two reference screens, linear in between:
+       token          iPhone SE (375px)   laptop (1440px)   cap
+       base           15px                18px              22px
+       display        20px                32.4px            52px
+       menu           38px                58px              85px  (also ≤ 8.5vh: short / landscape phones)
+     Formula for a token going from A px @375 to B px @1440:
+       slope = (B - A) / 1065 * 100  (in vw);  intercept = A - 3.75 * slope  (in px) */
+  --type-base:    clamp(15px, calc(13.94px + 0.282vw), 22px);
+  --type-display: clamp(20px, calc(15.63px + 1.164vw), 52px);
+  --type-menu:    clamp(30px, min(calc(30.96px + 1.878vw), 8.5vh), 85px);
+  /* Distance from a line box's top to the top of Inter's capitals at 120% line-height,
+     in em. Used to put the first menu item's caps level with the page headline's caps. */
+  --cap-offset: 0.236;
+  /* Running text: fixed, so it never outgrows the headers above it */
+  --type-running: 14px;
   --type-small:   12px;
 }
 
-.type-contact-item,
-.case-text,
-.case-intro-text,
-.case-outro {
+.type-contact-item {
   text-align: left;
   text-align-last: left;
   text-wrap: pretty;
   word-spacing: -0.01em;
   hyphens: auto;
+  /* Never more than two hyphenated lines in a row (Safari; Chrome ignores it) */
+  -webkit-hyphenate-limit-lines: 2;
+}
+/* English: no tiny fragments like "de-sign" (words of 6+ letters, 3+ letters on each
+   side). German keeps the browser default — its long compounds need the extra break
+   points, otherwise justified lines open up wide gaps. */
+html:lang(en) .type-contact-item {
+  hyphenate-limit-chars: 6 3 3;
+  -webkit-hyphenate-limit-before: 3;
+  -webkit-hyphenate-limit-after: 3;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -116,14 +131,6 @@ body {
   background-color: #000;
 }
 a { text-decoration: none; color: inherit; }
-.feather {
-  width: var(--icon-size-base); height: var(--icon-size-base);
-  stroke-width: 1.5;
-  vertical-align: middle;
-  display: inline-block;
-  transition: transform 0.3s ease;
-}
-.icon-arrow { margin-left: var(--icon-gap); }
 
 @keyframes typewriter-char {
   from {
@@ -147,6 +154,8 @@ a { text-decoration: none; color: inherit; }
 }
 
 .type-banner-headline {
+  /* Always two lines tall, like the slogan, so one-line intro texts don't shift the layout */
+  min-height: calc(2em * 1.2);
   color: #000;
   font-family: var(--font-main);
   font-size: var(--type-display);
@@ -164,7 +173,7 @@ a { text-decoration: none; color: inherit; }
 .type-ui-text {
   color: #FFF;
   font-family: var(--font-main);
-  font-size: var(--type-ui);
+  font-size: var(--type-base);
   font-weight: 400;
   line-height: normal;
 }
@@ -179,14 +188,13 @@ a { text-decoration: none; color: inherit; }
   cursor: pointer;
   transition: opacity var(--transition-base);
 }
-.type-menu-item:hover { opacity: 0.7; }
 .type-menu-item.active-page {
-  opacity: 0.5;
+  opacity: var(--dim-inactive);
   cursor: default;
   pointer-events: none;
 }
 .menu-footer .nav-link.active-page {
-  opacity: 0.5;
+  opacity: var(--dim-inactive);
   cursor: default;
   pointer-events: none;
   transition: opacity var(--transition-base);
@@ -195,20 +203,17 @@ a { text-decoration: none; color: inherit; }
 .type-contact-header {
   color: #000;
   font-family: var(--font-main);
-  font-size: var(--type-body);
+  font-size: var(--type-base);
   font-weight: 500;
   line-height: var(--line-height-heading);
   letter-spacing: var(--letter-space-loose);
   margin-bottom: var(--spacing-md);
   max-width: var(--layout-width);
 }
-.font-regular { font-weight: 400 !important; }
-.text-grey { color: var(--text-grey); }
-.margin-top-50 { margin-top: var(--spacing-xl); }
 .type-contact-item {
   color: #000;
   font-family: var(--font-main);
-  font-size: var(--type-body);
+  font-size: var(--type-running);
   font-weight: 400;
   line-height: var(--line-height-body);
   letter-spacing: var(--letter-space-loose);
@@ -227,7 +232,7 @@ a { text-decoration: none; color: inherit; }
 .type-service-title {
   color: #000;
   font-family: var(--font-main);
-  font-size: var(--type-body);
+  font-size: var(--type-base);
   font-weight: 400;
   line-height: var(--line-height-heading);
   letter-spacing: var(--letter-space-loose);
@@ -235,25 +240,14 @@ a { text-decoration: none; color: inherit; }
 .type-service-tags {
   color: var(--text-grey);
   font-family: var(--font-main);
-  font-size: var(--type-label);
+  font-size: var(--type-running);
   font-weight: 400;
   line-height: var(--line-height-body);
   margin-top: var(--spacing-md);
   margin-bottom: 0;
   padding: 0;
 }
-.type-small-note {
-  color: var(--text-grey);
-  font-family: var(--font-main);
-  font-size: var(--type-small);
-  font-weight: 400;
-  line-height: var(--line-height-body);
-  margin-top: var(--spacing-xs);
-}
 .text-right { text-align: right; }
-.margin-bottom-20 { margin-bottom: var(--spacing-md); }
-.list-gap { margin-top: var(--spacing-md); }
-.text-nowrap { white-space: nowrap; }
 
 header {
   height: var(--header-height);
@@ -267,30 +261,36 @@ header {
   z-index: 200;
   background: transparent;
   mix-blend-mode: difference;
+  pointer-events: none; /* only the controls catch input; scrolling passes through */
   /* Safari Fix */
   -webkit-transform: translate3d(0,0,0);
   transform: translate3d(0,0,0);
 }
 .brand { cursor: pointer; text-transform: lowercase; }
+/* Header controls are <button>s — strip native button styling.
+   :where() keeps specificity at 0 so .type-ui-text still sets font and colour. */
+:where(button.menu-trigger, button.lang-toggle, button.print-btn) {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  line-height: inherit;
+}
 .menu-trigger {
   cursor: pointer;
   user-select: none;
   white-space: nowrap;
-  transition: opacity var(--transition-slow);
 }
-.menu-trigger.fade-out { opacity: 0; }
 
 .lang-toggle {
   cursor: pointer;
   user-select: none;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--transition-slow);
+  opacity: var(--dim-inactive);
 }
-.lang-toggle--visible {
-  opacity: 0.4;
-  pointer-events: auto;
-}
+.brand, .menu-trigger, .lang-toggle, .details-toggle, .print-btn { transition: opacity var(--transition-base); }
+/* Print: only on the CV page, next to the language toggle (script.js) */
+.print-btn { cursor: pointer; }
 
 
 #menu-overlay {
@@ -304,7 +304,9 @@ header {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  padding: var(--spacing-section-vertical) var(--ui-padding-side) var(--ui-padding-top) var(--ui-padding-side);
+  padding: var(--menu-top) var(--ui-padding-side) var(--ui-padding-top) var(--ui-padding-side);
+  /* First menu item's capitals level with the page headlines' (pages start at --spacing-contact-vertical) */
+  --menu-top: calc(var(--spacing-contact-vertical) + var(--cap-offset) * (var(--type-display) - var(--type-menu)));
   transform-origin: top center;
   transform: scaleY(0);
   transition: transform var(--page-speed) var(--page-curve);
@@ -315,7 +317,6 @@ header {
 .menu-list { display: flex; flex-direction: column; width: 100%; transition: opacity var(--transition-base); }
 .menu-bottom { display: flex; flex-direction: column; margin-top: auto; margin-bottom: var(--spacing-section-vertical); width: 100%; }
 .pair-gap { margin-bottom: var(--spacing-sm); }
-.group-gap { margin-bottom: var(--spacing-lg); }
 .menu-footer {
   display: flex;
   justify-content: space-between;
@@ -333,7 +334,6 @@ header {
   align-items: center;
   width: 100%;
 }
-.menu-intro-link .feather { stroke-width: 2.5; }
 
 .page-container {
   position: absolute;
@@ -362,15 +362,6 @@ header {
   contain: paint;
 }
 
-.case-container {
-  background-color: #fff;
-  overflow-y: auto;
-  padding: 0 var(--ui-padding-side) var(--ui-padding-top) var(--ui-padding-side);
-  display: flex;
-  flex-direction: column;
-  overscroll-behavior-y: none;
-  contain: paint;
-}
 
 #page-home { background-color: #000; cursor: grab; }
 #page-home:active { cursor: grabbing; }
@@ -384,6 +375,30 @@ header {
   mix-blend-mode: difference;
   opacity: 0.9;
 }
+
+/* Vertical drags drive the feed (script.js) instead of the browser */
+#page-home { touch-action: pan-x pinch-zoom; }
+
+/* Invisible native scroll layer for trackpad / mouse wheel (see script.js).
+   One snap point per slide; scroll-snap-stop = max. one slide per swipe. */
+#feed-scroller {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  touch-action: pan-x pinch-zoom;
+}
+#feed-scroller::-webkit-scrollbar { display: none; }
+.feed-snap {
+  height: 100%; /* one screen — set from TRACKPAD_DISTANCE in script.js */
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+.feed-snap.off { scroll-snap-align: none; } /* swipe committed: leave this slide */
 
 .slide-section {
   position: absolute;
@@ -399,8 +414,12 @@ header {
   opacity: 0;
   transition: transform var(--anim-speed) var(--anim-curve), opacity 0s linear var(--anim-speed);
   z-index: 1;
-  /* Removed will-change to fix Safari blend mode issues on large monitors */
 }
+/* One GPU layer per slide (set from script.js, not in Safari, where
+   will-change on slides caused blend-mode glitches on large monitors).
+   The fold then stretches a finished layer instead of repainting the feed. */
+.feed-layers .slide-section { will-change: transform; }
+
 .slide-section.active {
   transform: scaleY(1);
   opacity: 1;
@@ -494,24 +513,6 @@ header {
 .media-row.row-fit.row-many {
   gap: clamp(8px, 1.5vw, 24px);
 }
-.media-row.row-scroll {
-  overflow-x: auto;
-  overflow-y: hidden;
-  scroll-snap-type: x mandatory;
-  padding-bottom: 2px;
-}
-.media-row.row-scroll .media-item {
-  flex: 0 0 auto;
-  width: clamp(160px, 40vw, 320px);
-  scroll-snap-align: start;
-}
-.media-row.row-scroll .media-item img,
-.media-row.row-scroll .media-item video {
-  width: 100%;
-  height: auto;
-  object-fit: contain;
-  display: block;
-}
 @media (min-width: 768px) {
   .media-row { max-width: var(--layout-width); }
 }
@@ -530,7 +531,7 @@ header {
   transform-origin: top center;
   transition: transform var(--page-speed) var(--page-curve);
 }
-.banner-overlay.hidden { transform: scaleY(0); }
+.banner-overlay.hidden { transform: scaleY(0); pointer-events: none; }
 .banner-content {
   display: flex;
   flex-direction: column;
@@ -538,131 +539,6 @@ header {
   width: 100%;
   height: 100%;
 }
-
-.case-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  flex: 1;
-  width: 100%;
-}
-
-.case-top {
-  height: 100vh;
-  height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  position: relative;
-}
-
-.case-hero {
-  flex: 1 1 auto;
-  width: calc(100% + (var(--ui-padding-side) * 2));
-  margin-left: calc(var(--ui-padding-side) * -1);
-  margin-right: calc(var(--ui-padding-side) * -1);
-  overflow: hidden;
-  min-height: 0;
-}
-.case-hero img,
-.case-hero video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.case-top .case-header {
-  flex: 0 0 auto;
-  padding-top: clamp(20px, 3vh, 40px);
-  padding-bottom: clamp(20px, 3vh, 40px);
-}
-.case-top .case-header .type-about-headline { margin-bottom: 0; }
-
-.case-intro {
-  max-width: 100%;
-  margin-bottom: 0;
-  padding-top: clamp(30px, 4vh, 50px);
-}
-
-#page-case .case-intro-text {
-  position: static; overflow: visible; width: 100%; display: block;
-  height: auto; max-height: none; transition: none; will-change: auto;
-  cursor: default; -webkit-tap-highlight-color: transparent;
-  text-align: left;
-}
-#page-case .case-intro-text::after { content: none !important; }
-#page-case .case-intro-text .intro-main,
-#page-case .case-intro-text .intro-greyfade { display: none !important; }
-#page-case .case-intro-toggle,
-#page-case .case-readmore-inline { display: none !important; }
-
-.case-category {
-  max-width: 100%;
-  margin-top: var(--spacing-xs);
-  margin-bottom: var(--case-section-gap);
-  color: var(--text-grey);
-  white-space: pre-wrap;
-}
-
-.case-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--case-block-gap);
-  width: 100%;
-}
-
-.case-block {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-}
-.case-block-inner {
-  width: 100%;
-  max-width: none;
-  display: flex;
-  justify-content: center;
-}
-.case-block-inner.single { align-items: center; }
-
-.case-media-single {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.case-media-single img,
-.case-media-single video {
-  width: 100%;
-  height: auto;
-  object-fit: contain;
-  display: block;
-}
-
-#page-case .media-row {
-  max-width: none !important;
-  gap: var(--case-block-gap) !important;
-}
-
-.case-text {
-  max-width: 100%;
-  white-space: pre-wrap;
-  text-align: left;
-}
-
-#page-case .case-block.is-text { justify-content: flex-start; }
-#page-case .case-block.is-text .case-block-inner { justify-content: flex-start; }
-#page-case .case-block.is-text .case-text { width: 100%; max-width: 100%; }
-
-#page-case .case-block.is-text { margin-top: clamp(var(--spacing-md), 4vw, 60px); margin-bottom: clamp(var(--spacing-xs), 2vw, var(--spacing-md)); }
-
-.case-ending {
-  max-width: 100%;
-  margin-top: var(--case-section-gap);
-  margin-bottom: 0;
-}
-.case-outro { white-space: pre-wrap; color: #000; text-align: left; }
-.case-credit { white-space: pre-wrap; color: var(--text-grey); margin-top: var(--spacing-md); }
 
 .contact-wrapper { display: flex; flex-direction: column; gap: var(--spacing-contact-vertical); flex: 1; width: 100%; }
 p.type-contact-item { max-width: 100%; margin-bottom: var(--spacing-xl); text-align: left; }
@@ -680,10 +556,9 @@ span.mobile-only { display: inline; }
   padding: var(--spacing-xs) 0;
   border-bottom: var(--line-thickness) solid var(--line-color);
   cursor: pointer;
-  transition: opacity var(--transition-fast);
+  transition: opacity var(--transition-base);
   width: 100%;
 }
-.contact-row:hover { opacity: 0.5; }
 .contact-list.no-lines { border-top: none; }
 .contact-list.no-lines .contact-row { border-bottom: none; padding: 0; margin-bottom: 2px; }
 .copy-row .type-contact-item { transition: opacity var(--transition-base); }
@@ -708,8 +583,6 @@ span.mobile-only { display: inline; }
   z-index: 10;
 }
 .page-footer .type-ui-text { color: #000; }
-#case-next-link { color: #000; text-decoration: none; cursor: pointer; }
-#case-next-link:hover { opacity: 0.5; transition: opacity var(--transition-fast); }
 
 /* ── Client grid: single column on mobile, two columns on desktop ── */
 .client-grid {
@@ -735,11 +608,10 @@ span.mobile-only { display: inline; }
   padding: var(--spacing-xs) 0;
   transition: padding-top 0.5s ease, opacity var(--transition-base);
 }
-.service-row:hover .service-header { opacity: 0.7; }
 .service-row.expanded .service-header { padding-top: var(--spacing-md); padding-bottom: 0; opacity: 1; }
 .service-title-wrapper { display: flex; gap: var(--spacing-component-gap); flex: 1; min-width: 0; }
 .service-toggle {
-  font-size: var(--type-ui);
+  font-size: var(--type-base);
   line-height: 1;
   user-select: none;
   transition: opacity 0.2s ease;
@@ -762,7 +634,7 @@ span.mobile-only { display: inline; }
   min-height: 0;
   overflow: hidden;
   opacity: 0;
-  transition: opacity 0.3s ease, padding 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: padding 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   padding-left: var(--service-body-indent);
   padding-right: 0;
   padding-top: 0;
@@ -799,33 +671,122 @@ p.type-contact-item.service-description {
   align-items: flex-end;
   z-index: 100;
   mix-blend-mode: difference;
+  pointer-events: none; /* only the controls catch input; scrolling passes through */
   transition: opacity var(--transition-slow) 0.7s;
   /* Safari Fix for Large Screens */
   -webkit-transform: translate3d(0,0,0);
   transform: translate3d(0,0,0);
 }
 
-#page-home.hidden ~ #project-footer { opacity: 0; pointer-events: none; transition: opacity var(--transition-fast); }
-.learn-more { cursor: pointer; display: flex; align-items: center; }
-.project-title { cursor: pointer; }
+#footer-title { text-align: right; }
+#main-header a, #main-header button, #project-footer .project-details { pointer-events: auto; }
 
-@keyframes slideUpFade { 0% { opacity: 0; transform: translateY(var(--anim-translate-small)); } 100% { opacity: 1; transform: translateY(0); } }
-.text-anim { animation: slideUpFade 0.6s ease-out forwards; }
+/* ── Details panel (home) ── "Details" bottom left; the panel folds up beneath it,
+   pushing the label up, and folds down again when the text is clicked */
+.project-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+:where(button.details-toggle) {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+.details-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--anim-speed) var(--anim-curve);
+  cursor: pointer;
+}
+.details-panel.open { grid-template-rows: 1fr; }
+.details-body { overflow: hidden; min-height: 0; }
+.type-details {
+  color: #FFF;
+  font-family: var(--font-main);
+  font-size: var(--type-running);
+  font-weight: 400;
+  line-height: 1.4;
+}
+.details-body > :first-child { margin-top: 2.6em; }
+@media (max-width: 767px) {
+  .type-details { font-size: var(--type-small); } /* phones: one step smaller */
+}
+.details-group + .details-group { margin-top: 1.9em; }
+
+/* Adaptive UI colour on the home feed (set per text spot from script.js):
+   solid black or white instead of the difference blend, fading slowly between the
+   two. Everywhere else the difference blend stays. */
+.ui-adaptive #main-header,
+.ui-adaptive #project-footer { mix-blend-mode: normal; }
+.ui-adaptive #main-header .brand,
+.ui-adaptive #lang-toggle,
+.ui-adaptive #menu-btn,
+.ui-adaptive #project-footer .project-details,
+.ui-adaptive #footer-title { transition: color 0.6s ease, opacity var(--transition-slow); }
+.ui-adaptive #project-footer .project-details * { color: inherit; }
+
+#page-home.hidden ~ #project-footer { opacity: 0; pointer-events: none; transition: opacity var(--transition-fast); }
+
+/* ╔══════════════════════════════════════════════════════════════════
+   ║  TEXT MOTION — how text leaves and arrives (language switch, details…)
+   ╠══════════════════════════════════════════════════════════════════
+   ║  Set these on any selector to target a type of text; children inherit.
+   ║  Read by script.js (textOut / typewriterIn).
+   ║
+   ║  --tm-in          letters | words      how new text types in
+   ║  --tm-in-step     time between two letters / words
+   ║  --tm-out         letters | words   dissolve one by one in reading order
+   ║  --tm-out-spread  how long the dissolve cascade runs (first → last unit)
+   ║  --tm-out-unit    fade time of a single letter / word
+   ╚══════════════════════════════════════════════════════════════════ */
+:root {
+  /* Default: small headings, labels, client names, menu, tags… */
+  --tm-in: letters;
+  --tm-in-step: 22ms;
+  --tm-out: letters;
+  --tm-out-spread: 140ms;
+  --tm-out-unit: 140ms;
+}
+/* Big headlines: same dissolve, letters a little slower (bigger, heavier) */
+.type-about-headline,
+.type-banner-headline,
+.type-menu-item,
+.cv-name {
+  --tm-in-step: 40ms;
+  --tm-out-spread: 220ms;
+}
+/* Running text: word by word */
+p.type-contact-item,
+.cv-body {
+  --tm-in: words;
+  --tm-in-step: 18ms;
+  --tm-out: words;
+  --tm-out-spread: 170ms;
+  --tm-out-unit: 160ms;
+}
+
+/* A word that would otherwise be hyphenated across the column gap (see fixColumnBreaks) */
+.no-col-split { hyphens: none; -webkit-hyphens: none; white-space: nowrap; }
+
+/* Leaving text: each letter / word fades on its own (delays set from script) */
+@keyframes textFadeOut { to { opacity: 0; } }
+.text-out { animation: textFadeOut var(--tm-out-unit, 140ms) ease-in forwards; }
+
 
 @media (min-width: 768px) {
   :root {
-    --page-padding: 30px;
-    --page-padding-top: 45px;
     --spacing-footer-gap: 100px;
   }
-  .type-ui-text { font-size: var(--type-ui); }
   .menu-bottom { margin-bottom: 120px; }
 }
 
 @media (min-width: 839px) {
   :root {
-    --page-padding: 40px;
-    --page-padding-top: 60px;
     --layout-width: 65%;
     --spacing-footer-gap: 120px;
     --spacing-macro: 220px;
@@ -852,26 +813,27 @@ p.type-contact-item.service-description {
     transform: none;
   }
   .type-banner-headline {
-    margin-left: calc(100vw / 6);
+    margin-left: calc(100vw / 6 - var(--ui-padding-side)); /* page column (banner is padded) */
     margin-bottom: 0;
   }
   #menu-overlay {
-    padding: clamp(80px, 11vh, 150px) var(--ui-padding-side) var(--ui-padding-top) var(--ui-padding-side);
+    padding: var(--menu-top) var(--ui-padding-side) var(--ui-padding-top) var(--ui-padding-side);
     flex-direction: column;
     align-items: flex-start;
     justify-content: flex-start;
   }
+  /* Same column as the pages (.contact-wrapper): 1/6 of the screen, minus the
+     overlay's own side padding, so menu and page text start on one line */
   .menu-list {
     width: 100%;
-    padding-left: calc(100vw / 6);
+    padding-left: calc(100vw / 6 - var(--ui-padding-side));
   }
   .menu-list .pair-gap { margin-bottom: clamp(14px, 2vh, 25px); }
-  .menu-list .group-gap { margin-bottom: clamp(35px, 5vh, 62px); }
   .menu-bottom {
     width: 100%;
-    padding-left: calc(100vw / 6);
+    padding-left: calc(100vw / 6 - var(--ui-padding-side));
     margin-top: auto;
-    margin-bottom: clamp(80px, 11vh, 150px); 
+    margin-bottom: clamp(40px, 11vh, 150px); 
     align-self: flex-start;
     align-items: flex-start;
   }
@@ -882,7 +844,6 @@ p.type-contact-item.service-description {
     gap: 0;
     justify-content: space-between;
   }
-  .menu-intro-link .feather { display: none; }
   .desktop-only { display: block; }
   span.desktop-only { display: inline; }
   .mobile-only { display: none; }
@@ -897,59 +858,11 @@ p.type-contact-item.service-description {
     padding-left: calc(100vw / 6 - var(--ui-padding-side));
     padding-right: calc(4 * var(--grid-unit) - var(--ui-padding-side)); 
   }
-  .case-wrapper {
-    padding-left: calc(100vw / 6 - var(--ui-padding-side));
-    padding-right: calc(4 * var(--grid-unit) - var(--ui-padding-side));
-  }
-  .case-hero {
-    position: relative;
-    left: auto;
-    transform: none;
-    margin-left: calc(-100vw / 6);
-    margin-right: calc(-4 * (100vw / 12));
-    width: 100vw;
-  }
-  .case-intro,
-  .case-category {
-    max-width: 100%;
-  }
-  #page-case .case-block.is-text .case-text {
-    max-width: 100%;
-    column-count: 2;
-    column-gap: var(--col-gutter);
-    column-width: var(--col-width);
-    orphans: 3;
-    widows: 3;
-    white-space: normal; /* override pre-wrap so text flows naturally across columns */
-  }
-  /* Force .case-ending to fill its flex parent so .case-outro has room for 2 columns */
-  .case-ending {
-    width: 100%;
-    max-width: 100%;
-  }
-  .case-content {
-    gap: var(--case-block-gap);
-  }
-  #page-case .media-row {
-    gap: var(--case-block-gap) !important;
-  }
-  #page-case .case-intro-text {
-    column-count: 2;
-    column-gap: var(--col-gutter);
-    column-width: var(--col-width);
-    orphans: 3;
-    widows: 3;
-    text-align: justify;
-    text-align-last: left;
-  }
   .type-contact-header,
   .type-about-headline {
     max-width: calc(4 * var(--grid-unit));
   }
-  p.type-contact-item,
-  .case-text,
-  .case-intro-text,
-  .case-outro {
+  p.type-contact-item {
     text-align: justify;
     text-align-last: left;
     text-justify: inter-word;
@@ -966,21 +879,6 @@ p.type-contact-item.service-description {
     orphans: 3;
     widows: 3;
   }
-  /* Two-column layout for case outro.
-     Kept separate from p.type-contact-item — the outro is a div inside a flex
-     container, so it needs explicit width: 100% and no restrictive max-width
-     to allow the columns to actually render. white-space: normal overrides the
-     base pre-wrap which would otherwise collapse columns to one. */
-  .case-outro {
-    width: 100%;
-    max-width: 100%;
-    column-count: 2;
-    column-gap: var(--col-gutter);
-    column-width: var(--col-width);
-    orphans: 3;
-    widows: 3;
-    white-space: normal;
-  }
   #page-legal p.type-contact-item {
     column-count: 1;
     max-width: var(--layout-width);
@@ -994,14 +892,15 @@ p.type-contact-item.service-description {
   .service-description {
     max-width: calc(3 * var(--grid-unit));
     column-count: 1;
+    text-align: left; /* too narrow to justify without wide gaps */
   }
   .contact-list {
-    max-width: calc(7 * var(--grid-unit));
+    max-width: var(--col-width); /* one text column: rows stay short and tight */
   }
   .client-grid {
     display: inline-grid;
     grid-template-columns: auto auto;
-    column-gap: var(--spacing-component-gap-grid);
+    column-gap: var(--spacing-xl);
     row-gap: 2px;
     width: auto;
   }
@@ -1018,9 +917,6 @@ p.type-contact-item.service-description {
     grid-column: 1 / -1;
     max-width: 100%;
   }
-  .case-header .type-about-headline {
-    max-width: calc(5 * var(--grid-unit));
-  }
   .service-title-wrapper {
     gap: var(--spacing-component-gap-large);
   }
@@ -1032,8 +928,6 @@ p.type-contact-item.service-description {
 
 @media (min-width: 1440px) {
   :root {
-    --page-padding: 60px;
-    --page-padding-top: 90px;
     --layout-width: 55%;
     --spacing-footer-gap: 250px;
   }
@@ -1044,9 +938,6 @@ p.type-contact-item.service-description {
     padding-left: calc(var(--service-num-width) + var(--spacing-component-gap-xl));
     padding-right: 0;
   }
-  .case-header .type-about-headline {
-    max-width: calc(6 * var(--grid-unit));
-  }
   .page-footer {
     /* Safari Fix for Large Screens */
     -webkit-transform: translate3d(0,0,0);
@@ -1054,252 +945,185 @@ p.type-contact-item.service-description {
   }
 }
 
-@media (min-width: 1920px) {
-  :root {
-    --page-padding: 80px;
-    --page-padding-top: 120px;
-  }
-}
 
-/* ── CV Page ────────────────────────────────────────────────────── */
-
-/* ╔══════════════════════════════════════════════════════════════════
-   ║  CV SPACING — edit these 6 values to control every distance
-   ╠══════════════════════════════════════════════════════════════════
-   ║
-   ║  --cv-before-line        16px   space from content to rule above
-   ║  --cv-after-line         16px   space from rule to what follows
-   ║  --cv-before-headline     0px   extra gap before headline (stacks with after-line)
-   ║  --cv-after-headline     16px   headline → content  (Experience / Education)
-   ║  --cv-after-headline-sm   4px   headline → content  (sidebar sections + Intro)
-   ║  --cv-before-subheadline 16px   gap before each sub-headline
-   ║  --cv-after-subheadline   8px   sub-headline → body text
-   ║
-   ║  ─── Layout (not distances) ──────────────────────────────────
-   ║  --cv-page-pad-top  150px   grey space above card (matches --spacing-contact-vertical)
-   ║  --cv-page-pad-bot   80px   grey space below card
-   ║  --cv-card-pad-v     32px   card top/bottom padding (mobile)
-   ║  --cv-card-pad-h     24px   card left/right padding (mobile)
-   ║  --cv-card-pad-v-lg  48px   card top/bottom padding (desktop)
-   ║  --cv-card-pad-h-lg  56px   card left/right padding (desktop)
-   ║  --cv-sidebar-width 220px   sidebar column width
-   ║  --cv-col-gap        40px   gap between sidebar and main (desktop)
-   ║  --cv-stack-gap      32px   gap between stacked columns (mobile)
-   ║
-   ╚══════════════════════════════════════════════════════════════════ */
+/* ── CV page ──────────────────────────────────────────────────────
+   The A4 CV (Figma "CV Page") as a sheet of paper. On a laptop the sheet is
+   ~1160px wide, where the site's type tokens land on the sheet's own ratios:
+     name → display · section titles, phone / email → base
+     everything else → running text · corner labels → small
+   Inside, photo and sidebar take the sheet's left column and the content starts
+   where it does on A4. The layout follows the sheet's width (container queries),
+   so a narrow sheet (phones) stacks: photo beside the name, one column below.
+   Spacing hierarchy: a line and its text 0 · title → its content 20 ·
+   entry → entry 30 · section → section 50. */
 .cv-container {
-  --cv-before-line:        16px;
-  --cv-after-line:         16px;
-  --cv-before-headline:     0px;
-  --cv-after-headline:     16px;
-  --cv-after-headline-sm:   8px;
-  --cv-before-subheadline: 16px;
-  --cv-after-subheadline:   8px;
-
-  --cv-page-pad-top:  150px;
-  --cv-page-pad-bot:   80px;
-
-  --cv-card-pad-v:     32px;
-  --cv-card-pad-h:     24px;
-  --cv-card-pad-v-lg:  48px;
-  --cv-card-pad-h-lg:  56px;
-
-  --cv-sidebar-width: 220px;
-  --cv-col-gap:        40px;
-  --cv-stack-gap:      32px;
-
   background-color: #fff;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
   overscroll-behavior-y: none;
   contain: paint;
 }
-
 .cv-outer {
+  container-type: inline-size; /* the sheet's A4 height is measured from this width */
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: var(--cv-page-pad-top) var(--ui-padding-side) var(--cv-page-pad-bot);
-  flex: 1;
+  padding: var(--spacing-contact-vertical) var(--ui-padding-side) var(--spacing-footer-gap);
 }
 
-.cv-card {
-  font-family: var(--font-main);
+.cv-sheet {
+  container-type: inline-size;
+  display: flex;
+  width: 100%;
+  max-width: 1160px;
+  min-height: calc(min(100cqw, 1160px) * 297 / 210); /* at least one A4 page; grows with the text */
   background: #fff;
-  width: 100%;
-  max-width: 900px;
-  padding: var(--cv-card-pad-v) var(--cv-card-pad-h);
-  box-shadow: 0 2px 24px rgba(0,0,0,0.09);
+  box-shadow: 0 2px 24px rgba(0, 0, 0, 0.09);
 }
-
-.cv-card-body {
+.cv-page {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--cv-stack-gap);
-}
-
-/* Mobile: main content first, sidebar below */
-.cv-sidebar { order: 2; }
-.cv-main    { order: 1; }
-
-.cv-sidebar,
-.cv-main {
-  display: flex;
-  flex-direction: column;
-  gap: var(--cv-before-line);
-}
-
-.cv-photo {
-  width: 100%;
-  max-width: 200px;
-  height: auto;
-  display: block;
-  object-fit: cover;
-  object-position: center top;
-}
-
-.cv-identity {
-  display: flex;
-  flex-direction: column;
-  border-top: 0.5px solid #000;
-  padding-top: var(--cv-after-line);
-  gap: var(--cv-after-subheadline);
-}
-
-.cv-name {
+  padding: max(3.2cqw, var(--ui-padding-side)); /* A4: 80 of 2480 */
+  color: #000;
   font-family: var(--font-main);
-  font-size: 20px;
+  font-size: var(--type-running);
+  line-height: var(--line-height-body);
+}
+
+/* Corner labels, top and bottom of the sheet */
+.cv-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  font-size: var(--type-small);
   font-weight: 500;
-  line-height: 1.2;
-  letter-spacing: -0.3px;
-  color: #000;
+  line-height: normal;
 }
+.cv-meta { flex-wrap: wrap; row-gap: var(--spacing-xs); }
+.cv-meta > * { white-space: nowrap; } /* a label never breaks; on narrow sheets the second one wraps below */
+.cv-foot { margin-top: auto; padding-top: var(--spacing-footer-gap); }
 
+.cv-top {
+  display: grid;
+  grid-template-columns: min(40%, 240px) minmax(0, 1fr);
+  column-gap: var(--spacing-md);
+  row-gap: var(--spacing-component-gap-large);
+  margin-top: var(--spacing-component-gap-xl);
+}
+.cv-top-main { display: contents; } /* narrow: name beside the photo, introduction below both */
+.cv-photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+}
+.cv-intro { grid-column: 1 / -1; }
+
+.cv-identity { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.cv-name {
+  font-size: var(--type-display);
+  font-weight: 500;
+  line-height: var(--line-height-heading);
+  letter-spacing: var(--letter-space-normal);
+}
 .cv-contact {
-  font-family: var(--font-main);
-  font-size: 13px;
-  line-height: 1.65;
-  color: #000;
-  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-size: var(--type-base);
+  line-height: var(--line-height-heading);
 }
-
-.cv-contact-links { margin-top: var(--cv-before-line); }
-
 .cv-copy-btn {
   background: none;
-  border: none;
+  border: 0;
   padding: 0;
-  margin: 0;
   font: inherit;
   color: inherit;
+  text-align: left;
   cursor: pointer;
-  transition: color var(--transition-base), opacity var(--transition-base);
-}
-.cv-copy-btn:hover { color: var(--text-grey); }
-
-.cv-section {
-  display: flex;
-  flex-direction: column;
-  border-top: 0.5px solid #000;
-  padding-top: var(--cv-after-line);
-}
-
-.cv-sidebar .cv-section:last-child,
-.cv-main .cv-section:last-child {
-  border-bottom: 0.5px solid #000;
-  padding-bottom: var(--cv-before-line);
+  transition: opacity var(--transition-base);
 }
 
 .cv-section-title {
-  font-family: var(--font-main);
-  font-size: 20px;
+  font-size: var(--type-base);
   font-weight: 500;
-  line-height: 1.2;
-  letter-spacing: -0.3px;
-  color: #000;
-  margin-top: var(--cv-before-headline);
-  margin-bottom: var(--cv-after-headline);
+  line-height: var(--line-height-heading);
+  letter-spacing: var(--letter-space-loose);
+  margin-bottom: var(--spacing-md);
 }
 
-/* sidebar sections + Introduction get the smaller headline gap */
-.cv-sidebar .cv-section-title,
-.cv-intro .cv-section-title {
-  margin-bottom: var(--cv-after-headline-sm);
-}
-
-.cv-list {
-  list-style: disc;
-  padding-left: 16px;
+.cv-columns {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: var(--spacing-component-gap-xl);
+  margin-top: var(--spacing-component-gap-xl);
 }
+.cv-main { display: flex; flex-direction: column; gap: var(--spacing-component-gap-xl); }
+.cv-entry + .cv-entry { margin-top: var(--spacing-component-gap); }
+/* Entry lines and sidebar titles: same size as their text, set apart by weight only */
+.cv-entry-head,
+.cv-label { font-size: inherit; font-weight: 500; }
 
-.cv-list li,
-.cv-contact,
-.cv-entry-head {
-  font-family: var(--font-main);
-  font-size: 13px;
-  line-height: 1.6;
-  color: #000;
-  margin: 0;
+.cv-sidebar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--spacing-component-gap) var(--spacing-md);
 }
+.cv-list { list-style: none; }
+.cv-sidebar { hyphens: auto; -webkit-hyphens: auto; hyphenate-limit-chars: 8 4 4; } /* long German words in the narrow lists */
+.cv-body { max-width: 52em; } /* the sheet's line length */
 
-.cv-body {
-  font-family: var(--font-main);
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--text-grey);
-  margin: 0;
-}
-
-.cv-grey { color: var(--text-grey); }
-
-.cv-entry {
-  display: flex;
-  flex-direction: column;
-  gap: var(--cv-after-subheadline);
-}
-
-.cv-entry + .cv-entry {
-  margin-top: var(--cv-before-subheadline);
-}
-
-.cv-entry-head { font-weight: 500; }
-.cv-entry-head strong { font-weight: 500; }
-
-.cv-date::before { content: ' | '; }
-
-.cv-intro .cv-body { color: #000; }
-
-@media (max-width: 639px) {
-  .cv-container {
-    --cv-page-pad-bot: 40px;
-    --cv-stack-gap: 0px;
-  }
-  .cv-photo { display: none; }
-  .cv-date { display: block; }
-  .cv-date::before { display: none; }
-  /* sidebar stacks below main — its first section's border-top duplicates the
-     border-bottom already on the last main section, so remove it */
-  .cv-sidebar > .cv-section:first-of-type { border-top: none; }
-}
-
-@media (min-width: 640px) {
-  .cv-card { padding: var(--cv-card-pad-v-lg) var(--cv-card-pad-h-lg); }
-
-  .cv-card-body {
+@container (min-width: 700px) {
+  /* Sheet layout (A4: left column 608 / gap 157 / content 1555 of 2320) */
+  .cv-top,
+  .cv-columns {
     display: grid;
-    grid-template-columns: var(--cv-sidebar-width) 1fr;
-    gap: var(--cv-col-gap);
-    align-items: start;
+    grid-template-columns: 26.2% minmax(0, 1fr);
+    column-gap: 6.8%;
   }
+  .cv-top { row-gap: 0; }
+  /* Name at the top, introduction resting on the photo's bottom edge */
+  .cv-top-main {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: var(--spacing-component-gap-large);
+  }
+  /* The introduction's last line sits on the photo's bottom edge: trim the space
+     below its baseline (the title → text distance is untouched) */
+  .cv-intro .cv-body { text-box: trim-end cap alphabetic; }
+  .cv-columns { margin-top: var(--spacing-component-gap-large); }
+  .cv-sidebar { order: -1; display: flex; flex-direction: column; gap: var(--spacing-component-gap); }
+}
 
-  .cv-sidebar { order: 0; }
-  .cv-main    { order: 0; }
-
-  .cv-photo { max-width: none; }
+/* Print: only the sheet, laid out exactly as on screen (1160px wide) and scaled
+   onto A4 — 210mm = 793.7px, 793.7 / 1160 = 0.684. The sheet's top/bottom margin
+   (A4: 80 of 3508 ≈ 7mm) becomes the page margin, so text enlarged with the print
+   dialog's own Scale setting runs onto a second page with the same margins. */
+@media print {
+  @page { size: A4; margin: 7mm 0; }
+  html:has(#page-cv.visible),
+  html:has(#page-cv.visible) body { height: auto; min-height: 0; overflow: visible; background: #fff; }
+  html:has(#page-cv.visible) body > :not(#page-cv) { display: none !important; }
+  #page-cv.visible {
+    position: static;
+    height: auto;
+    overflow: visible;
+    transform: none;
+    contain: none;
+  }
+  #page-cv .cv-outer { padding: 0; }
+  #page-cv .cv-page { padding-block: 0; }
+  #page-cv .cv-sheet {
+    width: 1160px;
+    max-width: none;
+    min-height: calc(1160px * 282.5 / 210); /* A4 minus the page margins, a hair under so one page never spills */
+    box-shadow: none;
+    zoom: 0.684;
+  }
+  #page-cv .cv-entry,
+  #page-cv .cv-side-section { break-inside: avoid; }
 }
 
 /* ── Scroll hint indicator ───────────────────────────────────── */
@@ -1315,7 +1139,7 @@ p.type-contact-item.service-description {
   color: #fff;
   mix-blend-mode: difference;
   font-family: var(--font-main);
-  font-size: var(--type-ui);
+  font-size: var(--type-base);
   font-weight: 400;
   pointer-events: none;
   z-index: 50;
@@ -1323,3 +1147,41 @@ p.type-contact-item.service-description {
 }
 .sh-arrow   { display: inline-block; }
 .sh-arrow-r { transform: rotate(180deg); }
+/* ── Hover: one rule for everything clickable (mouse only — no sticky hover on touch) ── */
+@media (hover: hover) {
+  .brand:hover, .menu-trigger:hover, .details-toggle:hover,
+  .type-menu-item:hover, .copy-link:hover, .contact-row:hover,
+  .service-row:hover .service-header, .cv-copy-btn:hover, .print-btn:hover { opacity: var(--dim-hover); }
+  .lang-toggle:hover { opacity: 1; } /* the other language lights up */
+}
+
+/* ── Accessibility ───────────────────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Keyboard focus ring — invisible for mouse/touch users */
+:focus-visible {
+  outline: 1px solid currentColor;
+  outline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+}

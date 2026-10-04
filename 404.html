@@ -2,16 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Julian Jakob</title>
-  <script>
-    // GitHub Pages SPA fix — redirects sub-paths back to index.html
-    // Stores the requested path in sessionStorage so the app can restore it
-    var path = window.location.pathname;
-    if (path && path !== '/') {
-      sessionStorage.setItem('spa_redirect', path);
-    }
-    window.location.replace('/');
-  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Page not found | Julian Jakob</title>
+  <!-- Unknown or retired URLs (e.g. former case-study pages) keep their 404 status for search engines, visitors go home -->
+  <meta http-equiv="refresh" content="0; url=/">
+  <script>window.location.replace("/");</script>
+  <style>body{font-family:"Helvetica Neue",Arial,sans-serif;margin:30px 20px;color:#000;background:#fff}a{color:inherit}</style>
 </head>
-<body></body>
+<body>
+  <p>This page doesn't exist. <a href="/">Go to julianjakob.at</a></p>
+</body>
 </html>

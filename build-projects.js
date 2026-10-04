@@ -39,6 +39,9 @@ for (const slot of SLOTS) {
     title:    (project.title  || `Project ${slot}`).trim(),
     title_de: project.title_de ? project.title_de.trim() : null,
     slug:     (project.slug   || `project-${slot}`).trim(),
+    // Shown in the home "Details" panel. All optional:
+    // { type: {en,de}, studio, year, responsibilities: {en: [...], de: [...]} }
+    details:  project.details || null,
     manifest,
   });
 

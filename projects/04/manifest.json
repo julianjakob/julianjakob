@@ -2,19 +2,51 @@
   "home": [
     {
       "type": "single",
-      "src": "01.webp"
+      "item": {
+        "src": "01.webp",
+        "w": 4000,
+        "h": 3000,
+        "sizes": [
+          {
+            "w": 640,
+            "src": "sizes/01-640.webp"
+          },
+          {
+            "w": 960,
+            "src": "sizes/01-960.webp"
+          },
+          {
+            "w": 1280,
+            "src": "sizes/01-1280.webp"
+          },
+          {
+            "w": 1920,
+            "src": "sizes/01-1920.webp"
+          },
+          {
+            "w": 2560,
+            "src": "sizes/01-2560.webp"
+          }
+        ]
+      }
     },
     {
       "type": "single",
-      "src": "02.webp"
+      "item": {
+        "src": "02.webp",
+        "w": 1080,
+        "h": 1350,
+        "sizes": [
+          {
+            "w": 640,
+            "src": "sizes/02-640.webp"
+          },
+          {
+            "w": 960,
+            "src": "sizes/02-960.webp"
+          }
+        ]
+      }
     }
-  ],
-  "case": {
-    "hero": null,
-    "hasIntro": false,
-    "hasCategory": false,
-    "hasOutro": false,
-    "hasCredit": false,
-    "blocks": []
-  }
+  ]
 }

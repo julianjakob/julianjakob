@@ -2,5 +2,23 @@
   "enabled": true,
   "title": "Makhulo",
   "title_de": "Makhulo",
-  "slug": "Makhulo"
+  "slug": "Makhulo",
+  "details": {
+    "type": {
+      "en": "Freelance Project",
+      "de": "Freelance-Projekt"
+    },
+    "responsibilities": {
+      "en": [
+        "Visual Identity",
+        "Concept Development",
+        "Stakeholder Management"
+      ],
+      "de": [
+        "Visuelle Identität",
+        "Konzeptentwicklung",
+        "Stakeholder-Management"
+      ]
+    }
+  }
 }

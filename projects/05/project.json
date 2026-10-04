@@ -2,5 +2,23 @@
   "enabled": true,
   "title": "Florian",
   "title_de": "Florian",
-  "slug": "Florian"
+  "slug": "Florian",
+  "details": {
+    "type": {
+      "en": "Freelance Project",
+      "de": "Freelance-Projekt"
+    },
+    "responsibilities": {
+      "en": [
+        "Visual Identity",
+        "Concept Development",
+        "Stakeholder Management"
+      ],
+      "de": [
+        "Visuelle Identität",
+        "Konzeptentwicklung",
+        "Stakeholder-Management"
+      ]
+    }
+  }
 }

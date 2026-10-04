@@ -2,5 +2,22 @@
   "enabled": true,
   "title": "Sony Music: 2AMDM",
   "title_de": "Sony Music: 2AMDM",
-  "slug": "Sony Music: 2AMDM"
+  "slug": "Sony Music: 2AMDM",
+  "details": {
+    "type": {
+      "en": "Studio Project",
+      "de": "Studioprojekt"
+    },
+    "studio": "Studio Herrström",
+    "responsibilities": {
+      "en": [
+        "Concept Development",
+        "Visual System Development"
+      ],
+      "de": [
+        "Konzeptentwicklung",
+        "Entwicklung des visuellen Systems"
+      ]
+    }
+  }
 }

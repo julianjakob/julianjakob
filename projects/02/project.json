@@ -2,5 +2,21 @@
   "enabled": true,
   "title": "Sück Club",
   "title_de": "Sück Club",
-  "slug": "Sück Club"
+  "slug": "Sück Club",
+  "details": {
+    "type": {
+      "en": "Freelance Project",
+      "de": "Freelance-Projekt"
+    },
+    "responsibilities": {
+      "en": [
+        "Concept Development",
+        "Poster Execution"
+      ],
+      "de": [
+        "Konzeptentwicklung",
+        "Umsetzung der Plakate"
+      ]
+    }
+  }
 }

@@ -2,20 +2,10 @@
   "home": [
     {
       "type": "single",
-      "src": "01.mp4"
-    }
-  ],
-  "case": {
-    "hero": null,
-    "hasIntro": false,
-    "hasCategory": false,
-    "hasOutro": false,
-    "hasCredit": false,
-    "blocks": [
-      {
-        "type": "single",
-        "src": "01.webm"
+      "item": {
+        "src": "01.mp4",
+        "webm": "01.webm"
       }
-    ]
-  }
+    }
+  ]
 }

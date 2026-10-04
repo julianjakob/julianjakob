@@ -2,54 +2,53 @@
   "home": [
     {
       "type": "single",
-      "src": "01.mp4"
+      "item": {
+        "src": "01.mp4",
+        "webm": "01.webm"
+      }
     },
     {
       "type": "row",
       "items": [
-        "02a.webp",
-        "02b.webp"
+        {
+          "src": "02a.webp",
+          "w": 1910,
+          "h": 2700,
+          "sizes": [
+            {
+              "w": 640,
+              "src": "sizes/02a-640.webp"
+            },
+            {
+              "w": 960,
+              "src": "sizes/02a-960.webp"
+            },
+            {
+              "w": 1280,
+              "src": "sizes/02a-1280.webp"
+            }
+          ]
+        },
+        {
+          "src": "02b.webp",
+          "w": 1910,
+          "h": 2700,
+          "sizes": [
+            {
+              "w": 640,
+              "src": "sizes/02b-640.webp"
+            },
+            {
+              "w": 960,
+              "src": "sizes/02b-960.webp"
+            },
+            {
+              "w": 1280,
+              "src": "sizes/02b-1280.webp"
+            }
+          ]
+        }
       ]
     }
-  ],
-  "case": {
-    "hero": "hero.webp",
-    "hasIntro": true,
-    "hasCategory": true,
-    "hasOutro": true,
-    "hasCredit": true,
-    "blocks": [
-      {
-        "type": "single",
-        "src": "01.mp4"
-      },
-      {
-        "type": "single",
-        "src": "02.webp"
-      },
-      {
-        "type": "row",
-        "items": [
-          "03a.webp",
-          "03b.webp"
-        ]
-      },
-      {
-        "type": "single",
-        "src": "04.webp"
-      },
-      {
-        "type": "single",
-        "src": "05.webp"
-      },
-      {
-        "type": "single",
-        "src": "06.webp"
-      },
-      {
-        "type": "single",
-        "src": "07.mp4"
-      }
-    ]
-  }
+  ]
 }

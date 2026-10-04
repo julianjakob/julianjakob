@@ -4,49 +4,44 @@
     "title": "Sony Music: 2AMDM",
     "title_de": "Sony Music: 2AMDM",
     "slug": "Sony Music: 2AMDM",
+    "details": {
+      "type": {
+        "en": "Studio Project",
+        "de": "Studioprojekt"
+      },
+      "studio": "Studio Herrström",
+      "responsibilities": {
+        "en": [
+          "Concept Development",
+          "Visual System Development"
+        ],
+        "de": [
+          "Konzeptentwicklung",
+          "Entwicklung des visuellen Systems"
+        ]
+      }
+    },
     "manifest": {
       "home": [
         {
           "type": "single",
-          "src": "01.webp"
-        }
-      ],
-      "case": {
-        "hero": "hero.webp",
-        "hasIntro": true,
-        "hasCategory": true,
-        "hasOutro": true,
-        "hasCredit": true,
-        "blocks": [
-          {
-            "type": "single",
-            "src": "01.webp"
-          },
-          {
-            "type": "single",
-            "src": "02.webp"
-          },
-          {
-            "type": "single",
-            "src": "03.webp"
-          },
-          {
-            "type": "row",
-            "items": [
-              "04a.webp",
-              "04b.webp"
+          "item": {
+            "src": "01.webp",
+            "w": 1080,
+            "h": 1350,
+            "sizes": [
+              {
+                "w": 640,
+                "src": "sizes/01-640.webp"
+              },
+              {
+                "w": 960,
+                "src": "sizes/01-960.webp"
+              }
             ]
-          },
-          {
-            "type": "single",
-            "src": "05.webp"
-          },
-          {
-            "type": "single",
-            "src": "06.webp"
           }
-        ]
-      }
+        }
+      ]
     }
   },
   {
@@ -54,24 +49,76 @@
     "title": "Sück Club",
     "title_de": "Sück Club",
     "slug": "Sück Club",
+    "details": {
+      "type": {
+        "en": "Freelance Project",
+        "de": "Freelance-Projekt"
+      },
+      "responsibilities": {
+        "en": [
+          "Concept Development",
+          "Poster Execution"
+        ],
+        "de": [
+          "Konzeptentwicklung",
+          "Umsetzung der Plakate"
+        ]
+      }
+    },
     "manifest": {
       "home": [
         {
           "type": "row",
           "items": [
-            "01a.webp",
-            "01b.webp"
+            {
+              "src": "01a.webp",
+              "w": 2160,
+              "h": 2700,
+              "sizes": [
+                {
+                  "w": 640,
+                  "src": "sizes/01a-640.webp"
+                },
+                {
+                  "w": 960,
+                  "src": "sizes/01a-960.webp"
+                },
+                {
+                  "w": 1280,
+                  "src": "sizes/01a-1280.webp"
+                },
+                {
+                  "w": 1920,
+                  "src": "sizes/01a-1920.webp"
+                }
+              ]
+            },
+            {
+              "src": "01b.webp",
+              "w": 2160,
+              "h": 2700,
+              "sizes": [
+                {
+                  "w": 640,
+                  "src": "sizes/01b-640.webp"
+                },
+                {
+                  "w": 960,
+                  "src": "sizes/01b-960.webp"
+                },
+                {
+                  "w": 1280,
+                  "src": "sizes/01b-1280.webp"
+                },
+                {
+                  "w": 1920,
+                  "src": "sizes/01b-1920.webp"
+                }
+              ]
+            }
           ]
         }
-      ],
-      "case": {
-        "hero": null,
-        "hasIntro": false,
-        "hasCategory": false,
-        "hasOutro": false,
-        "hasCredit": false,
-        "blocks": []
-      }
+      ]
     }
   },
   {
@@ -79,67 +126,100 @@
     "title": "Makhulo",
     "title_de": "Makhulo",
     "slug": "Makhulo",
+    "details": {
+      "type": {
+        "en": "Freelance Project",
+        "de": "Freelance-Projekt"
+      },
+      "responsibilities": {
+        "en": [
+          "Visual Identity",
+          "Concept Development",
+          "Stakeholder Management"
+        ],
+        "de": [
+          "Visuelle Identität",
+          "Konzeptentwicklung",
+          "Stakeholder-Management"
+        ]
+      }
+    },
     "manifest": {
       "home": [
         {
           "type": "single",
-          "src": "01.webp"
+          "item": {
+            "src": "01.webp",
+            "w": 3840,
+            "h": 2160,
+            "sizes": [
+              {
+                "w": 640,
+                "src": "sizes/01-640.webp"
+              },
+              {
+                "w": 960,
+                "src": "sizes/01-960.webp"
+              },
+              {
+                "w": 1280,
+                "src": "sizes/01-1280.webp"
+              },
+              {
+                "w": 1920,
+                "src": "sizes/01-1920.webp"
+              },
+              {
+                "w": 2560,
+                "src": "sizes/01-2560.webp"
+              }
+            ]
+          }
         },
         {
           "type": "row",
           "items": [
-            "02a.webp",
-            "02b.webp"
+            {
+              "src": "02a.webp",
+              "w": 1910,
+              "h": 2700,
+              "sizes": [
+                {
+                  "w": 640,
+                  "src": "sizes/02a-640.webp"
+                },
+                {
+                  "w": 960,
+                  "src": "sizes/02a-960.webp"
+                },
+                {
+                  "w": 1280,
+                  "src": "sizes/02a-1280.webp"
+                }
+              ]
+            },
+            {
+              "src": "02b.webp",
+              "w": 1910,
+              "h": 2700,
+              "sizes": [
+                {
+                  "w": 640,
+                  "src": "sizes/02b-640.webp"
+                },
+                {
+                  "w": 960,
+                  "src": "sizes/02b-960.webp"
+                },
+                {
+                  "w": 1280,
+                  "src": "sizes/02b-1280.webp"
+                }
+              ]
+            }
           ]
         }
-      ],
-      "case": {
-        "hero": "hero.webp",
-        "hasIntro": true,
-        "hasCategory": true,
-        "hasOutro": true,
-        "hasCredit": true,
-        "blocks": [
-          {
-            "type": "single",
-            "src": "01.mp4"
-          },
-          {
-            "type": "single",
-            "src": "02.webp"
-          },
-          {
-            "type": "row",
-            "items": [
-              "03a.mp4",
-              "03b.webp"
-            ]
-          },
-          {
-            "type": "single",
-            "src": "04.webp"
-          },
-          {
-            "type": "single",
-            "src": "05.webp"
-          },
-          {
-            "type": "row",
-            "items": [
-              "06a.webp",
-              "06b.webp"
-            ]
-          },
-          {
-            "type": "single",
-            "src": "07.webp"
-          },
-          {
-            "type": "single",
-            "src": "08.webp"
-          }
-        ]
-      }
+      ]
     }
   },
   {
@@ -147,25 +227,74 @@
     "title": "Spotify Japan",
     "title_de": "Spotify Japan",
     "slug": "Spotify Japan",
+    "details": {
+      "type": {
+        "en": "Studio Project",
+        "de": "Studioprojekt"
+      },
+      "studio": "Studio Herrström",
+      "responsibilities": {
+        "en": [
+          "Concept Development",
+          "Visual System Development"
+        ],
+        "de": [
+          "Konzeptentwicklung",
+          "Entwicklung des visuellen Systems"
+        ]
+      }
+    },
     "manifest": {
       "home": [
         {
           "type": "single",
-          "src": "01.webp"
+          "item": {
+            "src": "01.webp",
+            "w": 4000,
+            "h": 3000,
+            "sizes": [
+              {
+                "w": 640,
+                "src": "sizes/01-640.webp"
+              },
+              {
+                "w": 960,
+                "src": "sizes/01-960.webp"
+              },
+              {
+                "w": 1280,
+                "src": "sizes/01-1280.webp"
+              },
+              {
+                "w": 1920,
+                "src": "sizes/01-1920.webp"
+              },
+              {
+                "w": 2560,
+                "src": "sizes/01-2560.webp"
+              }
+            ]
+          }
         },
         {
           "type": "single",
-          "src": "02.webp"
+          "item": {
+            "src": "02.webp",
+            "w": 1080,
+            "h": 1350,
+            "sizes": [
+              {
+                "w": 640,
+                "src": "sizes/02-640.webp"
+              },
+              {
+                "w": 960,
+                "src": "sizes/02-960.webp"
+              }
+            ]
+          }
         }
-      ],
-      "case": {
-        "hero": null,
-        "hasIntro": false,
-        "hasCategory": false,
-        "hasOutro": false,
-        "hasCredit": false,
-        "blocks": []
-      }
+      ]
     }
   },
   {
@@ -173,60 +302,77 @@
     "title": "Florian",
     "title_de": "Florian",
     "slug": "Florian",
+    "details": {
+      "type": {
+        "en": "Freelance Project",
+        "de": "Freelance-Projekt"
+      },
+      "responsibilities": {
+        "en": [
+          "Visual Identity",
+          "Concept Development",
+          "Stakeholder Management"
+        ],
+        "de": [
+          "Visuelle Identität",
+          "Konzeptentwicklung",
+          "Stakeholder-Management"
+        ]
+      }
+    },
     "manifest": {
       "home": [
         {
           "type": "single",
-          "src": "01.mp4"
+          "item": {
+            "src": "01.mp4",
+            "webm": "01.webm"
+          }
         },
         {
           "type": "row",
           "items": [
-            "02a.webp",
-            "02b.webp"
+            {
+              "src": "02a.webp",
+              "w": 1910,
+              "h": 2700,
+              "sizes": [
+                {
+                  "w": 640,
+                  "src": "sizes/02a-640.webp"
+                },
+                {
+                  "w": 960,
+                  "src": "sizes/02a-960.webp"
+                },
+                {
+                  "w": 1280,
+                  "src": "sizes/02a-1280.webp"
+                }
+              ]
+            },
+            {
+              "src": "02b.webp",
+              "w": 1910,
+              "h": 2700,
+              "sizes": [
+                {
+                  "w": 640,
+                  "src": "sizes/02b-640.webp"
+                },
+                {
+                  "w": 960,
+                  "src": "sizes/02b-960.webp"
+                },
+                {
+                  "w": 1280,
+                  "src": "sizes/02b-1280.webp"
+                }
+              ]
+            }
           ]
         }
-      ],
-      "case": {
-        "hero": "hero.webp",
-        "hasIntro": true,
-        "hasCategory": true,
-        "hasOutro": true,
-        "hasCredit": true,
-        "blocks": [
-          {
-            "type": "single",
-            "src": "01.mp4"
-          },
-          {
-            "type": "single",
-            "src": "02.webp"
-          },
-          {
-            "type": "row",
-            "items": [
-              "03a.webp",
-              "03b.webp"
-            ]
-          },
-          {
-            "type": "single",
-            "src": "04.webp"
-          },
-          {
-            "type": "single",
-            "src": "05.webp"
-          },
-          {
-            "type": "single",
-            "src": "06.webp"
-          },
-          {
-            "type": "single",
-            "src": "07.mp4"
-          }
-        ]
-      }
+      ]
     }
   },
   {
@@ -234,26 +380,31 @@
     "title": "Mercedes Maybach",
     "title_de": "Mercedes Maybach",
     "slug": "Mercedes Maybach",
+    "details": {
+      "type": {
+        "en": "Studio Project",
+        "de": "Studioprojekt"
+      },
+      "studio": "Studio Herrström",
+      "responsibilities": {
+        "en": [
+          "Layout Development"
+        ],
+        "de": [
+          "Layoutentwicklung"
+        ]
+      }
+    },
     "manifest": {
       "home": [
         {
           "type": "single",
-          "src": "01.mp4"
-        }
-      ],
-      "case": {
-        "hero": null,
-        "hasIntro": false,
-        "hasCategory": false,
-        "hasOutro": false,
-        "hasCredit": false,
-        "blocks": [
-          {
-            "type": "single",
-            "src": "01.webm"
+          "item": {
+            "src": "01.mp4",
+            "webm": "01.webm"
           }
-        ]
-      }
+        }
+      ]
     }
   }
 ]

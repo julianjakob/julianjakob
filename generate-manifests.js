@@ -9,22 +9,95 @@
 
 const fs   = require("fs");
 const path = require("path");
+const { execFileSync } = require("child_process");
 
 const SLOTS      = ["01","02","03","04","05","06","07","08"];
 const IMG_EXTS   = [".jpg",".jpeg",".png",".webp"];
 const VID_EXTS   = [".mp4",".webm"];
 const MEDIA_EXTS = [...IMG_EXTS, ...VID_EXTS];
 
+// Smaller copies of every image (home/sizes/<name>-<width>.webp). The site picks
+// the one closest to the size it's displayed at — sharper while slides animate
+// (browsers shrink huge images coarsely mid-animation) and much lighter to load.
+// Needs cwebp (brew install webp); without it the originals are used as before.
+const SIZE_WIDTHS = [640, 960, 1280, 1920, 2560];
+const WEBP_QUALITY = "82";
+let hasCwebp = true;
+try { execFileSync("cwebp", ["-version"], { stdio: "ignore" }); }
+catch { hasCwebp = false; console.warn("  ! cwebp not found — skipping resized images (brew install webp)"); }
+
+function buildSizes(dir, file, width) {
+  if (!hasCwebp || !width) return [];
+  const sizesDir = path.join(dir, "sizes");
+  const stem = path.basename(file, path.extname(file));
+  const srcPath = path.join(dir, file);
+  const srcTime = fs.statSync(srcPath).mtimeMs;
+  const out = [];
+  for (const w of SIZE_WIDTHS) {
+    if (w >= width) break;
+    const name = `${stem}-${w}.webp`;
+    const target = path.join(sizesDir, name);
+    if (!fs.existsSync(target) || fs.statSync(target).mtimeMs < srcTime) {
+      fs.mkdirSync(sizesDir, { recursive: true });
+      execFileSync("cwebp", ["-quiet", "-q", WEBP_QUALITY, "-resize", String(w), "0", "-metadata", "none", srcPath, "-o", target]);
+    }
+    out.push({ w, src: `sizes/${name}` });
+  }
+  return out;
+}
+
 function findMedia(dir, stem) {
   for (const ext of MEDIA_EXTS) {
     const f = path.join(dir, stem + ext);
-    if (fs.existsSync(f)) return stem + ext;
+    if (fs.existsSync(f)) return describeMedia(dir, stem + ext);
   }
   return null;
 }
 
-function fileExists(dir, name) {
-  return fs.existsSync(path.join(dir, name));
+// Build a media entry: file name, pixel size (images) and a WebM alternative (videos).
+// Dimensions let the site lay out slides instantly without waiting for downloads.
+function describeMedia(dir, file) {
+  const entry = { src: file };
+  const ext = path.extname(file).toLowerCase();
+  if (IMG_EXTS.includes(ext)) {
+    const dims = imageSize(path.join(dir, file));
+    if (dims) {
+      entry.w = dims.w; entry.h = dims.h;
+      const sizes = buildSizes(dir, file, dims.w);
+      if (sizes.length) entry.sizes = sizes;
+    }
+  } else if (ext === ".mp4") {
+    const webm = file.replace(/\.mp4$/i, ".webm");
+    if (fs.existsSync(path.join(dir, webm))) entry.webm = webm;
+  }
+  return entry;
+}
+
+// Reads width/height from WebP, PNG and JPEG headers (no dependencies).
+function imageSize(file) {
+  const b = fs.readFileSync(file);
+  if (b.toString("ascii", 0, 4) === "RIFF" && b.toString("ascii", 8, 12) === "WEBP") {
+    const chunk = b.toString("ascii", 12, 16);
+    if (chunk === "VP8X") return { w: 1 + b.readUIntLE(24, 3), h: 1 + b.readUIntLE(27, 3) };
+    if (chunk === "VP8 ") return { w: b.readUInt16LE(26) & 0x3fff, h: b.readUInt16LE(28) & 0x3fff };
+    if (chunk === "VP8L") {
+      const bits = b.readUInt32LE(21);
+      return { w: 1 + (bits & 0x3fff), h: 1 + ((bits >> 14) & 0x3fff) };
+    }
+  }
+  if (b.readUInt32BE(0) === 0x89504e47) return { w: b.readUInt32BE(16), h: b.readUInt32BE(20) };
+  if (b[0] === 0xff && b[1] === 0xd8) {
+    let i = 2;
+    while (i < b.length) {
+      const marker = b[i + 1];
+      const len = b.readUInt16BE(i + 2);
+      if (marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker)) {
+        return { w: b.readUInt16BE(i + 7), h: b.readUInt16BE(i + 5) };
+      }
+      i += 2 + len;
+    }
+  }
+  return null;
 }
 
 function pad2(n) { return String(n).padStart(2, "0"); }
@@ -48,52 +121,12 @@ function scanHomeDir(homeDir) {
     // Single
     const f = findMedia(homeDir, num);
     if (f) {
-      items.push({ type: "single", src: f });
+      items.push({ type: "single", item: f });
       continue;
     }
     break;
   }
   return items;
-}
-
-function scanCaseDir(caseDir) {
-  if (!fs.existsSync(caseDir)) return null;
-
-  const hero        = findMedia(caseDir, "hero");
-  const hasIntro    = fileExists(caseDir, "intro.txt");
-  const hasCategory = fileExists(caseDir, "category.txt");
-  const hasOutro    = fileExists(caseDir, "outro.txt");
-  const hasCredit   = fileExists(caseDir, "credit.txt");
-
-  const blocks = [];
-  for (let i = 1; i <= 199; i++) {
-    const num = pad2(i);
-    // Text block
-    if (fileExists(caseDir, num + ".txt")) {
-      blocks.push({ type: "text", num });
-      continue;
-    }
-    // Row
-    const rowItems = [];
-    for (const letter of ["a","b","c"]) {
-      const f = findMedia(caseDir, num + letter);
-      if (!f) break;
-      rowItems.push(f);
-    }
-    if (rowItems.length > 0) {
-      blocks.push({ type: "row", items: rowItems });
-      continue;
-    }
-    // Single
-    const f = findMedia(caseDir, num);
-    if (f) {
-      blocks.push({ type: "single", src: f });
-      continue;
-    }
-    break;
-  }
-
-  return { hero, hasIntro, hasCategory, hasOutro, hasCredit, blocks };
 }
 
 let generated = 0;
@@ -113,16 +146,14 @@ for (const slot of SLOTS) {
   if (!project.enabled) { console.log(`  – ${slot}: disabled, skipping`); skipped++; continue; }
 
   const homeDir = path.join(projectDir, "home");
-  const caseDir = path.join(projectDir, "case");
 
   const manifest = {
     home: scanHomeDir(homeDir),
-    case: scanCaseDir(caseDir),
   };
 
   const outPath = path.join(projectDir, "manifest.json");
   fs.writeFileSync(outPath, JSON.stringify(manifest, null, 2));
-  console.log(`  ✓ ${slot}: ${manifest.home.length} home slides, ${manifest.case ? manifest.case.blocks.length : 0} case blocks`);
+  console.log(`  ✓ ${slot}: ${manifest.home.length} home slides`);
   generated++;
 }
 
