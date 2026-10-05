@@ -43,12 +43,16 @@
   --spacing-sm: 18px;
   --spacing-md: 20px;
   --spacing-xl: 50px;
+  /* Ruled rows (contact list, Process steps): padding above / below the text */
+  --spacing-row: 7px;
+  --spacing-row-open: 16px; /* an opened Process step */
 
   --spacing-section-vertical: 135px;
   --spacing-contact-vertical: min(150px, 22vh); /* shrinks only on very short screens (landscape phones) */
   --spacing-component-gap: 30px;
   --spacing-component-gap-large: 40px;
   --spacing-component-gap-xl: 50px;
+  --spacing-component-gap-grid: 90px;
 
   --service-num-width: 25px;
   --service-body-indent: calc(var(--service-num-width) + var(--spacing-component-gap));
@@ -553,7 +557,7 @@ span.mobile-only { display: inline; }
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-xs) 0;
+  padding: var(--spacing-row) 0;
   border-bottom: var(--line-thickness) solid var(--line-color);
   cursor: pointer;
   transition: opacity var(--transition-base);
@@ -605,10 +609,10 @@ span.mobile-only { display: inline; }
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-xs) 0;
+  padding: var(--spacing-row) 0;
   transition: padding-top 0.5s ease, opacity var(--transition-base);
 }
-.service-row.expanded .service-header { padding-top: var(--spacing-md); padding-bottom: 0; opacity: 1; }
+.service-row.expanded .service-header { padding-top: var(--spacing-row-open); padding-bottom: 0; opacity: 1; }
 .service-title-wrapper { display: flex; gap: var(--spacing-component-gap); flex: 1; min-width: 0; }
 .service-toggle {
   font-size: var(--type-base);
@@ -656,8 +660,8 @@ p.type-contact-item.service-description {
 }
 .service-row.expanded .service-body {
   opacity: 1;
-  padding-top: var(--spacing-md);
-  padding-bottom: var(--spacing-md);
+  padding-top: var(--spacing-row-open);
+  padding-bottom: var(--spacing-row-open);
 }
 
 #project-footer {
@@ -892,15 +896,14 @@ p.type-contact-item,
   .service-description {
     max-width: calc(3 * var(--grid-unit));
     column-count: 1;
-    text-align: left; /* too narrow to justify without wide gaps */
   }
   .contact-list {
-    max-width: var(--col-width); /* one text column: rows stay short and tight */
+    max-width: calc(2 * var(--col-width) + var(--col-gutter)); /* the two text columns, like the paragraphs */
   }
   .client-grid {
     display: inline-grid;
     grid-template-columns: auto auto;
-    column-gap: var(--spacing-xl);
+    column-gap: var(--spacing-component-gap-grid);
     row-gap: 2px;
     width: auto;
   }

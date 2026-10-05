@@ -97,7 +97,6 @@ async function init() {
         banner.style.display = "none";
         syncUiMode();
         if (currentPage === "home" && shouldShowPeek()) { // not when the visit starts on another page
-          markPeekShown();
           let peekTimer = null;
           const removePeekListeners = () => {
             window.removeEventListener("wheel",      cancelEarly);
@@ -110,6 +109,7 @@ async function init() {
           window.addEventListener("keydown",    cancelEarly, { once: true });
           peekTimer = setTimeout(() => {
             removePeekListeners();
+            markPeekShown(); // only once it really plays — cancelled early, it comes back next visit
             runScrollIndicator();
           }, 800);
         }
