@@ -824,14 +824,16 @@ p.type-contact-item.service-description {
    so the menu's first item stays level with the page headline */
 @media (max-width: 767px) {
   .type-details { font-size: var(--type-small); } /* one step smaller */
+  /* Page headlines (About, Process, Expertise): a touch more open than other headings */
+  .type-about-headline { line-height: 172%; }
   :root {
-    --line-height-body: 190%;
+    --line-height-body: 200%;
     --line-height-heading: 165%;
-    --lh-body: 1.9;
+    --lh-body: 2;
     --lh-heading: 1.65;
-    --cap-offset: 0.265;
+    --cap-offset: 0.30;          /* page headlines at 172% (see .type-about-headline below) */
     --menu-line-height: 135%;
-    --menu-cap-offset: calc(var(--cap-offset) - 0.15); /* (165% − 135%) / 2 */
+    --menu-cap-offset: 0.115;    /* 0.265 at 165%, minus (165% − 135%) / 2 */
   }
   .pair-gap { margin-bottom: 8px; }
   .type-service-tags { font-size: calc(var(--type-small) - 1px); } /* tags: one px smaller */

@@ -857,9 +857,33 @@ async function init() {
     if (el._labelTimer || el.textContent === text) return;
     el._labelTimer = setTimeout(() => {
       el._labelTimer = 0;
-      el.textContent = el._labelNext;
+      glideHeader(() => { el.textContent = el._labelNext; });
       typewriterIn(el);
     }, textOut([el]));
+  }
+
+  // Header controls (PDF · DE/EN · Menu) sit right-aligned: when a label changes width
+  // (Menu ↔ Close) or the PDF button comes and goes, the others glide to their new
+  // places instead of jumping (measured before and after the change, then animated)
+  const headerControls = document.querySelector("#main-header .header-controls");
+  function glideHeader(change) {
+    if (!headerControls) { change(); return; }
+    const items = [...headerControls.children].filter((c) => !c.hidden);
+    const before = new Map(items.map((c) => [c, c.getBoundingClientRect().left]));
+    change();
+    before.forEach((left, c) => {
+      if (c.hidden) return;
+      const dx = left - c.getBoundingClientRect().left;
+      if (Math.abs(dx) < 0.5) return;
+      clearTimeout(c._glideTimer);
+      c.style.transition = "none";
+      c.style.transform = `translateX(${dx}px)`;
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        c.style.transition = "transform 0.45s cubic-bezier(0.25, 0, 0.2, 1), opacity var(--transition-base)";
+        c.style.transform = "";
+        c._glideTimer = setTimeout(() => { c.style.transition = ""; }, 500);
+      }));
+    });
   }
 
   // ── Details panel (home) ──────────────────────────────────────
@@ -1029,10 +1053,10 @@ async function init() {
     if (show) {
       const lang = (window.getCurrentLang && window.getCurrentLang()) || "en";
       printBtn.textContent = printBtn.getAttribute(`data-${lang}`); // clean text, current language
-      printBtn.hidden = false;
+      glideHeader(() => { printBtn.hidden = false; });
       typewriterIn(printBtn);
     }
-    else printTimer = setTimeout(() => { printBtn.hidden = true; }, textOut([printBtn]));
+    else printTimer = setTimeout(() => glideHeader(() => { printBtn.hidden = true; }), textOut([printBtn]));
   }
 
   function syncUiMode() {
