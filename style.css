@@ -40,8 +40,13 @@
 
 /* style.css */
 :root {
-  --line-color: #000000;
+  /* Colours: black and white, nothing else */
+  --color-ink: #000;
+  --color-paper: #fff;
+  /* Hairlines (contact list, Process / Services rows) */
+  --line-color: var(--color-ink);
   --line-thickness: 0.5px;
+  --rule: var(--line-thickness) solid var(--line-color);
   /* Typeface: EB Garamond, Regular throughout — no bold anywhere */
   --font-main: "EB Garamond", Georgia, "Times New Roman", serif;
   /* Garamond's lowercase is small for its size: every size below is scaled to a
@@ -84,16 +89,19 @@
   --spacing-component-gap-xl: 50px;
   --spacing-component-gap-grid: 90px;
 
+  /* Process / Services rows: number, gap, title — the text below lines up with the title */
   --service-num-width: 25px;
-  --service-body-indent: calc(var(--service-num-width) + var(--spacing-component-gap));
+  --service-gap: var(--spacing-component-gap);
+  --service-body-indent: calc(var(--service-num-width) + var(--service-gap));
 
   /* A classical serif keeps (nearly) its own letter-spacing */
   --letter-space-tight: -0.4px;
   --letter-space-normal: -0.2px;
   --letter-space-loose: 0px;
 
-
-  --anim-translate-micro: 8px;
+  /* Phones, scrolling pages: height of the white fades at the screen's top and bottom */
+  --fade-top: 70px;
+  --fade-bottom: 60px;
 
   /* Dimmed text: hover feedback / the inactive option (other language, current page) */
   --dim-hover: 0.5;
@@ -125,6 +133,10 @@
      size (EB Garamond at 135% line-height, x-height adjusted to 0.5). Used to put the
      first menu item's caps level with the page headline's caps. */
   --cap-offset: 0.19;  /* measured: menu and headline caps within 1px at 375 and 1440 */
+  /* Menu items: their own leading (tighter on phones); the cap offset follows it —
+     half of each line-height step, so the first item stays level with the headline */
+  --menu-line-height: var(--line-height-heading);
+  --menu-cap-offset: var(--cap-offset);
   /* UI: logo, DE/EN, Menu, Print, Details, project title, page footers — one step below base */
   --type-ui:      clamp(14px, calc(13.3px + 0.188vw), 17px);
   /* Running text: fixed, so it never outgrows the headers above it */
@@ -152,6 +164,7 @@ html:lang(en) .type-contact-item {
 * { margin: 0; padding: 0; box-sizing: border-box; }
 h1, h2, h3, h4, h5, h6, b, strong, th { font-weight: 400; } /* Regular everywhere: no browser bold */
 html {
+  background-color: var(--color-paper); /* Safari's top and bottom bars take this colour: white everywhere */
   height: 100%;
   height: -webkit-fill-available; /* iOS Safari: viewport excludes browser chrome */
 }
@@ -170,19 +183,43 @@ body {
   font-variant-ligatures: common-ligatures;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  background-color: #000;
+  background-color: var(--color-paper);
+}
+
+/* Phones, scrolling pages: two white gradients stay fixed at the top and bottom of the
+   screen while the text scrolls underneath, so it dissolves instead of being cut off at
+   an edge. The footer line (z-index 10) sits above them, like the header. */
+@media (hover: none) and (pointer: coarse) {
+  html .contact-container,
+  html .cv-container { contain: none; } /* else the gradients would scroll with the text */
+  .contact-container::before,
+  .cv-container::before,
+  .contact-container::after,
+  .cv-container::after {
+    content: "";
+    position: fixed;
+    left: 0; right: 0;
+    z-index: 5;
+    pointer-events: none;
+  }
+  .contact-container::before,
+  .cv-container::before {
+    top: 0;
+    height: var(--fade-top);
+    background: linear-gradient(to bottom, var(--color-paper), rgba(255, 255, 255, 0));
+  }
+  .contact-container::after,
+  .cv-container::after {
+    bottom: 0;
+    height: var(--fade-bottom);
+    background: linear-gradient(to top, var(--color-paper), rgba(255, 255, 255, 0));
+  }
 }
 a { text-decoration: none; color: inherit; }
 
 @keyframes typewriter-char {
-  from {
-    opacity: 0;
-    transform: translateY(var(--anim-translate-micro));
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* Intro slogan: set without kerning and ligatures from the start. While it animates,
@@ -202,107 +239,97 @@ a { text-decoration: none; color: inherit; }
   padding: 0.3em 0.25em;
   margin: 0 -0.25em;
 }
+/* The one-line UI texts (header, footer title, Details, page footers): on the iPhone each
+   fading letter is painted on its own layer, sized to the letter's line box — the tails
+   of p, y, g were cut off. As inline blocks the letters get a real box with room below;
+   the negative margin keeps the line exactly where it was. */
+#main-header :is(.typewriter-char, .text-out),
+#footer-title :is(.typewriter-char, .text-out),
+.details-toggle :is(.typewriter-char, .text-out),
+.page-footer :is(.typewriter-char, .text-out) {
+  display: inline-block;
+  padding: 0.3em 0;
+  margin-top: -0.3em;
+  margin-bottom: -0.3em;
+}
+/* While text animates, each of its lines is held together (script.js: locked lines) */
+.lock-line { white-space: nowrap; }
+/* Each letter / word fades in softly; neighbours overlap, so text arrives as a wave */
 .typewriter-char {
   opacity: 0;
-  animation: typewriter-char 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  display: inline;
-}
-
-.typewriter-char br {
-  display: inline;
+  animation: typewriter-char var(--tm-in-unit, 380ms) cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
 }
 
 .type-banner-headline {
   /* Always two lines tall, like the slogan, so one-line intro texts don't shift the layout */
   min-height: 2lh;
-  color: #000;
-  font-family: var(--font-main);
+  color: var(--color-ink);
   font-style: italic;
   font-size: var(--type-display);
-  font-weight: 400;
   line-height: var(--line-height-heading);
   letter-spacing: var(--letter-space-normal);
 }
 .banner-logo { display: none; }
 .type-banner-footer {
-  color: #000;
-  font-family: var(--font-main);
+  color: var(--color-ink);
   font-size: var(--type-ui);
-  font-weight: 400;
   line-height: normal;
 }
 .type-ui-text {
-  color: #FFF;
-  font-family: var(--font-main);
+  color: var(--color-paper);
   font-size: var(--type-ui);
-  font-weight: 400;
   line-height: normal;
 }
 .type-menu-item {
-  color: #FFF;
-  font-family: var(--font-main);
+  color: var(--color-paper);
   font-size: var(--type-menu);
-  font-weight: 400;
-  line-height: var(--line-height-heading);
+  line-height: var(--menu-line-height);
   letter-spacing: var(--letter-space-tight);
   display: block;
   cursor: pointer;
   transition: opacity var(--transition-base);
 }
-.type-menu-item.active-page {
-  opacity: var(--dim-inactive);
-  cursor: default;
-  pointer-events: none;
-}
+/* The page you're on: dimmed, not clickable */
+.type-menu-item.active-page,
 .menu-footer .nav-link.active-page {
   opacity: var(--dim-inactive);
   cursor: default;
   pointer-events: none;
-  transition: opacity var(--transition-base);
 }
+.menu-footer .nav-link.active-page { transition: opacity var(--transition-base); }
 
 .type-contact-header {
-  color: #000;
-  font-family: var(--font-main);
+  color: var(--color-ink);
   font-size: var(--type-base);
-  font-weight: 400;
   line-height: var(--line-height-heading);
   letter-spacing: var(--letter-space-loose);
   margin-bottom: var(--spacing-md);
   max-width: var(--layout-width);
 }
 .type-contact-item {
-  color: #000;
-  font-family: var(--font-main);
+  color: var(--color-ink);
   font-size: var(--type-running);
-  font-weight: 400;
   line-height: var(--line-height-body);
   letter-spacing: var(--letter-space-loose);
 }
 .type-about-headline {
-  color: #000;
-  font-family: var(--font-main);
+  color: var(--color-ink);
   font-size: var(--type-display);
   font-style: normal;
-  font-weight: 400;
   line-height: var(--line-height-heading);
   letter-spacing: var(--letter-space-normal);
   margin-bottom: var(--spacing-xl);
   max-width: var(--layout-width);
 }
 .type-service-title {
-  color: #000;
-  font-family: var(--font-main);
+  color: var(--color-ink);
   font-size: var(--type-base);
-  font-weight: 400;
   line-height: var(--line-height-heading);
   letter-spacing: var(--letter-space-loose);
 }
 .type-service-tags {
-  color: #000;
-  font-family: var(--font-main);
+  color: var(--color-ink);
   font-size: var(--type-small);
-  font-weight: 400;
   line-height: var(--line-height-body);
   margin-top: var(--spacing-md);
   margin-bottom: 0;
@@ -353,21 +380,20 @@ header {
 /* Print: only on the CV page, next to the language toggle (script.js) */
 .print-btn { cursor: pointer; }
 
-
 #menu-overlay {
   position: fixed;
   top: 0; left: 0;
   width: 100%;
   height: 100vh;
   height: 100dvh;
-  background-color: #000;
+  background-color: var(--color-ink);
   z-index: 150;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   padding: var(--menu-top) var(--ui-padding-side) var(--ui-padding-top) var(--ui-padding-side);
   /* First menu item's capitals level with the page headlines' (pages start at --spacing-contact-vertical) */
-  --menu-top: calc(var(--spacing-contact-vertical) + var(--cap-offset) * (var(--type-display) - var(--type-menu)));
+  --menu-top: calc(var(--spacing-contact-vertical) + var(--cap-offset) * var(--type-display) - var(--menu-cap-offset) * var(--type-menu));
   transform-origin: top center;
   transform: scaleY(0);
   transition: transform var(--page-speed) var(--page-curve);
@@ -375,6 +401,25 @@ header {
   touch-action: none;
 }
 #menu-overlay.open { transform: scaleY(1); }
+/* Closed and folded away, the menu leaves the page entirely. Safari 26 colours its top
+   and bottom bars from fixed elements at the screen edges — even a menu squashed to
+   zero height counts, and would turn both bars black on every page. */
+#menu-overlay.off { display: none; }
+/* Menu open: a black strip at the top edge, above the header, so Safari's top bar turns
+   black like the bottom one (the header itself would otherwise decide it). Safari only
+   notices elements arriving and leaving, not colour changes — so it's added and removed,
+   never recoloured. The menu is black behind it anyway. */
+#bar-top {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%;
+  height: 4px;
+  background-color: var(--color-ink);
+  z-index: 201;
+  pointer-events: none;
+}
+html.menu-open #bar-top { display: block; }
 .menu-list { display: flex; flex-direction: column; width: 100%; transition: opacity var(--transition-base); }
 .menu-bottom { display: flex; flex-direction: column; margin-top: auto; margin-bottom: var(--spacing-section-vertical); width: 100%; }
 .pair-gap { margin-bottom: var(--spacing-sm); }
@@ -384,10 +429,10 @@ header {
   width: 100%;
   transition: opacity var(--transition-base);
   position: absolute;
-  bottom: calc(var(--ui-padding-top) + env(safe-area-inset-bottom, 0px));
+  bottom: 0;
   left: 0;
-  padding: 0 var(--ui-padding-side);
-  padding-bottom: max(var(--ui-padding-top), 20px);
+  /* same place as the footers on home and the pages */
+  padding: 0 var(--ui-padding-side) max(var(--ui-padding-top), env(safe-area-inset-bottom, 0px));
 }
 .menu-intro-link {
   display: flex;
@@ -402,10 +447,8 @@ header {
   width: 100%;
   height: 100vh;
   height: 100dvh;
-  overflow-y: hidden;
-  overflow-x: visible;
-  transition: transform var(--page-speed) var(--page-curve);
   overflow: visible;
+  transition: transform var(--page-speed) var(--page-curve);
 }
 /* At rest a page has no transform at all: its text renders as plain page text. Safari
    otherwise keeps it on a scaled layer after the fold and can leave it soft */
@@ -413,7 +456,7 @@ header {
 .page-container.hidden { transform: scaleY(0); z-index: 1; pointer-events: none; }
 
 .contact-container {
-  background-color: #fff;
+  background-color: var(--color-paper);
   overflow-y: auto;
   padding: var(--spacing-contact-vertical) var(--ui-padding-side) var(--ui-padding-top) var(--ui-padding-side);
   display: flex;
@@ -422,8 +465,7 @@ header {
   contain: paint;
 }
 
-
-#page-home { background-color: #000; cursor: grab; }
+#page-home { background-color: var(--color-ink); cursor: grab; }
 #page-home:active { cursor: grabbing; }
 #page-home img,
 #page-home video { user-select: none; -webkit-user-drag: none; pointer-events: none; }
@@ -436,8 +478,10 @@ header {
   opacity: 0.9;
 }
 
-/* Vertical drags drive the feed (script.js) instead of the browser */
-#page-home { touch-action: pan-x pinch-zoom; }
+/* Touches on the feed belong to the swipe (script.js), never to the browser.
+   "none" — iOS Safari doesn't know "pinch-zoom" and drops a whole
+   "pan-x pinch-zoom" declaration, which let it scroll the trackpad layer instead */
+#page-home { touch-action: none; }
 
 /* Invisible native scroll layer for trackpad / mouse wheel (see script.js).
    One snap point per slide; scroll-snap-stop = max. one slide per swipe. */
@@ -450,7 +494,7 @@ header {
   scroll-snap-type: y mandatory;
   overscroll-behavior: contain;
   scrollbar-width: none;
-  touch-action: pan-x pinch-zoom;
+  touch-action: none; /* trackpad / wheel only — touch never scrolls it */
 }
 #feed-scroller::-webkit-scrollbar { display: none; }
 .feed-snap {
@@ -465,7 +509,7 @@ header {
   top: 0; left: 0;
   width: 100%;
   height: 100%;
-  background-color: #fff;
+  background-color: var(--color-paper);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -475,10 +519,11 @@ header {
   transition: transform var(--anim-speed) var(--anim-curve), opacity 0s linear var(--anim-speed);
   z-index: 1;
 }
-/* One GPU layer per slide (set from script.js, not in Safari, where
-   will-change on slides caused blend-mode glitches on large monitors).
-   The fold then stretches a finished layer instead of repainting the feed. */
-.feed-layers .slide-section { will-change: transform; }
+/* The two slides folding during a swipe get their own GPU layer (script.js adds
+   .is-folding while the feed moves, removes it when it lands): the fold then only
+   stretches a finished picture — in every browser, Safari too — and at rest no
+   memory is held for layers (nine full-screen layers would cost a phone >100 MB) */
+.slide-section.is-folding { will-change: transform; }
 
 .slide-section.active {
   transform: none; /* at rest: no layer (see .page-container.visible) */
@@ -583,7 +628,7 @@ header {
   width: 100%;
   height: 100vh;
   height: 100dvh;
-  background-color: #fff;
+  background-color: var(--color-paper);
   z-index: 9999;
   display: flex;
   flex-direction: column;
@@ -605,16 +650,14 @@ p.type-contact-item { max-width: 100%; margin-bottom: var(--spacing-xl); text-al
 #page-legal p.type-contact-item { text-align: left; text-align-last: left; hyphens: none; }
 
 .desktop-only { display: none; }
-span.desktop-only { display: none; }
-.mobile-only { display: block; }
 span.mobile-only { display: inline; }
-.contact-list { display: flex; flex-direction: column; border-top: var(--line-thickness) solid var(--line-color); width: 100%; }
+.contact-list { display: flex; flex-direction: column; border-top: var(--rule); width: 100%; }
 .contact-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: var(--spacing-row) 0;
-  border-bottom: var(--line-thickness) solid var(--line-color);
+  border-bottom: var(--rule);
   cursor: pointer;
   transition: opacity var(--transition-base);
   width: 100%;
@@ -642,7 +685,7 @@ span.mobile-only { display: inline; }
   justify-content: space-between;
   z-index: 10;
 }
-.page-footer .type-ui-text { color: #000; }
+.page-footer .type-ui-text { color: var(--color-ink); }
 
 /* ── Client grid: single column on mobile, two columns on desktop ── */
 .client-grid {
@@ -656,7 +699,7 @@ span.mobile-only { display: inline; }
 .client-col .type-contact-item { white-space: nowrap; }
 
 .service-row {
-  border-bottom: var(--line-thickness) solid var(--line-color);
+  border-bottom: var(--rule);
   cursor: pointer;
   transition: background-color 0.3s ease;
   width: 100%;
@@ -669,7 +712,7 @@ span.mobile-only { display: inline; }
   transition: padding-top 0.5s ease, opacity var(--transition-base);
 }
 .service-row.expanded .service-header { padding-top: var(--spacing-row-open); padding-bottom: 0; opacity: 1; }
-.service-title-wrapper { display: flex; gap: var(--spacing-component-gap); flex: 1; min-width: 0; }
+.service-title-wrapper { display: flex; gap: var(--service-gap); flex: 1; min-width: 0; }
 .service-toggle {
   font-size: var(--type-base);
   line-height: 1;
@@ -679,7 +722,7 @@ span.mobile-only { display: inline; }
   text-align: right;
   flex-shrink: 0;
 }
-.service-num { min-width: var(--service-num-width); color: #000; flex-shrink: 0; }
+.service-num { min-width: var(--service-num-width); color: var(--color-ink); flex-shrink: 0; }
 .service-name { min-width: 0; }
 .service-body-wrapper {
   display: grid;
@@ -695,19 +738,7 @@ span.mobile-only { display: inline; }
   overflow: hidden;
   opacity: 0;
   transition: padding 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  padding-left: var(--service-body-indent);
-  padding-right: 0;
-  padding-top: 0;
-  padding-bottom: 0;
-}
-.service-description {
-  padding-top: 0;
-  padding-bottom: 0;
-  margin-top: 0;
-  margin-bottom: 0;
-  max-width: 100%;
-  width: 100%;
-  line-height: var(--line-height-body);
+  padding: 0 0 0 var(--service-body-indent);
 }
 p.type-contact-item.service-description {
   max-width: 100%;
@@ -771,28 +802,27 @@ p.type-contact-item.service-description {
 }
 .details-body { overflow: hidden; min-height: 0; }
 .type-details {
-  color: #FFF;
-  font-family: var(--font-main);
+  color: var(--color-paper);
   font-size: var(--type-running);
-  font-weight: 400;
   line-height: var(--line-height-body);
 }
 .details-body > :first-child { margin-top: 2.6em; }
-@media (max-width: 767px) {
-  .type-details { font-size: var(--type-small); } /* phones: one step smaller */
-}
+.details-group + .details-group { margin-top: 1.9em; }
 /* Phones: more open leading (narrow columns read better with air between lines);
    the cap offset grows with the headline leading (+ half the extra line height),
    so the menu's first item stays level with the page headline */
 @media (max-width: 767px) {
+  .type-details { font-size: var(--type-small); } /* one step smaller */
   :root {
     --line-height-body: 190%;
     --line-height-heading: 165%;
     --cap-offset: 0.265;
+    --menu-line-height: 135%;
+    --menu-cap-offset: calc(var(--cap-offset) - 0.15); /* (165% − 135%) / 2 */
   }
+  .pair-gap { margin-bottom: 8px; }
   .type-service-tags { font-size: calc(var(--type-small) - 1px); } /* tags: one px smaller */
 }
-.details-group + .details-group { margin-top: 1.9em; }
 
 /* Adaptive UI colour on the home feed (set per text spot from script.js):
    solid black or white instead of the difference blend, fading slowly between the
@@ -811,7 +841,7 @@ p.type-contact-item.service-description {
    over), and dragging across them doesn't select text */
 .ui-adaptive #main-header,
 .ui-adaptive #project-footer {
-  touch-action: pan-x pinch-zoom;
+  touch-action: none;
   -webkit-user-select: none;
   user-select: none;
 }
@@ -826,6 +856,8 @@ p.type-contact-item.service-description {
    ║
    ║  --tm-in          letters | words      how new text types in
    ║  --tm-in-step     time between two letters / words
+   ║  --tm-in-max      longest a text may take to type in: long texts step faster
+   ║  --tm-in-unit     fade time of a single letter / word
    ║  --tm-out         letters | words   dissolve one by one in reading order
    ║  --tm-out-spread  how long the dissolve cascade runs (first → last unit)
    ║  --tm-out-unit    fade time of a single letter / word
@@ -834,6 +866,8 @@ p.type-contact-item.service-description {
   /* Default: small headings, labels, client names, menu, tags… */
   --tm-in: letters;
   --tm-in-step: 22ms;
+  --tm-in-max: 600ms;
+  --tm-in-unit: 380ms;
   --tm-out: letters;
   --tm-out-spread: 140ms;
   --tm-out-unit: 140ms;
@@ -844,6 +878,7 @@ p.type-contact-item.service-description {
 .type-menu-item,
 .cv-name {
   --tm-in-step: 40ms;
+  --tm-in-max: 1000ms;
   --tm-out-spread: 220ms;
 }
 /* Running text: word by word */
@@ -851,6 +886,7 @@ p.type-contact-item,
 .cv-body {
   --tm-in: words;
   --tm-in-step: 18ms;
+  --tm-in-max: 1200ms;
   --tm-out: words;
   --tm-out-spread: 170ms;
   --tm-out-unit: 160ms;
@@ -862,7 +898,6 @@ p.type-contact-item,
 /* Leaving text: each letter / word fades on its own (delays set from script) */
 @keyframes textFadeOut { to { opacity: 0; } }
 .text-out { animation: textFadeOut var(--tm-out-unit, 140ms) ease-in forwards; }
-
 
 @media (min-width: 768px) {
   :root {
@@ -876,6 +911,7 @@ p.type-contact-item,
     --layout-width: 65%;
     --spacing-footer-gap: 120px;
     --spacing-macro: 220px;
+    --service-gap: var(--spacing-component-gap-large);
   }
   .banner-overlay {
     position: relative;
@@ -903,28 +939,17 @@ p.type-contact-item,
     line-height: 0;       /* doesn't change the slogan's line height */
     letter-spacing: 0;
   }
-  #menu-overlay {
-    padding: var(--menu-top) var(--ui-padding-side) var(--ui-padding-top) var(--ui-padding-side);
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-start;
-  }
+  #menu-overlay { align-items: flex-start; }
   /* Same column as the pages (.contact-wrapper): 1/6 of the screen, minus the
      overlay's own side padding, so menu and page text start on one line */
-  .menu-list {
-    width: 100%;
-    padding-left: calc(100vw / 6 - var(--ui-padding-side));
-  }
-  .menu-list .pair-gap { margin-bottom: clamp(14px, 2vh, 25px); }
+  .menu-list,
+  .menu-bottom { padding-left: calc(100vw / 6 - var(--ui-padding-side)); }
   .menu-bottom {
-    width: 100%;
-    padding-left: calc(100vw / 6 - var(--ui-padding-side));
-    margin-top: auto;
-    margin-bottom: clamp(40px, 11vh, 150px); 
+    margin-bottom: clamp(40px, 11vh, 150px);
     align-self: flex-start;
     align-items: flex-start;
   }
-  .menu-bottom .pair-gap { margin-bottom: clamp(14px, 2vh, 25px); }
+  .pair-gap { margin-bottom: clamp(14px, 2vh, 25px); }
   .menu-intro-link {
     width: auto;
     flex-direction: row;
@@ -933,32 +958,20 @@ p.type-contact-item,
   }
   .desktop-only { display: block; }
   span.desktop-only { display: inline; }
-  .mobile-only { display: none; }
+  .mobile-only,
   span.mobile-only { display: none; }
-  .menu-footer {
-    position: absolute;
-    bottom: var(--ui-padding-top);
-    left: 0;
-    padding: 0 var(--ui-padding-side);
-  }
   .contact-wrapper {
     padding-left: calc(100vw / 6 - var(--ui-padding-side));
-    padding-right: calc(4 * var(--grid-unit) - var(--ui-padding-side)); 
+    padding-right: calc(4 * var(--grid-unit) - var(--ui-padding-side));
   }
   .type-contact-header,
   .type-about-headline {
     max-width: calc(4 * var(--grid-unit));
   }
+  /* Body paragraphs: justified, in two columns (contact / about / process) */
   p.type-contact-item {
     text-align: justify;
-    text-align-last: left;
     text-justify: inter-word;
-    -webkit-hyphens: auto;
-    hyphens: auto;
-    word-spacing: -0.01em;
-  }
-  /* Two-column layout for body paragraphs on contact/about/process pages */
-  p.type-contact-item {
     margin-bottom: calc(0.4 * var(--grid-unit));
     max-width: calc(2 * var(--col-width) + var(--col-gutter));
     column-count: 2;
@@ -971,15 +984,9 @@ p.type-contact-item,
     column-count: 1;
     max-width: var(--layout-width);
     text-align: left;
-    text-align-last: left;
-    hyphens: none;
   }
   #page-pricing .type-service-tags {
     max-width: var(--col-width);
-  }
-  .service-description {
-    max-width: calc(3 * var(--grid-unit));
-    column-count: 1;
   }
   .contact-list {
     max-width: calc(2 * var(--col-width) + var(--col-gutter)); /* the two text columns, like the paragraphs */
@@ -988,15 +995,10 @@ p.type-contact-item,
     display: inline-grid;
     grid-template-columns: auto auto;
     column-gap: var(--spacing-component-gap-grid);
-    row-gap: 2px;
-    width: auto;
   }
   .about-portrait {
-    display: block;
     width: var(--col-width);
     max-width: var(--col-width);
-    height: auto;
-    object-fit: cover;
     object-position: center top;
     margin-top: calc(0.4 * var(--grid-unit));
   }
@@ -1004,26 +1006,13 @@ p.type-contact-item,
     grid-column: 1 / -1;
     max-width: 100%;
   }
-  .service-title-wrapper {
-    gap: var(--spacing-component-gap-large);
-  }
-  .service-body {
-    padding-left: calc(var(--service-num-width) + var(--spacing-component-gap-large));
-    padding-right: 0;
-  }
 }
 
 @media (min-width: 1440px) {
   :root {
     --layout-width: 55%;
     --spacing-footer-gap: 250px;
-  }
-  .service-title-wrapper {
-    gap: var(--spacing-component-gap-xl);
-  }
-  .service-body {
-    padding-left: calc(var(--service-num-width) + var(--spacing-component-gap-xl));
-    padding-right: 0;
+    --service-gap: var(--spacing-component-gap-xl);
   }
   .page-footer {
     /* Safari Fix for Large Screens */
@@ -1031,7 +1020,6 @@ p.type-contact-item,
     transform: translate3d(0,0,0);
   }
 }
-
 
 /* ── CV page ──────────────────────────────────────────────────────
    The A4 CV (Figma "CV Page") as a sheet of paper. On a laptop the sheet is
@@ -1044,7 +1032,7 @@ p.type-contact-item,
    Spacing hierarchy: an entry line and its text 5 · list title → list 10 ·
    section title → content 20 · entry → entry 20 · section → section 50. */
 .cv-container {
-  background-color: #fff;
+  background-color: var(--color-paper);
   overflow-y: auto;
   overscroll-behavior-y: none;
   contain: paint;
@@ -1063,7 +1051,7 @@ p.type-contact-item,
   width: 100%;
   max-width: 1160px;
   min-height: calc(min(100cqw, 1160px) * 297 / 210); /* at least one A4 page; grows with the text */
-  background: #fff;
+  background: var(--color-paper);
   box-shadow: 0 2px 24px rgba(0, 0, 0, 0.09);
 }
 .cv-page {
@@ -1071,8 +1059,7 @@ p.type-contact-item,
   display: flex;
   flex-direction: column;
   padding: max(3.2cqw, var(--ui-padding-side)); /* A4: 80 of 2480 */
-  color: #000;
-  font-family: var(--font-main);
+  color: var(--color-ink);
   font-size: var(--type-running);
   line-height: var(--line-height-body);
 }
@@ -1083,10 +1070,10 @@ p.type-contact-item,
   justify-content: space-between;
   gap: var(--spacing-md);
   font-size: var(--type-small);
-  font-weight: 400;
   line-height: normal;
+  flex-wrap: wrap;
+  row-gap: var(--spacing-xs);
 }
-.cv-meta { flex-wrap: wrap; row-gap: var(--spacing-xs); }
 .cv-meta > * { white-space: nowrap; } /* a label never breaks; on narrow sheets the second one wraps below */
 .cv-foot { margin-top: auto; padding-top: var(--spacing-footer-gap); }
 
@@ -1110,7 +1097,6 @@ p.type-contact-item,
 .cv-identity { display: flex; flex-direction: column; gap: var(--spacing-sm); }
 .cv-name {
   font-size: var(--type-display);
-  font-weight: 400;
   line-height: var(--line-height-heading);
   letter-spacing: var(--letter-space-normal);
 }
@@ -1134,7 +1120,6 @@ p.type-contact-item,
 
 .cv-section-title {
   font-size: var(--type-base);
-  font-weight: 400;
   line-height: var(--line-height-heading);
   letter-spacing: var(--letter-space-loose);
   margin-bottom: calc(var(--spacing-md) + var(--spacing-xs) / 2);
@@ -1148,19 +1133,22 @@ p.type-contact-item,
 }
 .cv-main { display: flex; flex-direction: column; gap: var(--spacing-component-gap-xl); }
 .cv-entry + .cv-entry { margin-top: var(--spacing-md); }
-/* Entry lines and sidebar titles: same size as their text, set apart by weight only */
+/* Entry lines and sidebar titles: the size of their text */
 .cv-entry-head,
-.cv-label { font-size: inherit; font-weight: 400; }
-.cv-entry-head { margin-bottom: calc(var(--spacing-xs) / 2); }
-.cv-label { margin-bottom: calc(var(--spacing-xs) / 2); } /* = entry line → its text */
+.cv-label { font-size: inherit; }
+.cv-entry-head,
+.cv-label { margin-bottom: calc(var(--spacing-xs) / 2); } /* entry line → its text */
 
 .cv-sidebar {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--spacing-component-gap) var(--spacing-md);
+  /* long German words in the narrow lists */
+  -webkit-hyphens: auto;
+  hyphens: auto;
+  hyphenate-limit-chars: 8 4 4;
 }
 .cv-list { list-style: none; }
-.cv-sidebar { hyphens: auto; -webkit-hyphens: auto; hyphenate-limit-chars: 8 4 4; } /* long German words in the narrow lists */
 .cv-body { max-width: 52em; } /* the sheet's line length */
 
 /* Narrow sheet (phones): location, phone, email, the sidebar lists and the
@@ -1233,7 +1221,7 @@ p.type-contact-item,
 @media print {
   @page { size: A4; margin: 7mm 0; }
   html:has(#page-cv.visible),
-  html:has(#page-cv.visible) body { height: auto; min-height: 0; overflow: visible; background: #fff; }
+  html:has(#page-cv.visible) body { height: auto; min-height: 0; overflow: visible; background: var(--color-paper); }
   html:has(#page-cv.visible) body > :not(#page-cv) { display: none !important; }
   #page-cv.visible {
     position: static;
@@ -1265,11 +1253,9 @@ p.type-contact-item,
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: #fff;
+  color: var(--color-paper);
   mix-blend-mode: difference;
-  font-family: var(--font-main);
   font-size: var(--type-ui);
-  font-weight: 400;
   pointer-events: none;
   z-index: 50;
   opacity: 0;

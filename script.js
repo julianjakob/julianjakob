@@ -35,11 +35,6 @@ async function init() {
     menuTimeout = 0,
     pendingAfterBanner = null;
 
-  // Each slide on its own GPU layer: the fold then only stretches an already-drawn
-  // layer instead of repainting the whole feed every frame (which made Chrome show
-  // blurry low-res placeholders mid-swipe). Not in Safari — see .feed-layers in CSS.
-  if (!IS_SAFARI) pageHome.classList.add("feed-layers");
-
   // Intro: started inline in index.html right after the banner (see createIntro there)
   const intro = window.jjIntro || { finish: (until) => Promise.resolve(until).then(() => new Promise((r) => setTimeout(r, 2000))), done() {} };
 
@@ -82,6 +77,7 @@ async function init() {
     homeSlides[0].classList.remove("active");
     intro.finish(mediaReady(homeSlides[0])).then(() => {
       banner.classList.add("hidden");
+      typeFooterIn(150); // revealed as the intro folds up
       intro.done();
       hasSeenBanner = true; // the feed takes input as soon as the intro starts folding away
 
@@ -151,11 +147,19 @@ async function init() {
   };
   function setMenuLabel(text) { swapLabel(menuBtn, text); }
 
+  // Folded away: out of the layout (see #menu-overlay.off in style.css)
+  menuOverlay.addEventListener("transitionend", (e) => {
+    if (e.target === menuOverlay && e.propertyName === "transform" && !isMenuOpen) menuOverlay.classList.add("off");
+  });
+
   function toggleMenu(skipFadeToMenu = false) {
     finishFeed();
     isMenuOpen = !isMenuOpen;
+    document.documentElement.classList.toggle("menu-open", isMenuOpen);
     const activePage = pages[currentPage];
     if (isMenuOpen) {
+      menuOverlay.classList.remove("off");
+      void menuOverlay.offsetHeight; // in the layout first, so it unfolds from zero
       menuOverlay.classList.add("open");
       menuOverlay.inert = false;
       menuBtn.setAttribute("aria-expanded", "true");
@@ -354,7 +358,7 @@ async function init() {
         row.setAttribute("aria-expanded", String(expand));
         if (expand) {
           body.querySelectorAll(".text-out").forEach((span) => span.replaceWith(...span.childNodes));
-          body.normalize();
+          unlockLines(body);
           body.style.visibility = "hidden";
           row.classList.add("expanded");
           setTimeout(() => {
@@ -474,11 +478,8 @@ async function init() {
   // At rest the slides go back to plain .active classes, which the menu and
   // page transitions rely on.
   const SLIDE_SLOW_MS = 700;   // matches --anim-speed: calm swipes, wheel, keys
-  const SLIDE_FAST_MS = 280;   // hard flicks
   const clamp01 = (x) => Math.min(1, Math.max(0, x));
   const mod = (a, n) => ((a % n) + n) % n;
-  // px/ms → 0..1: ≤0.3 px/ms is a calm swipe, ≥1.2 px/ms a hard flick
-  const velocityIntensity = (pxPerMs) => clamp01((pxPerMs - 0.3) / 0.9);
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
   // CSS-style cubic-bezier easing for the JS-driven animation
@@ -518,37 +519,62 @@ async function init() {
     if (v.readyState > 0 && v.currentTime > 0) v.currentTime = 0;
   }
 
+  // Per frame only the two folding slides change, and only their transform. The first
+  // frame of a move hands all slides from classes to inline styles once; the pair in
+  // view gets its own GPU layer (.is-folding) until the feed lands.
+  let liveA = -1, liveB = -1;
   function renderFeed(x) {
     const n = homeSlides.length;
     const base = Math.floor(x), f = x - base;
-    const a = mod(base, n), b = mod(base + 1, n);
-    homeSlides.forEach((s, i) => {
-      s.style.transition = "none";
-      setSlideVideosPlaying(s, i === a ? f < 1 : i === b && f > 0);
-      if (i === a) {
-        s.style.transformOrigin = "top center";
-        s.style.transform = `scaleY(${1 - f})`;
-        s.style.opacity = "1";
-        s.style.zIndex = "10";
-      } else if (i === b && f > 0) {
-        s.style.transformOrigin = "bottom center";
-        s.style.transform = `scaleY(${f})`;
-        s.style.opacity = "1";
-        s.style.zIndex = "10";
-      } else {
+    const a = mod(base, n), b = f > 0 ? mod(base + 1, n) : -1;
+    if (!feedLive) {
+      homeSlides.forEach((s) => {
+        s.style.transition = "none";
         s.style.transform = "scaleY(0)";
         s.style.opacity = "0";
         s.style.zIndex = "1";
+      });
+      liveA = liveB = -1;
+      feedLive = true;
+    }
+    if (a !== liveA || b !== liveB) {
+      for (const i of [liveA, liveB]) {
+        if (i < 0 || i === a || i === b) continue;
+        const s = homeSlides[i];
+        s.classList.remove("is-folding");
+        s.style.transform = "scaleY(0)";
+        s.style.opacity = "0";
+        s.style.zIndex = "1";
+        setSlideVideosPlaying(s, false);
       }
-    });
-    feedLive = true;
-    updateUiColors(false, true); // per frame: only the slide behind each spot can change
+      const A = homeSlides[a];
+      A.classList.add("is-folding");
+      A.style.transformOrigin = "top center";
+      A.style.opacity = "1";
+      A.style.zIndex = "10";
+      if (b >= 0) {
+        const B = homeSlides[b];
+        B.classList.add("is-folding");
+        B.style.transformOrigin = "bottom center";
+        B.style.opacity = "1";
+        B.style.zIndex = "10";
+      }
+      liveA = a; liveB = b;
+    }
+    homeSlides[a].style.transform = `scaleY(${1 - f})`;
+    setSlideVideosPlaying(homeSlides[a], f < 1);
+    if (b >= 0) {
+      homeSlides[b].style.transform = `scaleY(${f})`;
+      setSlideVideosPlaying(homeSlides[b], true);
+    }
 
+    // Halfway: the title types in, colours follow. Details regenerate once it lands.
     const shown = mod(Math.round(x), n);
     if (shown !== feedShownIdx) {
       feedShownIdx = shown;
-      updateFooter(homeSlides[shown]);
+      updateFooterTitle(homeSlides[shown]);
       syncSlideMedia(shown, { playOnly: true });
+      updateUiColors(false);
     }
   }
 
@@ -560,7 +586,7 @@ async function init() {
     const idx = feedX - n;
     homeSlides.forEach((s, i) => {
       s.style.transition = "none";
-      s.classList.remove("exit");
+      s.classList.remove("exit", "is-folding");
       s.classList.toggle("active", i === idx);
       s.style.transform = s.style.opacity = s.style.transformOrigin = s.style.zIndex = "";
     });
@@ -569,17 +595,56 @@ async function init() {
     feedLive = false;
     currentIndex = idx;
     if (feedShownIdx !== idx) { feedShownIdx = idx; updateFooter(homeSlides[idx]); }
+    else detailsFor(homeSlides[idx].getAttribute("data-slot")); // held back during the swipe
     syncSlideMedia(idx);
     syncScroller();
     updateUiColors(false);
   }
 
+  let lastFeedVelocity = 0; // slides/ms of the animation that was just interrupted
   function stopFeedAnim() {
     if (!feedAnim) return null;
     cancelAnimationFrame(feedAnim.raf);
     const target = feedAnim.to;
+    lastFeedVelocity = feedAnim.v || 0;
     feedAnim = null;
     return target;
+  }
+
+  // ── Release: a spring, like Reels ────────────────────────────
+  // The finger's speed carries straight into the motion and a critically damped spring
+  // settles the slide — no fixed duration, no restart from standstill, never past the
+  // target. Grabbing it again mid-flight hands over seamlessly (see pointerdown).
+  const SPRING_W = 0.025; // stiffness (1/ms): higher = snappier (~0.3 s to land)
+  function springTo(to, v0 = 0) {
+    stopFeedAnim();
+    stopCushion();
+    if (reduceMotion.matches) { feedX = targetX = to; renderFeed(feedX); settleFeed(); return; }
+    const dir = Math.sign(to - feedX) || Math.sign(v0);
+    const anim = { to, v: v0, x: feedX, last: performance.now(), raf: 0 };
+    targetIdle = false;
+    const step = (now) => {
+      let dt = Math.min(48, now - anim.last);
+      anim.last = now;
+      while (dt > 0) { // small fixed steps keep the spring stable on slow frames
+        const h = Math.min(4, dt); dt -= h;
+        anim.v += (-SPRING_W * SPRING_W * (anim.x - anim.to) - 2 * SPRING_W * anim.v) * h;
+        anim.x += anim.v * h;
+        if (dir && (anim.x - anim.to) * dir > 0) { anim.x = anim.to; anim.v = 0; } // no overshoot
+      }
+      feedX = targetX = anim.x;
+      if (Math.abs(anim.x - anim.to) * window.innerHeight < 1 && Math.abs(anim.v) < 0.0002) { // within a pixel: land
+        feedAnim = null;
+        feedX = targetX = anim.to;
+        renderFeed(feedX);
+        settleFeed();
+        return;
+      }
+      renderFeed(feedX);
+      anim.raf = requestAnimationFrame(step);
+    };
+    feedAnim = anim;
+    anim.raf = requestAnimationFrame(step);
   }
 
   // ── Cushion ──────────────────────────────────────────────────
@@ -665,12 +730,35 @@ async function init() {
     animateFeed(from + (direction === "next" ? 1 : -1), SLIDE_SLOW_MS, moving ? EASE_RELEASE : EASE_SLIDE);
   }
 
-  function updateFooter(slide) {
+  function updateFooterTitle(slide) {
     if (!footerTitle || !slide) return;
     footerTitle.textContent = slide.getAttribute("data-title") || "";
     typewriterIn(footerTitle);
+  }
+  function updateFooter(slide) {
+    if (!footerTitle || !slide) return;
+    updateFooterTitle(slide);
     detailsFor(slide.getAttribute("data-slot"));
   }
+
+  // The footer (Details, project title) types in whenever it comes into view — after the
+  // intro, coming back to home, closing the menu — not only on a swipe; otherwise it
+  // would just fade in as a block. `delay`: when it becomes visible (see #project-footer).
+  let footerTypeTimer = 0;
+  function typeFooterIn(delay) {
+    clearTimeout(footerTypeTimer);
+    footerTypeTimer = setTimeout(() => {
+      if (currentPage !== "home" || isMenuOpen) return;
+      const label = document.querySelector("#details-btn [data-en]");
+      [label, footerTitle].forEach((el) => { if (el && el.textContent.trim()) typewriterIn(el); });
+    }, delay);
+  }
+  // Home shown again (navigation, menu closed): the footer fades back after 0.7s
+  new MutationObserver(() => {
+    const shown = !pageHome.classList.contains("hidden");
+    if (shown && pageHome._wasHidden) typeFooterIn(700);
+    pageHome._wasHidden = !shown;
+  }).observe(pageHome, { attributes: true, attributeFilter: ["class"] });
 
   // A short label changing like all other text: the old word dissolves letter by letter,
   // the new one types in. A change requested mid-dissolve just updates what types in.
@@ -859,7 +947,7 @@ async function init() {
     if (on) { updateUiColors(true); return; }
     clearInterval(uiVideoTimer); uiVideoTimer = 0;
     uiGroupList().forEach((g) => {
-      g.els.forEach((el) => { el.style.color = ""; });
+      g.els.forEach((el) => { el.style.color = ""; el._uiColor = undefined; });
       g.white = undefined; g.slide = null; g.lowSince = 0;
     });
   }
@@ -980,7 +1068,19 @@ async function init() {
       } else g.lowSince = 0;
       g.white = white;
       g.slide = slide;
-      g.els.forEach((el) => { el.style.color = white ? "#fff" : "#000"; });
+      g.els.forEach((el) => {
+        const color = white ? "#fff" : "#000";
+        if (el._uiColor === color) return;
+        el._uiColor = color;
+        // Text still typing in takes its new colour at once: with the slow crossfade the
+        // letters would type in the old, unreadable colour and the word appear in one go
+        if (el.querySelector(".typewriter-char")) {
+          el.style.transition = "none";
+          el.style.color = color;
+          void el.offsetWidth;
+          el.style.transition = "";
+        } else el.style.color = color;
+      });
     });
     // Moving pictures: re-check twice a second while a video sits behind the text
     if (hasVideo && !uiVideoTimer) uiVideoTimer = setInterval(() => updateUiColors(false), 500);
@@ -1032,6 +1132,8 @@ async function init() {
       if (Math.abs(dx) > Math.abs(dy)) { endDrag(e, true); return; } // horizontal: not ours
       drag.active = true;
       document.body.style.userSelect = "none";
+      drag.startY = e.clientY; // follow from here: no jump by the 8px it took to decide
+      return;
     }
     const now = performance.now();
     drag.samples.push({ y: e.clientY, t: now });
@@ -1054,9 +1156,9 @@ async function init() {
     }
 
     if (!d.active || cancelled) {
-      // Tap or horizontal move: let an interrupted transition finish
-      if (d.resumeTo !== null) animateFeed(d.resumeTo, SLIDE_SLOW_MS * Math.abs(d.resumeTo - feedX), EASE_RELEASE);
-      else if (feedLive) animateFeed(Math.round(feedX), 200, EASE_RELEASE);
+      // Tap or horizontal move: let an interrupted transition carry on to where it was going
+      if (d.resumeTo !== null) springTo(d.resumeTo, lastFeedVelocity);
+      else if (feedLive) springTo(Math.round(feedX), 0);
       return;
     }
 
@@ -1064,14 +1166,21 @@ async function init() {
     const dt = Math.max(16, performance.now() - first.t);
     const v = (first.y - last.y) / dt; // px/ms, >0 = towards next
     let target;
-    if (Math.abs(v) > 0.3) target = v > 0 ? Math.ceil(feedX - 1e-6) : Math.floor(feedX + 1e-6);
-    else target = Math.round(feedX);
+    if (Math.abs(v) > 0.3) {
+      target = v > 0 ? Math.ceil(feedX - 1e-6) : Math.floor(feedX + 1e-6);
+      // Flicked again the same way while the last one was still landing: one further, like Reels
+      if (d.resumeTo !== null && target === d.resumeTo && Math.sign(d.resumeTo - d.startFeed) === Math.sign(v)) target += Math.sign(v);
+    } else target = Math.round(feedX);
     target = Math.min(d.anchor + 1, Math.max(d.anchor - 1, target));
 
-    // Swipe speed sets the speed of the rest of the transition
-    const msPerSlide = SLIDE_SLOW_MS - (SLIDE_SLOW_MS - SLIDE_FAST_MS) * velocityIntensity(Math.abs(v));
-    animateFeed(target, Math.max(120, msPerSlide * Math.abs(target - feedX)), EASE_RELEASE); // cushion adds the landing
+    // The finger's speed carries into the spring (px/ms → slides/ms)
+    springTo(target, v / window.innerHeight);
   }
+  // iOS backup for touch-action: while a swipe is on, the page never scrolls natively
+  [pageHome, document.getElementById("main-header"), document.getElementById("project-footer")].forEach((el) => {
+    if (el) el.addEventListener("touchmove", (e) => { if (drag && e.cancelable) e.preventDefault(); }, { passive: false });
+  });
+
   let suppressClick = false;
   window.addEventListener("click", (e) => {
     if (!suppressClick) return;
@@ -1496,7 +1605,9 @@ function createMediaElement(media, { alt = "", priority = false } = {}) {
         const slide = v.closest(".slide-section");
         const page  = v.closest(".page-container");
         const onScreen = slide && (slide.classList.contains("active") || slide.style.opacity === "1");
-        return !!onScreen && !(page && page.classList.contains("hidden"));
+        // A hidden page keeps playing while it folds away (e.g. under the opening menu)
+        const foldedAway = page && page.classList.contains("hidden") && page.getBoundingClientRect().height < 1;
+        return !!onScreen && !foldedAway;
       };
       v.addEventListener("loadedmetadata", function setupLoop() {
         v.removeEventListener("loadedmetadata", setupLoop);
@@ -1636,6 +1747,8 @@ function textMotion(el) {
   return {
     in: v("--tm-in", "letters"),
     inStep: ms("--tm-in-step", 22),
+    inMax: ms("--tm-in-max", 600),
+    inUnit: ms("--tm-in-unit", 380),
     out: v("--tm-out", "letters"),
     outSpread: ms("--tm-out-spread", 140),
     outUnit: ms("--tm-out-unit", 140),
@@ -1644,11 +1757,89 @@ function textMotion(el) {
 
 function unwrapTypewriter(el) {
   el.querySelectorAll(".typewriter-char").forEach((span) => span.replaceWith(...span.childNodes));
+  unlockLines(el);
+}
+
+// ── Locked lines ──
+// Text split into spans for animating doesn't wrap exactly like the plain text: a
+// nearly full line can come out a hair wider and lose its last word, and Safari may not
+// hyphenate inside spans. So before anything moves, the lines are read from the plain
+// text and locked: each line is held together (no wrapping inside it) and breaks only
+// where it did; a hyphenated word gets its hyphen written out. When the animation ends,
+// unlockLines() returns the plain text — the lines never re-break, nothing jumps.
+function readLines(node) {
+  const starts = new Set(), cuts = new Map(); // new line at word start; hyphenated word → cut offset
+  const range = document.createRange();
+  // Visible boxes of a stretch of text. At a line break Safari (iOS) can add an empty box
+  // at the end of the previous line for the next line's first letter — boxes without
+  // width are ignored, and a letter's line is the one where it actually has width.
+  const boxes = (a, b) => { range.setStart(node, a); range.setEnd(node, b); return [...range.getClientRects()].filter((r) => r.width > 0.5); };
+  const lineCount = (list) => new Set(list.map((r) => Math.round(r.top / 3))).size;
+  const top = (i) => { const list = boxes(i, i + 1); if (!list.length) return null; return list.reduce((w, r) => (r.width > w.width ? r : w)).top; };
+  let prev = null;
+  for (const m of node.data.matchAll(/\S+/g)) {
+    const t = top(m.index);
+    if (t === null) continue;
+    if (prev !== null && Math.abs(t - prev) > 2) starts.add(m.index);
+    prev = t;
+    if (m[0].length < 4 || lineCount(boxes(m.index, m.index + m[0].length)) < 2) continue;
+    // Hyphenated: the longest start of the word that still sits on one line
+    for (let i = 1; i < m[0].length; i++) {
+      if (lineCount(boxes(m.index, m.index + i + 1)) > 1) {
+        if (m[0][i - 1] !== "-") cuts.set(m.index, i); // after a hard hyphen ("brand-led") the break needs no hyphen added
+        else starts.add(m.index + i);
+        prev = top(m.index + i);
+        break;
+      }
+    }
+  }
+  return { starts, cuts };
+}
+
+function unlockLines(el) {
+  el.querySelectorAll(".pinned-hyphen").forEach((span) => span.remove());
+  el.querySelectorAll(".lock-line").forEach((span) => span.replaceWith(...span.childNodes));
   el.normalize();
 }
 
-// Splits the visible text of `el` into letter or word spans; returns the spans.
-// `skip(textNode)` can exclude text (e.g. nested translated elements).
+// Letters in separate spans lose the font's kerning (the fine spacing of pairs like
+// "Te" or "co"): a line would run up to a few px wider while it animates and snap back
+// when the spans are removed. Each letter gets its pair's kerning as a margin instead,
+// so animated text sits exactly where the plain text does. Kerning is read from a
+// canvas (which kerns like the page) and scaled to the size the page really renders
+// at (font-size-adjust changes it).
+const kernCtx = document.createElement("canvas").getContext("2d");
+const kernCache = new Map();
+function keepKerning(parent, units) {
+  const letters = units.filter(Boolean);
+  if (letters.length < 2 || !kernCtx) return;
+  const cs = getComputedStyle(parent);
+  kernCtx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  if ("fontKerning" in kernCtx) kernCtx.fontKerning = "normal";
+  const key = kernCtx.font;
+  let cache = kernCache.get(key);
+  if (!cache) kernCache.set(key, (cache = new Map()));
+  const w = (t) => {
+    let v = cache.get(t);
+    if (v === undefined) cache.set(t, (v = kernCtx.measureText(t).width));
+    return v;
+  };
+  // Rendered size ÷ canvas size, from the letters' own widths
+  let dom = 0, canvas = 0;
+  letters.forEach((span) => { dom += span.getBoundingClientRect().width; canvas += w(span.textContent); });
+  if (!dom || !canvas) return;
+  const scale = dom / canvas;
+  for (let i = 0; i < units.length - 1; i++) {
+    const a = units[i], b = units[i + 1];
+    if (!a || !b) continue;
+    const kern = (w(a.textContent + b.textContent) - w(a.textContent) - w(b.textContent)) * scale;
+    if (Math.abs(kern) > 0.05) a.style.marginRight = kern.toFixed(2) + "px";
+  }
+}
+
+// Splits the visible text of `el` into letter or word spans, in locked lines (see
+// readLines); returns the spans. `skip(textNode)` can exclude text (e.g. nested
+// translated elements).
 function splitText(el, byWord, className, skip) {
   const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
   const nodes = [];
@@ -1659,18 +1850,54 @@ function splitText(el, byWord, className, skip) {
     nodes.push(n);
   }
   const spans = [];
-  nodes.forEach((node) => {
+  // Read every text's lines first: splitting one text changes the layout of the next
+  const layouts = nodes.map(readLines);
+  nodes.forEach((node, n) => {
+    const { starts, cuts } = layouts[n];
     const frag = document.createDocumentFragment();
-    (byWord ? node.textContent.split(/(\s+)/) : Array.from(node.textContent)).forEach((part) => {
-      if (!part) return;
-      if (/^\s+$/.test(part)) { frag.appendChild(document.createTextNode(part)); return; }
-      const span = document.createElement("span");
-      span.className = className;
-      span.textContent = part;
+    const own = []; // this text's units in order, null where kerning stops (space, line break)
+    let line = null, space = null;
+    const newLine = () => { line = null; own.push(null); };
+    const put = (unit) => {
+      if (!line) {
+        if (space) frag.appendChild(space); // the break between two lines stays outside them
+        line = frag.appendChild(Object.assign(document.createElement("span"), { className: "lock-line" }));
+      } else if (space) line.appendChild(space);
+      space = null;
+      line.appendChild(unit);
+    };
+    const unit = (text) => {
+      const span = Object.assign(document.createElement("span"), { className });
+      span.textContent = text;
       spans.push(span);
-      frag.appendChild(span);
+      own.push(span);
+      return span;
+    };
+    const hyphen = () => Object.assign(document.createElement("span"), { className: "pinned-hyphen", textContent: "-" });
+
+    let at = 0, cutAt = -1;
+    (byWord ? node.data.split(/(\s+)/) : Array.from(node.data)).forEach((part) => {
+      if (!part) return;
+      if (/^\s+$/.test(part)) { space = document.createTextNode(part); own.push(null); at += part.length; return; }
+      if (starts.has(at)) newLine();
+      if (cuts.has(at)) cutAt = at + cuts.get(at);
+      if (byWord && cutAt > at && cutAt < at + part.length) {
+        // A hyphenated word: two units, the first ending in its hyphen
+        const first = unit(part.slice(0, cutAt - at));
+        first.appendChild(hyphen());
+        put(first);
+        newLine();
+        put(unit(part.slice(cutAt - at)));
+      } else {
+        if (!byWord && at === cutAt) { spans[spans.length - 1].appendChild(hyphen()); newLine(); } // fades with its letter
+        put(unit(part));
+      }
+      at += part.length;
     });
-    node.parentNode.replaceChild(frag, node);
+    if (space) frag.appendChild(space);
+    const parent = node.parentNode;
+    parent.replaceChild(frag, node);
+    if (!byWord) keepKerning(parent, own);
   });
   return spans;
 }
@@ -1680,12 +1907,17 @@ const typingEls = new Set();
 
 // Type text in, letter by letter or word by word (per --tm-in)
 function typewriterIn(el, skip) {
+  // Typing again before the last one finished (e.g. a swipe back across halfway):
+  // start from the plain text, never nest letters inside letters
+  if (el.querySelector(".typewriter-char")) { clearTimeout(el._typewriterDone); unwrapTypewriter(el); }
   const m = textMotion(el);
   const byWord = m.in === "words" && el.getAttribute("data-typewriter") !== "char";
   const spans = splitText(el, byWord, "typewriter-char", skip);
-  spans.forEach((span, i) => { span.style.animationDelay = (i * m.inStep) + "ms"; });
+  // Long texts step faster, so none takes longer than --tm-in-max
+  const step = Math.min(m.inStep, m.inMax / Math.max(1, spans.length - 1));
+  spans.forEach((span, i) => { span.style.animationDelay = Math.round(i * step) + "ms"; });
   clearTimeout(el._typewriterDone);
-  const total = spans.length * m.inStep + 320;
+  const total = Math.round((spans.length - 1) * step + m.inUnit + 20);
   typingEls.add(el);
   el._typewriterDone = setTimeout(() => { typingEls.delete(el); unwrapTypewriter(el); }, total);
   return total; // ms until fully typed

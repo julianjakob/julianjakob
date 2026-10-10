@@ -228,14 +228,14 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon-180.png">
 
     <!-- ── Theme color (mobile browser chrome) ── -->
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#ffffff">
 
     <!-- ── Font preload (eliminates FOUT, improves LCP) ── -->
     <link rel="preload" href="/assets/fonts/EBGaramond-latin.woff2" as="font" type="font/woff2" crossorigin="anonymous">
     <link rel="preload" href="/assets/fonts/EBGaramond-Italic-latin.woff2" as="font" type="font/woff2" crossorigin="anonymous">
 
     <!-- ── Styles & Fonts ── -->
-    <link rel="stylesheet" href="/style.css?v=c10ffa559d">
+    <link rel="stylesheet" href="/style.css?v=36af83140d">
     <!-- Fonts self-hosted via @font-face in style.css -->
 </head>
 <body>
@@ -395,7 +395,7 @@
       var INTRO_SLOGAN_MS = 900;   // slogan on its own first
       var INTRO_OUT_SPREAD = 220;  // dissolve cascade of the outgoing text (first → last letter)
       var INTRO_OUT_UNIT   = 140;  // fade time of one letter (.text-out)
-      var INTRO_TYPE_MS   = 40;    // per letter — same as the headline typewriter
+      var INTRO_TYPE_MS   = 40;    // per letter — the headline typewriter's pace
       var INTRO_READ_MS   = 1100;  // the line stays readable at least this long
       var INTRO_CYCLE_MS  = 1600;  // still loading: next line after this
 
@@ -471,7 +471,7 @@
               return ch === " " ? " " : '<span class="typewriter-char" style="animation-delay:' + (i++ * INTRO_TYPE_MS) + 'ms">' + ch + "</span>";
             }).join("");
           }).join("<br>");
-          return wait(i * INTRO_TYPE_MS + 300);
+          return wait(i * INTRO_TYPE_MS + 380); // + one letter's fade (--tm-in-unit)
         }).then(function () { lineShownAt = performance.now(); });
       }
 
@@ -514,7 +514,8 @@
         </div>
     </header>
 
-    <nav id="menu-overlay" aria-label="Main" inert>
+    <div id="bar-top" aria-hidden="true"></div>
+    <nav id="menu-overlay" class="off" aria-label="Main" inert>
         <div class="menu-list">
             <a href="/about" data-dest="about"   class="type-menu-item nav-link pair-gap" data-en="About"   data-de="Über mich">About</a>
             <a href="/process" data-dest="process" class="type-menu-item nav-link pair-gap" data-en="Process" data-de="Prozess">Process</a>
@@ -991,7 +992,7 @@
         <h2 id="footer-title" class="project-title type-ui-text" aria-live="polite"></h2>
     </footer>
 
-    <script src="/script.js?v=0c184a3537" defer></script>
+    <script src="/script.js?v=9a91cf09db" defer></script>
 
 
     <!-- ── Language system ── -->
