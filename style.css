@@ -1190,6 +1190,7 @@ p.type-contact-item,
   .cv-side-section .cv-list,
   .cv-side-section .cv-list li { display: inline; }
   .cv-side-section .cv-list li:not(:last-child)::after { content: ", "; }
+  .cv-side-section .cv-list li:has(+ .cv-credit)::after { content: " "; } /* the credit follows without a comma */
 }
 
 @container (min-width: 700px) {
