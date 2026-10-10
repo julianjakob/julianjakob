@@ -9,7 +9,7 @@ async function init() {
   const pageContact = document.getElementById("page-contact");
   const pageAbout = document.getElementById("page-about");
   const pageProcess = document.getElementById("page-process");
-  const pagePricing = document.getElementById("page-pricing");
+  const pageExpertise = document.getElementById("page-expertise");
   const pageLegal = document.getElementById("page-legal");
   const pageCv    = document.getElementById("page-cv");
 
@@ -23,7 +23,7 @@ async function init() {
     contact: pageContact,
     about: pageAbout,
     process: pageProcess,
-    pricing: pagePricing,
+    expertise: pageExpertise,
     legal: pageLegal,
     cv:    pageCv,
   };
@@ -328,22 +328,25 @@ async function init() {
   }
 
   initServicesAccordion();
-  // Services: like the Details panel — closing, the text dissolves first and the row
+  initReveals();
+  // Process steps: folded at first, one open at a time — opening a step folds the one
+  // that was open. Like the Details panel: closing, the text dissolves first and the row
   // folds after it; opening, the row unfolds and the text types in on the way.
   function initServicesAccordion() {
-    document.querySelectorAll(".service-row").forEach((row) => {
+    const rows = [...document.querySelectorAll(".service-row")];
+    rows.forEach((row) => {
       const body = row.querySelector(".service-body");
+      const toggle = row.querySelector(".service-toggle");
       const texts = () => [...body.querySelectorAll(".service-description, .type-service-tags")];
-      let run = 0, open = row.classList.contains("expanded");
-      const handleToggle = () => {
-        const expand = (open = !open);
+      let run = 0;
+      row._open = row.classList.contains("expanded");
+      row._set = (expand) => {
+        if (expand === row._open) return;
+        row._open = expand;
         const r = ++run;
-        const toggle = row.querySelector(".service-toggle");
         if (toggle) toggle.textContent = expand ? "–" : "+"; // Garamond's own en dash: longer than a minus
         row.setAttribute("aria-expanded", String(expand));
         if (expand) {
-          body.querySelectorAll(".text-out").forEach((span) => span.replaceWith(...span.childNodes));
-          unlockLines(body);
           body.style.visibility = "hidden";
           row.classList.add("expanded");
           setTimeout(() => {
@@ -357,6 +360,11 @@ async function init() {
           setTimeout(() => { if (r === run) row.classList.remove("expanded"); }, Math.min(gone, 200));
         }
       };
+      const handleToggle = () => {
+        const expand = !row._open;
+        if (expand) rows.forEach((other) => { if (other !== row) other._set(false); });
+        row._set(expand);
+      };
       row.addEventListener("click", handleToggle);
       row.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleToggle(); }
@@ -364,6 +372,36 @@ async function init() {
     });
   }
 
+  // A line that opens more lines ("2× Cannes Lions +" on About): the superscript + / –
+  // changes like Details, the panel unfolds and its lines type in; closing, they
+  // dissolve and the panel folds.
+  function initReveals() {
+    document.querySelectorAll(".reveal-toggle").forEach((btn) => {
+      const panel = document.getElementById(btn.getAttribute("aria-controls"));
+      const hint = btn.querySelector(".details-hint");
+      if (!panel) return;
+      const lines = () => [...panel.querySelector(".reveal-body").children];
+      let open = false, run = 0;
+      btn.addEventListener("click", () => {
+        open = !open;
+        const r = ++run;
+        btn.setAttribute("aria-expanded", String(open));
+        if (hint) swapLabel(hint, open ? "–" : "+");
+        if (open) {
+          panel.style.visibility = "hidden";
+          panel.classList.add("open");
+          setTimeout(() => {
+            if (r !== run) return;
+            panel.style.visibility = "";
+            lines().forEach((el) => typewriterIn(el));
+          }, 200);
+        } else {
+          const gone = textOut(lines());
+          setTimeout(() => { if (r === run) panel.classList.remove("open"); }, Math.min(gone, 200));
+        }
+      });
+    });
+  }
 
   // Scroll hint — shown once per visitor, dismissed on first interaction
   let scrollHintActive = false;
@@ -596,7 +634,6 @@ async function init() {
     if (feedShownIdx !== idx) { feedShownIdx = idx; updateFooter(homeSlides[idx]); }
     else detailsFor(homeSlides[idx].getAttribute("data-slot")); // held back during the swipe
     syncSlideMedia(idx);
-    syncScroller();
     updateUiColors(false);
   }
 
@@ -647,22 +684,20 @@ async function init() {
   }
 
   // ── Cushion ──────────────────────────────────────────────────
-  // Every landing — drag release, keys, trackpad snap — goes through here.
+  // Landings of the key animation go through here (drag and wheel use the spring).
   // targetX is where the motion says the feed is; feedX (what's drawn) follows
   // it with a short exponential glide, so the last few milliseconds ease in
-  // softly instead of stopping dead. While a finger drags or wheel events
-  // arrive, the fold is drawn directly — no smoothing, no lag.
+  // softly instead of stopping dead. While a finger drags, the fold is drawn
+  // directly — no smoothing, no lag.
   const CUSHION_MS = 45;       // softness of the landing (higher = softer and more visible)
   let targetX = feedX;
   let targetIdle = true;       // the motion has finished; settle once the glide arrives
   let cushionRaf = 0, cushionLast = 0;
-  let lastWheelAt = 0;
 
   function cushionStep(now) {
     const dt = Math.min(64, now - cushionLast);
     cushionLast = now;
-    const direct = now - lastWheelAt < 60;
-    feedX = direct ? targetX : feedX + (targetX - feedX) * (1 - Math.exp(-dt / CUSHION_MS));
+    feedX += (targetX - feedX) * (1 - Math.exp(-dt / CUSHION_MS));
     if (Math.abs(targetX - feedX) < 0.0005) feedX = targetX;
     renderFeed(feedX);
   }
@@ -1237,179 +1272,27 @@ async function init() {
   window.addEventListener("blur", () => endDrag(null));
   document.addEventListener("visibilitychange", () => { if (document.hidden) endDrag(null); });
 
-  // ── Trackpad / mouse wheel: native scrolling ─────────────────
-  // An invisible scroll layer (#feed-scroller) sits over the slides with one
-  // snap point per slide. The browser handles trackpad fingers, momentum and
-  // "one item per swipe" (scroll-snap-stop) exactly like any native page; the
-  // fold is drawn from its scroll position. Three copies of the snap points
-  // let the feed loop: at rest it is re-centred onto the middle copy.
-  // Touch and mouse-drag don't scroll it — they use the pointer code above.
-  // While wheel events arrive the fold follows the scroll 1:1 (see cushion).
-  const TRACKPAD_DISTANCE = 1.25; // scrolling per slide, in viewport heights (higher = slower)
-  const TRACKPAD_COMMIT = 0.15;   // share of a slide that commits a swipe (lower = more eager)
-  const scroller = document.getElementById("feed-scroller");
-  let scrollSyncing = false;   // ignore scroll events caused by our own scrollTop writes
-  let scrollIdleTimer = 0;
-  // The browser snaps to the nearest point, so a gentle swipe (< half a slide) would
-  // bounce back. Once a swipe passes TRACKPAD_COMMIT, the snap point it started from
-  // is switched off: the nearest one left is the next slide in that direction.
-  // The decision is read from the trackpad input itself (a frame before the scroll it
-  // causes) and it sticks until the feed lands: the browser's own snap-back motion never
-  // undoes it — only fingers pulling back do. Otherwise a short, quick swipe that ends
-  // before the switch reaches the browser would snap back and stay there ("stuck").
-  const snaps = [];
-  let restIdx = -1;            // snap point of the slide the feed rests on
-  let commitDir = 0;           // -1 / 0 / 1: where this swipe is going
-  let wheelSum = 0;            // trackpad travel since the feed last rested (px)
-  let steering = false;        // we took over the landing (see the scroll handler)
-  let lastScrollPos = 0;
-
-  function setRestSnap(on) {
-    if (snaps[restIdx]) snaps[restIdx].classList.toggle("off", !on);
+  // ── Trackpad / mouse wheel (desktop) ─────────────────────────
+  // As the site first had it: a scroll past a small threshold moves one slide (the same
+  // fold as the arrow keys), then all scrolling is ignored for WHEEL_COOLDOWN_MS — that
+  // swallows the trackpad's coasting, so one gesture is one slide. Touch is separate.
+  const WHEEL_THRESHOLD = 20;     // px
+  const WHEEL_COOLDOWN_MS = 950;  // longer than one slide's fold
+  let wheelLastTrigger = 0;
+  function onWheel(e) {
+    if (!feedReady()) return;
+    e.preventDefault();
+    const now = performance.now();
+    if (now - wheelLastTrigger < WHEEL_COOLDOWN_MS || isAnimating || feedAnim || feedLive) return;
+    const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? window.innerHeight : 1);
+    if (Math.abs(dy) <= WHEEL_THRESHOLD) return;
+    wheelLastTrigger = now;
+    changeSlide(dy > 0 ? "next" : "prev");
   }
-  // One slide on from where the feed is landing (wheel over the header / footer bars):
-  // drives the same native scroll as a swipe, so both kinds of input share one path
-  function trackpadStep(dir) {
-    if (feedAnim) finishFeed();
-    const base = commitDir ? restIdx + commitDir : Math.round(scroller.scrollTop / slideScrollHeight());
-    restIdx = base;
-    commitDir = dir;
-    wheelSum = 0;
-    steering = true; // the landing is set; no snap-back to correct
-    setRestSnap(false);
-    scroller.scrollTo({ top: (base + dir) * slideScrollHeight(), behavior: "smooth" });
-  }
-
-  // d: travel in slides since rest; pullingBack: fingers moving against the commitment
-  function updateCommit(d, pullingBack) {
-    if (Math.abs(d) >= TRACKPAD_COMMIT) commitDir = Math.sign(d);
-    else if (pullingBack) commitDir = 0;
-    setRestSnap(!commitDir);
-  }
-
-  const slideScrollHeight = () => scroller.clientHeight * TRACKPAD_DISTANCE;
-
-  function syncScroller() {
-    if (!scroller) return;
-    targetX = feedX;
-    snaps.forEach((snap) => snap.classList.remove("off"));
-    restIdx = Math.round(feedX);
-    commitDir = 0;
-    wheelSum = 0;
-    steering = false;
-    lastScrollPos = feedX;
-    scrollSyncing = true;
-    scroller.scrollTop = feedX * slideScrollHeight();
-    requestAnimationFrame(() => { scrollSyncing = false; });
-  }
-
-  let snapWaits = 0;
-  function onNativeScrollEnd() {
-    if (!scroller || (drag && drag.active) || feedAnim) return;
-    const pos = scroller.scrollTop / slideScrollHeight();
-    // Snap still settling: check again shortly — but never wait forever (that would
-    // leave the feed between two slides and, un-recentred, eventually at the end)
-    if (Math.abs(pos - Math.round(pos)) > 0.01 && snapWaits++ < 4) {
-      clearTimeout(scrollIdleTimer);
-      scrollIdleTimer = setTimeout(onNativeScrollEnd, 150);
-      return;
-    }
-    snapWaits = 0;
-    targetX = Math.round(pos);
-    targetIdle = true;
-    startCushion(); // lands softly, then settles
-  }
-
-  if (scroller) {
-    const n = homeSlides.length;
-    // Each step is TRACKPAD_DISTANCE screens tall, but its snap target stays exactly one
-    // screen: snap areas taller than the screen would let the browser stop mid-slide.
-    for (let k = 0; k < n * 3; k++) {
-      const step = document.createElement("div");
-      step.style.height = `${TRACKPAD_DISTANCE * 100}%`;
-      const snap = document.createElement("div");
-      snap.className = "feed-snap";
-      snap.style.height = `${100 / TRACKPAD_DISTANCE}%`;
-      step.appendChild(snap);
-      scroller.appendChild(step);
-      snaps.push(snap);
-    }
-    if (n <= 1) scroller.style.overflowY = "hidden";
-
-    scroller.addEventListener("scroll", () => {
-      if (scrollSyncing || (drag && drag.active)) return;
-      if (!feedReady()) { syncScroller(); return; } // e.g. during the intro banner
-      if (feedAnim) stopFeedAnim();                  // trackpad takes over from keys
-      targetX = scroller.scrollTop / slideScrollHeight();
-      targetIdle = false;
-      // Momentum carrying the feed away from where it rested can commit; nothing here
-      // un-commits (moving back toward the start is the browser's bounce, not the fingers)
-      const moving = Math.sign(targetX - lastScrollPos);
-      lastScrollPos = targetX;
-      if (Math.sign(targetX - restIdx) === moving) updateCommit(targetX - restIdx, false);
-      // Committed, fingers off, yet moving back toward the start: the browser decided to
-      // bounce back before our switch reached it (a short, quick swipe). It doesn't
-      // re-target a bounce already running, so steer the landing to the next slide.
-      if (commitDir && !steering && moving === -commitDir && performance.now() - lastWheelAt > 30) {
-        steering = true;
-        scroller.scrollTo({ top: (restIdx + commitDir) * slideScrollHeight(), behavior: "smooth" });
-      }
-      // Fingers/momentum: draw right now, like a drag (no frame of delay)
-      if (performance.now() - lastWheelAt < 60) { feedX = targetX; renderFeed(feedX); }
-      startCushion();
-      clearTimeout(scrollIdleTimer);
-      scrollIdleTimer = setTimeout(onNativeScrollEnd, 150);
-    }, { passive: true });
-    // Trackpad during a key/touch animation: jump that one to its end first, so
-    // the native scroll continues from the right slide instead of a stale position
-    scroller.addEventListener("wheel", (e) => {
-      const now = performance.now(), gap = now - lastWheelAt;
-      lastWheelAt = now;
-      if (feedAnim) finishFeed();
-      const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? scroller.clientHeight : 1);
-      // A new swipe while the last one is still landing counts from where that one lands,
-      // so two swipes move two slides. The browser never says when fingers touch or lift,
-      // so this only applies when it's certain: the same direction after a real pause, with
-      // the last swipe already past halfway. Anything less is the same swipe continuing
-      // (a pause mid-swipe, the coast after lifting) — counting it again would jump a slide.
-      const landed = (scroller.scrollTop / slideScrollHeight() - restIdx) * commitDir;
-      if (commitDir && gap > 250 && Math.sign(dy) === commitDir && landed > 0.5) {
-        restIdx += commitDir;
-        wheelSum = 0;
-        commitDir = 0;
-        steering = false;
-      }
-      wheelSum += dy;
-      updateCommit(wheelSum / slideScrollHeight(), commitDir !== 0 && Math.sign(dy) === -commitDir);
-    }, { passive: true, capture: true });
-    scroller.addEventListener("scrollend", () => {
-      if (scrollSyncing) return;
-      clearTimeout(scrollIdleTimer);
-      onNativeScrollEnd();
-    });
-    window.addEventListener("resize", () => { if (!feedLive) syncScroller(); });
-    // Wheel over the header/footer controls can't reach the scroll layer: one slide per gesture.
-    // Listening on the bars only (not the window): a blocking wheel listener on the window
-    // would route every trackpad scroll through the main thread.
-    let barWheelAt = 0, barWheelSum = 0, barWheelDone = false;
-    const onBarWheel = (e) => {
-      if (!feedReady()) return;
-      e.preventDefault();
-      const now = performance.now();
-      if (now - barWheelAt > 120) { barWheelSum = 0; barWheelDone = false; } // a new gesture
-      barWheelAt = now;
-      barWheelSum += e.deltaY;
-      if (!barWheelDone && Math.abs(barWheelSum) > slideScrollHeight() * TRACKPAD_COMMIT) {
-        barWheelDone = true;
-        trackpadStep(barWheelSum > 0 ? 1 : -1);
-      }
-    };
-    ["main-header", "project-footer"].forEach((bar) => {
-      const el = document.getElementById(bar);
-      if (el) el.addEventListener("wheel", onBarWheel, { passive: false });
-    });
-    syncScroller();
-  }
+  // On the feed and over its header / footer bars (not the window: a blocking wheel
+  // listener there would slow down scrolling on every other page)
+  [pageHome, document.getElementById("main-header"), document.getElementById("project-footer")]
+    .forEach((el) => { if (el) el.addEventListener("wheel", onWheel, { passive: false }); });
 
   // ── Keyboard navigation ──────────────────────────────────────
   window.addEventListener("keydown", (e) => {
@@ -1787,7 +1670,22 @@ function textMotion(el) {
 
 function unwrapTypewriter(el) {
   el.querySelectorAll(".typewriter-char").forEach((span) => span.replaceWith(...span.childNodes));
+  releaseIcons(el);
   unlockLines(el);
+}
+
+// Icons inside animated text (the arrow after a link) move like one more letter: in
+// reading order between the letters, typing in and dissolving with them
+function withIcons(el, units) {
+  const icons = [...el.querySelectorAll(".icon")];
+  if (!icons.length) return units;
+  return [...units, ...icons].sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
+}
+function releaseIcons(el) {
+  el.querySelectorAll(".icon-in, .icon-out").forEach((icon) => {
+    icon.classList.remove("icon-in", "icon-out");
+    icon.style.animationDelay = "";
+  });
 }
 
 // ── Locked lines ──
@@ -1824,6 +1722,17 @@ function readLines(node) {
     }
   }
   return { starts, cuts };
+}
+
+// Back to plain text, whatever is still running on it (typing in, dissolving, locked
+// lines). Every new text animation starts from here: clicked quickly again and again, a
+// toggle never types letters inside letters that are still fading out.
+function settleText(el) {
+  clearTimeout(el._typewriterDone);
+  typingEls.delete(el);
+  el.querySelectorAll(".typewriter-char, .text-out, .text-out-pending").forEach((span) => span.replaceWith(...span.childNodes));
+  releaseIcons(el);
+  unlockLines(el);
 }
 
 function unlockLines(el) {
@@ -1937,15 +1846,16 @@ const typingEls = new Set();
 
 // Type text in, letter by letter or word by word (per --tm-in)
 function typewriterIn(el, skip) {
-  // Typing again before the last one finished (e.g. a swipe back across halfway):
-  // start from the plain text, never nest letters inside letters
-  if (el.querySelector(".typewriter-char")) { clearTimeout(el._typewriterDone); unwrapTypewriter(el); }
+  settleText(el); // whatever ran on it before (typing, dissolving): from plain text
   const m = textMotion(el);
   const byWord = m.in === "words" && el.getAttribute("data-typewriter") !== "char";
-  const spans = splitText(el, byWord, "typewriter-char", skip);
+  const spans = withIcons(el, splitText(el, byWord, "typewriter-char", skip));
   // Long texts step faster, so none takes longer than --tm-in-max
   const step = Math.min(m.inStep, m.inMax / Math.max(1, spans.length - 1));
-  spans.forEach((span, i) => { span.style.animationDelay = Math.round(i * step) + "ms"; });
+  spans.forEach((span, i) => {
+    span.style.animationDelay = Math.round(i * step) + "ms";
+    if (span.classList.contains("icon")) span.classList.add("icon-in");
+  });
   clearTimeout(el._typewriterDone);
   const total = Math.round((spans.length - 1) * step + m.inUnit + 20);
   typingEls.add(el);
@@ -1967,13 +1877,15 @@ function textOut(elements) {
   const done = [];
   elements.forEach((el) => {
     if (done.some((d) => d !== el && d.contains(el))) return;
+    settleText(el); // a dissolve over half-typed text would leave letters behind
     const m = textMotion(el);
     // Dissolve letter by letter / word by word in reading order, with a little jitter
-    const units = splitText(el, m.out === "words", "text-out-pending");
+    const units = withIcons(el, splitText(el, m.out === "words", "text-out-pending"));
     const last = Math.max(1, units.length - 1);
     units.forEach((span, k) => {
       span.style.animationDelay = Math.round((k / last) * m.outSpread + Math.random() * 40) + "ms";
-      span.className = "text-out";
+      if (span.classList.contains("icon")) span.classList.add("icon-out");
+      else span.className = "text-out";
     });
     longest = Math.max(longest, m.outSpread + 40 + m.outUnit);
     done.push(el);

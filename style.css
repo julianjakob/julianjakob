@@ -54,6 +54,9 @@
   --font-size-adjust: 0.5;
   --line-height-body: 175%;   /* running text: open, for the serif's tall ascenders */
   --line-height-heading: 150%;
+  /* The same two leadings as plain numbers, for whole-pixel row heights (lists) */
+  --lh-body: 1.75;
+  --lh-heading: 1.5;
   --type-small: 13px;
 
   --header-height: 60px;
@@ -359,7 +362,7 @@ header {
 .header-controls { display: flex; align-items: flex-start; gap: var(--spacing-md); }
 /* Header controls are <button>s — strip native button styling.
    :where() keeps specificity at 0 so .type-ui-text still sets font and colour. */
-:where(button.menu-trigger, button.lang-toggle, button.print-btn) {
+:where(button.menu-trigger, button.lang-toggle, button.print-btn, button.reveal-toggle) {
   background: none;
   border: 0;
   padding: 0;
@@ -436,12 +439,6 @@ html.menu-open #bar-top { display: block; }
   /* same place as the footers on home and the pages */
   padding: 0 var(--ui-padding-side) max(var(--ui-padding-top), env(safe-area-inset-bottom, 0px));
 }
-.menu-intro-link {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-}
 
 .page-container {
   position: absolute;
@@ -482,29 +479,9 @@ html.menu-open #bar-top { display: block; }
 
 /* Touches on the feed belong to the swipe (script.js), never to the browser.
    "none" — iOS Safari doesn't know "pinch-zoom" and drops a whole
-   "pan-x pinch-zoom" declaration, which let it scroll the trackpad layer instead */
+   "pan-x pinch-zoom" declaration, which let the page scroll under the swipe */
 #page-home { touch-action: none; }
 
-/* Invisible native scroll layer for trackpad / mouse wheel (see script.js).
-   One snap point per slide; scroll-snap-stop = max. one slide per swipe. */
-#feed-scroller {
-  position: absolute;
-  inset: 0;
-  z-index: 20;
-  overflow-x: hidden;
-  overflow-y: scroll;
-  scroll-snap-type: y mandatory;
-  overscroll-behavior: contain;
-  scrollbar-width: none;
-  touch-action: none; /* trackpad / wheel only — touch never scrolls it */
-}
-#feed-scroller::-webkit-scrollbar { display: none; }
-.feed-snap {
-  height: 100%; /* one screen — set from TRACKPAD_DISTANCE in script.js */
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
-}
-.feed-snap.off { scroll-snap-align: none; } /* swipe committed: leave this slide */
 
 .slide-section {
   position: absolute;
@@ -664,11 +641,40 @@ span.mobile-only { display: inline; }
   transition: opacity var(--transition-base);
   width: 100%;
 }
-.contact-list.no-lines { border-top: none; }
-.contact-row.static { cursor: default; } /* a ruled line of text, not a link (Services list) */
+.contact-row.static { cursor: default; }
+/* Rows in ruled lists are a whole number of pixels tall (their text's leading rounded):
+   otherwise each hairline lands at a different fraction of a pixel and some draw
+   thicker or fainter than others */
+.contact-row .type-contact-item { line-height: round(calc(var(--type-running) * var(--lh-body)), 1px); }
+.service-header .type-service-title { line-height: round(calc(var(--type-base) * var(--lh-heading)), 1px); }
+/* A line that opens more lines below it ("2× Cannes Lions +" on About): the same
+   superscript + / – as Details, the lines unfold and type in */
+.reveal-toggle { cursor: pointer; text-align: left; transition: opacity var(--transition-base); }
+.reveal-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--anim-speed) var(--anim-curve);
+}
+.reveal-panel.open { grid-template-rows: 1fr; }
+/* A note under a list (the credit under the awards): dimmed like the other-language toggle */
+.is-note { opacity: var(--dim-inactive); }
+.reveal-body { overflow: hidden; min-height: 0; display: flex; flex-direction: column; gap: 2px; }
+.reveal-link { transition: opacity var(--transition-base); }
+/* A campaign and its credit on one line; on narrow screens the credit wraps below */
+.client-col .type-contact-item.award-line { white-space: normal; }
+.award-line .is-note { white-space: nowrap; opacity: 1; } /* one piece; the line is dimmed as a whole */
+/* An opened award's project line — project, arrow and credit — is dimmed like the other-
+   language toggle, and lights up on hover like it */
+.award-line { opacity: var(--dim-inactive); transition: opacity var(--transition-base); }
+@media (max-width: 767px) {
+  .award-line .is-note { display: block; } /* phones: too narrow for both on one line — always below */
+}
+/* Icons (copy, arrow): drawn to sit with the text — the colour of the text, about the
+   size of its capitals. In animated text they type in and dissolve like a letter. */
+.icon { width: 0.95em; height: 0.95em; flex-shrink: 0; }
+.award-line .icon { vertical-align: -0.08em; } /* a ruled line of text, not a link (Services list) */
 /* A group that continues the list above it (About: Awards after Selected experience) */
 .contact-group.follows-list { margin-top: calc(var(--spacing-xl) - var(--spacing-contact-vertical)); }
-.contact-list.no-lines .contact-row { border-bottom: none; padding: 0; margin-bottom: 2px; }
 .copy-row .type-contact-item { transition: opacity var(--transition-base); }
 .copy-link { cursor: pointer; transition: opacity var(--transition-base); }
 .about-portrait {
@@ -821,6 +827,8 @@ p.type-contact-item.service-description {
   :root {
     --line-height-body: 190%;
     --line-height-heading: 165%;
+    --lh-body: 1.9;
+    --lh-heading: 1.65;
     --cap-offset: 0.265;
     --menu-line-height: 135%;
     --menu-cap-offset: calc(var(--cap-offset) - 0.15); /* (165% − 135%) / 2 */
@@ -903,6 +911,12 @@ p.type-contact-item,
 /* Leaving text: each letter / word fades on its own (delays set from script) */
 @keyframes textFadeOut { to { opacity: 0; } }
 .text-out { animation: textFadeOut var(--tm-out-unit, 140ms) ease-in forwards; }
+/* Icons in animated text: the same fade in and out as a letter (delays from script) */
+.icon-in {
+  opacity: 0;
+  animation: typewriter-char var(--tm-in-unit, 380ms) cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+.icon-out { animation: textFadeOut var(--tm-out-unit, 140ms) ease-in forwards; }
 
 @media (min-width: 768px) {
   :root {
@@ -955,12 +969,6 @@ p.type-contact-item,
     align-items: flex-start;
   }
   .pair-gap { margin-bottom: clamp(14px, 2vh, 25px); }
-  .menu-intro-link {
-    width: auto;
-    flex-direction: row;
-    gap: 0;
-    justify-content: space-between;
-  }
   .desktop-only { display: block; }
   span.desktop-only { display: inline; }
   .mobile-only,
@@ -982,16 +990,16 @@ p.type-contact-item,
     column-count: 2;
     column-gap: var(--col-gutter);
     column-width: var(--col-width);
-    orphans: 3;
-    widows: 3;
+    /* Any paragraph splits over both columns, even a short one. A higher minimum per
+       column isn't kept while text animates (Safari), so short paragraphs jumped from
+       two columns into one when the animation ended */
+    orphans: 1;
+    widows: 1;
   }
   #page-legal p.type-contact-item {
     column-count: 1;
     max-width: var(--layout-width);
     text-align: left;
-  }
-  #page-pricing .type-service-tags {
-    max-width: var(--col-width);
   }
   .contact-list {
     max-width: calc(2 * var(--col-width) + var(--col-gutter)); /* the two text columns, like the paragraphs */
@@ -1270,9 +1278,9 @@ p.type-contact-item,
 /* ── Hover: one rule for everything clickable (mouse only — no sticky hover on touch) ── */
 @media (hover: hover) {
   .brand:hover, .menu-trigger:hover, .details-toggle:hover,
-  .type-menu-item:hover, .copy-link:hover, .contact-row:not(.static):hover,
+  .type-menu-item:hover, .copy-link:hover, .contact-row:not(.static):hover, .reveal-toggle:hover,
   .service-row:hover .service-header, .cv-copy-btn:hover, .print-btn:hover { opacity: var(--dim-hover); }
-  .lang-toggle:hover { opacity: 1; } /* the other language lights up */
+  .lang-toggle:hover, .award-line:hover { opacity: 1; } /* the dimmed option lights up */
 }
 
 /* ── Accessibility ───────────────────────────────────────────── */
