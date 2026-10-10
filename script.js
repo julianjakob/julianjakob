@@ -372,18 +372,21 @@ async function init() {
     });
   }
 
-  // A line that opens more lines ("2× Cannes Lions +" on About): the superscript + / –
-  // changes like Details, the panel unfolds and its lines type in; closing, they
-  // dissolve and the panel folds.
+  // A line that opens more lines (the awards on About): the superscript + / – changes
+  // like Details, the panel unfolds and its lines type in; closing, they dissolve and the
+  // panel folds. One open at a time, like the Process steps: opening one folds the other.
   function initReveals() {
-    document.querySelectorAll(".reveal-toggle").forEach((btn) => {
+    const toggles = [...document.querySelectorAll(".reveal-toggle")];
+    toggles.forEach((btn) => {
       const panel = document.getElementById(btn.getAttribute("aria-controls"));
       const hint = btn.querySelector(".details-hint");
       if (!panel) return;
       const lines = () => [...panel.querySelector(".reveal-body").children];
-      let open = false, run = 0;
-      btn.addEventListener("click", () => {
-        open = !open;
+      let run = 0;
+      btn._open = false;
+      btn._set = (open) => {
+        if (open === btn._open) return;
+        btn._open = open;
         const r = ++run;
         btn.setAttribute("aria-expanded", String(open));
         if (hint) swapLabel(hint, open ? "–" : "+");
@@ -399,6 +402,11 @@ async function init() {
           const gone = textOut(lines());
           setTimeout(() => { if (r === run) panel.classList.remove("open"); }, Math.min(gone, 200));
         }
+      };
+      btn.addEventListener("click", () => {
+        const open = !btn._open;
+        if (open) toggles.forEach((other) => { if (other !== btn && other._set) other._set(false); });
+        btn._set(open);
       });
     });
   }
