@@ -1317,7 +1317,7 @@ let _projectsData = null;
 // All projects in one request (projects-data.json, written by build-projects.js)
 async function loadEnabledProjects() {
   try {
-    const res = await fetch("projects-data.json", { cache: "default" });
+    const res = await fetch("projects-data.json", { cache: "no-cache" }); // always revalidated: new projects show at once
     if (res.ok) return (_projectsData = await res.json());
   } catch {}
   return [];

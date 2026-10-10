@@ -10,16 +10,27 @@
  * index.html whose <head> carries that page's title, description and
  * canonical URL. Titles and descriptions come from the data-title-en and
  * data-description attributes on each <main id="page-…"> in index.html.
- * Also rewrites sitemap.xml.
+ * Also rewrites sitemap.xml, and stamps style.css / script.js with a fingerprint of
+ * their contents (style.css?v=…): when a file changes, its address changes, so no
+ * browser can mix a new page with an old cached stylesheet or script.
  *
  * Ausführen: node build-pages.js
- * (nach jeder Änderung an index.html ausführen, dann committen)
+ * (nach jeder Änderung an index.html, style.css oder script.js ausführen, dann committen)
  */
 
 const fs = require("fs");
+const crypto = require("crypto");
 
 const BASE = "https://julianjakob.at";
-const source = fs.readFileSync("index.html", "utf8");
+
+// Cache-busting: /style.css?v=<hash>, /script.js?v=<hash> (index.html is updated in place)
+const fingerprint = (file) => crypto.createHash("sha1").update(fs.readFileSync(file)).digest("hex").slice(0, 10);
+let stamped = fs.readFileSync("index.html", "utf8");
+for (const file of ["style.css", "script.js"]) {
+  stamped = stamped.replace(new RegExp(`/${file.replace(".", "\\.")}(\\?v=[0-9a-f]+)?"`, "g"), `/${file}?v=${fingerprint(file)}"`);
+}
+fs.writeFileSync("index.html", stamped);
+const source = stamped;
 
 const decode = (s) => s
   .replace(/&quot;/g, '"').replace(/&#x27;|&#39;/g, "'")
