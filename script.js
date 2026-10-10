@@ -1011,10 +1011,15 @@ async function init() {
 
   const uiActive = () => currentPage === "home" && !isMenuOpen && hasSeenBanner;
 
-  // "Print" sits next to the language toggle on the CV page only, and leaves when
-  // the menu opens — appearing / leaving like all other text
+  // "PDF" sits next to the language toggle on the CV page only, and leaves when the menu
+  // opens — appearing / leaving like all other text. It opens the CV as a ready-made A4
+  // PDF in the current language (assets/cv/, rendered from this page — see
+  // build-cv-pdf.mjs): the same one page in every browser, ready to print or save.
   const printBtn = document.getElementById("print-btn");
-  if (printBtn) printBtn.addEventListener("click", () => window.print());
+  if (printBtn) printBtn.addEventListener("click", () => {
+    const lang = (window.getCurrentLang && window.getCurrentLang()) === "de" ? "DE" : "EN";
+    window.open(`/assets/cv/Julian-Jakob-CV-${lang}.pdf`, "_blank", "noopener");
+  });
   let printShown = false, printTimer = 0;
   function syncPrintBtn() {
     const show = currentPage === "cv" && !isMenuOpen;
@@ -1867,6 +1872,7 @@ function typewriterIn(el, skip) {
   clearTimeout(el._typewriterDone);
   const total = Math.round((spans.length - 1) * step + m.inUnit + 20);
   typingEls.add(el);
+  el._typingEnds = performance.now() + total - m.inUnit; // when its last letter starts
   el._typewriterDone = setTimeout(() => { typingEls.delete(el); unwrapTypewriter(el); }, total);
   return total; // ms until fully typed
 }

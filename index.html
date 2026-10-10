@@ -451,7 +451,7 @@
     <header id="main-header">
         <a href="/" data-dest="home" class="brand type-ui-text nav-link" aria-label="Julian Jakob — home">©julianjakob</a>
         <div class="header-controls">
-            <button type="button" id="print-btn" class="print-btn type-ui-text" data-en="Print" data-de="Drucken" hidden>Print</button>
+            <button type="button" id="print-btn" class="print-btn type-ui-text" data-en="PDF" data-de="PDF" aria-label="CV as PDF" hidden>PDF</button>
             <button type="button" id="lang-toggle" class="lang-toggle type-ui-text" aria-label="Switch language to German">DE</button>
             <button type="button" id="menu-btn" class="menu-trigger type-ui-text text-right"
                  aria-expanded="false" aria-controls="menu-overlay"
@@ -1005,7 +1005,7 @@
         <h2 id="footer-title" class="project-title type-ui-text" aria-live="polite"></h2>
     </footer>
 
-    <script src="/script.js?v=e35ddc7851" defer></script>
+    <script src="/script.js?v=92b4f7214a" defer></script>
 
 
     <!-- ── Language system ── -->
@@ -1172,7 +1172,19 @@
             if (inView(el) && !el.querySelector("[data-en]")) window.typewriterIn(el);
           });
           // Untranslated text and the toggle label come back with the same rules
-          same.forEach(function (el) { window.typewriterIn(el, function (n) { return !!n.parentElement.closest("[data-en]"); }); });
+          // A + / – sign follows its label: it types in once the label's last letter does,
+          // never before its words (Awards, Details, Process steps)
+          var skipNested = function (n) { return !!n.parentElement.closest("[data-en]"); };
+          same.forEach(function (el) {
+            var sign = el.classList.contains("details-hint") || el.classList.contains("service-toggle");
+            var label = sign && el.parentElement && el.parentElement.closest("button, .service-header");
+            label = label && label.querySelector("[data-en]");
+            var wait = label && label._typingEnds ? label._typingEnds - performance.now() + 140 : 0; // a beat after the last letter
+            if (wait > 0) {
+              el.style.visibility = "hidden";
+              setTimeout(function () { el.style.visibility = ""; window.typewriterIn(el, skipNested); }, wait);
+            } else window.typewriterIn(el, skipNested);
+          });
           if (toggle) window.typewriterIn(toggle);
           switching = false;
         }, wait);
