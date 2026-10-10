@@ -1113,12 +1113,10 @@ p.type-contact-item,
   line-height: var(--line-height-heading);
   letter-spacing: var(--letter-space-normal);
 }
-.cv-contact {
+.cv-contact { /* phone and email: the size of the location above */
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  font-size: var(--type-base);
-  line-height: var(--line-height-heading);
 }
 .cv-copy-btn {
   background: none;
@@ -1163,7 +1161,7 @@ p.type-contact-item,
 }
 .cv-list { list-style: none; }
 /* Under the awards: where the work was done — smaller, dimmed like the other-language toggle */
-.cv-award-note { font-size: 0.85em; opacity: var(--dim-inactive); margin-top: calc(var(--spacing-xs) / 2); }
+.cv-award-note { font-size: 0.85em; line-height: 1.45; opacity: var(--dim-inactive); margin-top: calc(var(--spacing-xs) / 2); }
 .cv-body { max-width: 52em; } /* the sheet's line length */
 
 /* Narrow sheet (phones): location, phone, email, the sidebar lists and the
@@ -1213,6 +1211,11 @@ p.type-contact-item,
   /* The introduction's last line sits on the photo's bottom edge: trim the space
      below its baseline (the title → text distance is untouched) */
   .cv-intro .cv-body { text-box: trim-end cap alphabetic; }
+  /* Browsers without text-box trim (Firefox, older Safari / Chrome): the same, measured —
+     the last baseline sits 0.562em above the paragraph's bottom at this leading */
+  @supports not (text-box: trim-end cap alphabetic) {
+    .cv-intro .cv-body { margin-bottom: -0.562em; }
+  }
   .cv-columns { margin-top: var(--spacing-component-gap-large); }
   .cv-sidebar { order: -1; display: flex; flex-direction: column; gap: var(--spacing-md); }
   /* The sheet's type (CV PDF): the site's sizes × 0.82, the name × 0.88, open leading */
@@ -1222,9 +1225,7 @@ p.type-contact-item,
     line-height: 2;
   }
   .cv-name { font-size: calc(var(--type-display) * 0.88); line-height: 1; }
-  .cv-section-title,
-  .cv-contact { font-size: calc(var(--type-base) * var(--cv-scale)); }
-  .cv-contact { line-height: 2; }
+  .cv-section-title { font-size: calc(var(--type-base) * var(--cv-scale)); }
   .cv-meta { font-size: calc(var(--type-small) * var(--cv-scale)); }
   .cv-page .cv-body { max-width: none; } /* the sheet's text runs the full column, as in the PDF */
 }
