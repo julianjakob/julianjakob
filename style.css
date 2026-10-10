@@ -1257,6 +1257,10 @@ p.type-contact-item,
     box-shadow: none;
     zoom: 0.684;
   }
+  /* The footer line still sits at the page's bottom edge (margin-top: auto); this is only
+     the least space above it. Kept small, so the sheet keeps clear slack below one page —
+     browsers lay print out a few percent differently (Safari: about 3 % larger) */
+  #page-cv .cv-foot { padding-top: 30px; }
   #page-cv .cv-entry,
   #page-cv .cv-side-section { break-inside: avoid; }
 }
