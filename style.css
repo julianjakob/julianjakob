@@ -1235,9 +1235,9 @@ p.type-contact-item,
    (A4: 80 of 3508 ≈ 7mm) becomes the page margin, so text enlarged with the print
    dialog's own Scale setting runs onto a second page with the same margins. */
 @media print {
-  /* 16 mm top and bottom: the sheet (265 mm) fills the page exactly — and it still fits
-     when a browser applies its own, larger default margins (Safari: about 12.7 mm) */
-  @page { size: A4; margin: 16mm 0; }
+  /* The sheet is the page, as in the Figma CV: no page margins — the sheet's own
+     padding (80 of 2480, about 7 mm) is the margin, the same on all four sides */
+  @page { size: A4; margin: 0; }
   html:has(#page-cv.visible),
   html:has(#page-cv.visible) body { height: auto; min-height: 0; overflow: visible; background: var(--color-paper); }
   html:has(#page-cv.visible) body > :not(#page-cv) { display: none !important; }
@@ -1249,15 +1249,14 @@ p.type-contact-item,
     contain: none;
   }
   #page-cv .cv-outer { padding: 0; }
-  #page-cv .cv-page { padding-block: 0; }
+  #page-cv .cv-page { padding: calc(1160px * 80 / 2480); } /* the Figma margin: 80 of 2480, about 6.8 mm */
   #page-cv .cv-sheet {
     width: 1160px;
     max-width: none;
-    min-height: calc(1160px * 265 / 210); /* one page: A4 (297 mm) minus 2 × 16 mm */
+    min-height: calc(1160px * 296 / 210); /* one A4 page (297 mm), a hair under so it never spills */
     box-shadow: none;
     zoom: 0.684;
   }
-  #page-cv .cv-foot { padding-top: 40px; } /* on paper the footer line sits closer to the content */
   #page-cv .cv-entry,
   #page-cv .cv-side-section { break-inside: avoid; }
 }
