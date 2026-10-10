@@ -1,25 +1,55 @@
-/* ── Self-hosted Inter ─────────────────────────────────────────── */
+/* ── Self-hosted EB Garamond ──────────────────────────────────────
+   Variable font, used at Regular (400) only; the italic is for the intro slogan.
+   The -ext files only load if a page uses characters beyond basic Latin.
+   The files are edited: their German "locl" feature (Ä Ö Ü with low, flat dots in
+   German text) is renamed to an unused tag, so every browser — Safari ignores CSS
+   here — shows the standard umlauts with the dots above the letter. Re-downloaded
+   files need the same edit (fontTools: rename FeatureTag "locl" → "ss20"). */
 @font-face {
-  font-family: "Inter";
-  src: url("assets/fonts/Inter-Regular.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
+  font-family: "EB Garamond";
+  src: url("assets/fonts/EBGaramond-Italic-latin.woff2") format("woff2");
+  font-weight: 400 800;
+  font-style: italic;
   font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
-  font-family: "Inter";
-  src: url("assets/fonts/Inter-Medium.woff2") format("woff2");
-  font-weight: 500;
+  font-family: "EB Garamond";
+  src: url("assets/fonts/EBGaramond-Italic-latin-ext.woff2") format("woff2");
+  font-weight: 400 800;
+  font-style: italic;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "EB Garamond";
+  src: url("assets/fonts/EBGaramond-latin.woff2") format("woff2");
+  font-weight: 400 800;
   font-style: normal;
   font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "EB Garamond";
+  src: url("assets/fonts/EBGaramond-latin-ext.woff2") format("woff2");
+  font-weight: 400 800;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
 /* style.css */
 :root {
-  --text-grey: #999999;
   --line-color: #000000;
   --line-thickness: 0.5px;
-  --font-main: "Inter", "Helvetica Neue", Arial, sans-serif;
+  /* Typeface: EB Garamond, Regular throughout — no bold anywhere */
+  --font-main: "EB Garamond", Georgia, "Times New Roman", serif;
+  /* Garamond's lowercase is small for its size: every size below is scaled to a
+     fixed x-height (half the font size), so the type scale's values stay meaningful */
+  --font-size-adjust: 0.5;
+  --line-height-body: 175%;   /* running text: open, for the serif's tall ascenders */
+  --line-height-heading: 150%;
+  --type-small: 13px;
 
   --header-height: 60px;
   --ui-padding-side: 20px;
@@ -57,9 +87,10 @@
   --service-num-width: 25px;
   --service-body-indent: calc(var(--service-num-width) + var(--spacing-component-gap));
 
-  --letter-space-tight: -0.8px;
-  --letter-space-normal: -0.5px;
-  --letter-space-loose: -0.32px;
+  /* A classical serif keeps (nearly) its own letter-spacing */
+  --letter-space-tight: -0.4px;
+  --letter-space-normal: -0.2px;
+  --letter-space-loose: 0px;
 
 
   --anim-translate-micro: 8px;
@@ -73,38 +104,38 @@
   --transition-base:   0.3s ease;
   --transition-slow:   0.4s ease;
 
-  --line-height-body:    140%;
-  --line-height-heading: 120%;
-
-  /* Type scale — five sizes, nothing else:
+  /* Type scale — six sizes, nothing else:
        display   headlines, the name on the CV
        menu      menu items
-       base      UI (logo, Menu, DE/EN, Details, titles), section headers
+       base      section headers
+       ui        logo, Menu, DE/EN, Print, Details, project title
        running   all text under a header: paragraphs, lists, rows, tags, details
-       small     corner labels, details on phones
+       small     corner labels, tags, details on phones
      The first three are fluid, anchored on two reference screens, linear in between:
        token          iPhone SE (375px)   laptop (1440px)   cap
        base           15px                18px              22px
-       display        20px                32.4px            52px
-       menu           38px                58px              85px  (also ≤ 8.5vh: short / landscape phones)
+       display        24px                32.4px            52px
+       menu           32px                49px              72px  (also ≤ 7.5vh: short / landscape phones)
      Formula for a token going from A px @375 to B px @1440:
        slope = (B - A) / 1065 * 100  (in vw);  intercept = A - 3.75 * slope  (in px) */
   --type-base:    clamp(15px, calc(13.94px + 0.282vw), 22px);
-  --type-display: clamp(20px, calc(15.63px + 1.164vw), 52px);
-  --type-menu:    clamp(30px, min(calc(30.96px + 1.878vw), 8.5vh), 85px);
-  /* Distance from a line box's top to the top of Inter's capitals at 120% line-height,
-     in em. Used to put the first menu item's caps level with the page headline's caps. */
-  --cap-offset: 0.236;
+  --type-display: clamp(22px, calc(21.04px + 0.789vw), 52px);
+  --type-menu:    clamp(26px, min(calc(26.01px + 1.596vw), 7.5vh), 72px);
+  /* Distance from a line box's top to the top of the capitals, in em of the specified
+     size (EB Garamond at 135% line-height, x-height adjusted to 0.5). Used to put the
+     first menu item's caps level with the page headline's caps. */
+  --cap-offset: 0.19;  /* measured: menu and headline caps within 1px at 375 and 1440 */
+  /* UI: logo, DE/EN, Menu, Print, Details, project title, page footers — one step below base */
+  --type-ui:      clamp(14px, calc(13.3px + 0.188vw), 17px);
   /* Running text: fixed, so it never outgrows the headers above it */
   --type-running: 14px;
-  --type-small:   12px;
 }
-
 .type-contact-item {
   text-align: left;
   text-align-last: left;
-  text-wrap: pretty;
+  /* No text-wrap: pretty here — Safari switches hyphenation off with it */
   word-spacing: -0.01em;
+  -webkit-hyphens: auto; /* Safari */
   hyphens: auto;
   /* Never more than two hyphenated lines in a row (Safari; Chrome ignores it) */
   -webkit-hyphenate-limit-lines: 2;
@@ -119,6 +150,7 @@ html:lang(en) .type-contact-item {
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
+h1, h2, h3, h4, h5, h6, b, strong, th { font-weight: 400; } /* Regular everywhere: no browser bold */
 html {
   height: 100%;
   height: -webkit-fill-available; /* iOS Safari: viewport excludes browser chrome */
@@ -131,6 +163,12 @@ body {
   width: 100%;
   overflow: hidden;
   font-family: var(--font-main);
+  font-size-adjust: var(--font-size-adjust);
+  /* Kerning and ligatures always on — Safari otherwise skips kerning on small text,
+     which makes a serif's spacing uneven */
+  font-kerning: normal;
+  font-variant-ligatures: common-ligatures;
+  text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   background-color: #000;
 }
@@ -147,6 +185,23 @@ a { text-decoration: none; color: inherit; }
   }
 }
 
+/* Intro slogan: set without kerning and ligatures from the start. While it animates,
+   every letter is its own element, and Safari can't kern or join letters across
+   elements — the line would jump wider the moment the dissolve begins (fl ligature,
+   kerning pairs). This way it looks the same at rest and in motion, in every browser. */
+.banner-text {
+  font-kerning: none;
+  font-variant-ligatures: none;
+}
+/* Intro slogan (italic): while its letters animate, each paints within its own box —
+   give that box room so italic overhangs (the hook of an f, the tail of a g) are never
+   cut. The negative margin cancels the padding. Only here: in justified text Safari
+   counts the extra room when spacing the line, and words would shift. */
+.banner-text .typewriter-char,
+.banner-text .text-out {
+  padding: 0.3em 0.25em;
+  margin: 0 -0.25em;
+}
 .typewriter-char {
   opacity: 0;
   animation: typewriter-char 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
@@ -159,25 +214,27 @@ a { text-decoration: none; color: inherit; }
 
 .type-banner-headline {
   /* Always two lines tall, like the slogan, so one-line intro texts don't shift the layout */
-  min-height: calc(2em * 1.2);
+  min-height: 2lh;
   color: #000;
   font-family: var(--font-main);
+  font-style: italic;
   font-size: var(--type-display);
-  font-weight: 500;
+  font-weight: 400;
   line-height: var(--line-height-heading);
   letter-spacing: var(--letter-space-normal);
 }
+.banner-logo { display: none; }
 .type-banner-footer {
   color: #000;
   font-family: var(--font-main);
-  font-size: var(--type-base);
+  font-size: var(--type-ui);
   font-weight: 400;
   line-height: normal;
 }
 .type-ui-text {
   color: #FFF;
   font-family: var(--font-main);
-  font-size: var(--type-base);
+  font-size: var(--type-ui);
   font-weight: 400;
   line-height: normal;
 }
@@ -185,7 +242,7 @@ a { text-decoration: none; color: inherit; }
   color: #FFF;
   font-family: var(--font-main);
   font-size: var(--type-menu);
-  font-weight: 500;
+  font-weight: 400;
   line-height: var(--line-height-heading);
   letter-spacing: var(--letter-space-tight);
   display: block;
@@ -208,7 +265,7 @@ a { text-decoration: none; color: inherit; }
   color: #000;
   font-family: var(--font-main);
   font-size: var(--type-base);
-  font-weight: 500;
+  font-weight: 400;
   line-height: var(--line-height-heading);
   letter-spacing: var(--letter-space-loose);
   margin-bottom: var(--spacing-md);
@@ -227,7 +284,7 @@ a { text-decoration: none; color: inherit; }
   font-family: var(--font-main);
   font-size: var(--type-display);
   font-style: normal;
-  font-weight: 500;
+  font-weight: 400;
   line-height: var(--line-height-heading);
   letter-spacing: var(--letter-space-normal);
   margin-bottom: var(--spacing-xl);
@@ -242,9 +299,9 @@ a { text-decoration: none; color: inherit; }
   letter-spacing: var(--letter-space-loose);
 }
 .type-service-tags {
-  color: var(--text-grey);
+  color: #000;
   font-family: var(--font-main);
-  font-size: var(--type-running);
+  font-size: var(--type-small);
   font-weight: 400;
   line-height: var(--line-height-body);
   margin-top: var(--spacing-md);
@@ -348,12 +405,11 @@ header {
   overflow-y: hidden;
   overflow-x: visible;
   transition: transform var(--page-speed) var(--page-curve);
-  transform: scaleY(var(--scaleY, 1));
-  transform-style: preserve-3d;
-  backface-visibility: hidden;
   overflow: visible;
 }
-.page-container.visible { transform: scaleY(1); z-index: 10; pointer-events: auto; }
+/* At rest a page has no transform at all: its text renders as plain page text. Safari
+   otherwise keeps it on a scaled layer after the fold and can leave it soft */
+.page-container.visible { transform: none; z-index: 10; pointer-events: auto; }
 .page-container.hidden { transform: scaleY(0); z-index: 1; pointer-events: none; }
 
 .contact-container {
@@ -425,7 +481,7 @@ header {
 .feed-layers .slide-section { will-change: transform; }
 
 .slide-section.active {
-  transform: scaleY(1);
+  transform: none; /* at rest: no layer (see .page-container.visible) */
   opacity: 1;
   transform-origin: bottom center;
   transition: transform var(--anim-speed) var(--anim-curve);
@@ -683,7 +739,7 @@ p.type-contact-item.service-description {
 }
 
 #footer-title { text-align: right; }
-#main-header a, #main-header button, #project-footer .project-details { pointer-events: auto; }
+#main-header a, #main-header button, #project-footer .details-toggle { pointer-events: auto; }
 
 /* ── Details panel (home) ── "Details" bottom left; the panel folds up beneath it,
    pushing the label up, and folds down again when the text is clicked */
@@ -705,20 +761,36 @@ p.type-contact-item.service-description {
   display: grid;
   grid-template-rows: 0fr;
   transition: grid-template-rows var(--anim-speed) var(--anim-curve);
-  cursor: pointer;
 }
 .details-panel.open { grid-template-rows: 1fr; }
+.details-hint { /* + / – as a superscript, in the colour of "Details" */
+  font-size: 0.75em;
+  vertical-align: super;
+  line-height: 0;
+  margin-left: 0.1em;
+}
 .details-body { overflow: hidden; min-height: 0; }
 .type-details {
   color: #FFF;
   font-family: var(--font-main);
   font-size: var(--type-running);
   font-weight: 400;
-  line-height: 1.4;
+  line-height: var(--line-height-body);
 }
 .details-body > :first-child { margin-top: 2.6em; }
 @media (max-width: 767px) {
   .type-details { font-size: var(--type-small); } /* phones: one step smaller */
+}
+/* Phones: more open leading (narrow columns read better with air between lines);
+   the cap offset grows with the headline leading (+ half the extra line height),
+   so the menu's first item stays level with the page headline */
+@media (max-width: 767px) {
+  :root {
+    --line-height-body: 190%;
+    --line-height-heading: 165%;
+    --cap-offset: 0.265;
+  }
+  .type-service-tags { font-size: calc(var(--type-small) - 1px); } /* tags: one px smaller */
 }
 .details-group + .details-group { margin-top: 1.9em; }
 
@@ -733,6 +805,16 @@ p.type-contact-item.service-description {
 .ui-adaptive #project-footer .project-details,
 .ui-adaptive #footer-title { transition: color 0.6s ease, opacity var(--transition-slow); }
 .ui-adaptive #project-footer .project-details * { color: inherit; }
+
+/* On the feed the bars belong to the swipe: vertical touch drags starting on the logo,
+   Menu, Details or the open Details text move the feed (the browser doesn't take them
+   over), and dragging across them doesn't select text */
+.ui-adaptive #main-header,
+.ui-adaptive #project-footer {
+  touch-action: pan-x pinch-zoom;
+  -webkit-user-select: none;
+  user-select: none;
+}
 
 #page-home.hidden ~ #project-footer { opacity: 0; pointer-events: none; transition: opacity var(--transition-fast); }
 
@@ -801,24 +883,25 @@ p.type-contact-item,
     justify-content: center;
     align-items: center;
   }
-  .banner-content {
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 0;
-    height: auto;
-    width: 100%;
-    position: relative;
-  }
-  .type-banner-footer {
-    position: absolute;
-    left: 0;
-    top: 0;
-    transform: none;
-  }
+  /* The slogan in the page column (1/6 of the screen). ©julianjakob rides on the
+     slogan's first line, pushed back into the left column — text on one line always
+     shares its baseline, in every browser */
+  .banner-content { display: block; height: auto; width: 100%; }
+  .type-banner-footer { display: none; }
   .type-banner-headline {
-    margin-left: calc(100vw / 6 - var(--ui-padding-side)); /* page column (banner is padded) */
+    margin-left: calc(100vw / 6 - var(--ui-padding-side));
     margin-bottom: 0;
+  }
+  .banner-logo {
+    display: inline-block;
+    width: 0;             /* takes no room in the line */
+    white-space: nowrap;
+    position: relative;
+    left: calc(var(--ui-padding-side) - 100vw / 6);
+    font-size: var(--type-ui);
+    font-style: normal;
+    line-height: 0;       /* doesn't change the slogan's line height */
+    letter-spacing: 0;
   }
   #menu-overlay {
     padding: var(--menu-top) var(--ui-padding-side) var(--ui-padding-top) var(--ui-padding-side);
@@ -870,6 +953,7 @@ p.type-contact-item,
     text-align: justify;
     text-align-last: left;
     text-justify: inter-word;
+    -webkit-hyphens: auto;
     hyphens: auto;
     word-spacing: -0.01em;
   }
@@ -957,8 +1041,8 @@ p.type-contact-item,
    Inside, photo and sidebar take the sheet's left column and the content starts
    where it does on A4. The layout follows the sheet's width (container queries),
    so a narrow sheet (phones) stacks: photo beside the name, one column below.
-   Spacing hierarchy: a line and its text 0 · title → its content 20 ·
-   entry → entry 30 · section → section 50. */
+   Spacing hierarchy: an entry line and its text 5 · list title → list 10 ·
+   section title → content 20 · entry → entry 20 · section → section 50. */
 .cv-container {
   background-color: #fff;
   overflow-y: auto;
@@ -999,7 +1083,7 @@ p.type-contact-item,
   justify-content: space-between;
   gap: var(--spacing-md);
   font-size: var(--type-small);
-  font-weight: 500;
+  font-weight: 400;
   line-height: normal;
 }
 .cv-meta { flex-wrap: wrap; row-gap: var(--spacing-xs); }
@@ -1026,7 +1110,7 @@ p.type-contact-item,
 .cv-identity { display: flex; flex-direction: column; gap: var(--spacing-sm); }
 .cv-name {
   font-size: var(--type-display);
-  font-weight: 500;
+  font-weight: 400;
   line-height: var(--line-height-heading);
   letter-spacing: var(--letter-space-normal);
 }
@@ -1050,10 +1134,10 @@ p.type-contact-item,
 
 .cv-section-title {
   font-size: var(--type-base);
-  font-weight: 500;
+  font-weight: 400;
   line-height: var(--line-height-heading);
   letter-spacing: var(--letter-space-loose);
-  margin-bottom: var(--spacing-md);
+  margin-bottom: calc(var(--spacing-md) + var(--spacing-xs) / 2);
 }
 
 .cv-columns {
@@ -1063,10 +1147,12 @@ p.type-contact-item,
   margin-top: var(--spacing-component-gap-xl);
 }
 .cv-main { display: flex; flex-direction: column; gap: var(--spacing-component-gap-xl); }
-.cv-entry + .cv-entry { margin-top: var(--spacing-component-gap); }
+.cv-entry + .cv-entry { margin-top: var(--spacing-md); }
 /* Entry lines and sidebar titles: same size as their text, set apart by weight only */
 .cv-entry-head,
-.cv-label { font-size: inherit; font-weight: 500; }
+.cv-label { font-size: inherit; font-weight: 400; }
+.cv-entry-head { margin-bottom: calc(var(--spacing-xs) / 2); }
+.cv-label { margin-bottom: calc(var(--spacing-xs) / 2); } /* = entry line → its text */
 
 .cv-sidebar {
   display: grid;
@@ -1076,6 +1162,34 @@ p.type-contact-item,
 .cv-list { list-style: none; }
 .cv-sidebar { hyphens: auto; -webkit-hyphens: auto; hyphenate-limit-chars: 8 4 4; } /* long German words in the narrow lists */
 .cv-body { max-width: 52em; } /* the sheet's line length */
+
+/* Narrow sheet (phones): location, phone, email, the sidebar lists and the
+   Experience / Education entries a step below the running text — all the same size;
+   the name a little smaller than the page headlines */
+@container (max-width: 699px) {
+  .cv-location,
+  .cv-contact,
+  .cv-sidebar,
+  .cv-main .cv-section { font-size: calc(var(--type-running) - 1px); }
+  .cv-contact { line-height: var(--line-height-body); }
+  .cv-name { font-size: calc(var(--type-display) * 0.82); }
+  /* Each sidebar point runs on as one line ("Skills: Brand identity & positioning, …").
+     Client Experience and Awards come right after the introduction, Skills, Languages
+     and Interests after Education: the sidebar's sections join the column directly */
+  .cv-columns { gap: 0; }
+  .cv-sidebar { display: contents; }
+  .cv-clients   { order: 1; }
+  .cv-awards    { order: 2; margin-top: var(--spacing-sm); }
+  .cv-main      { order: 3; margin-top: var(--spacing-component-gap-xl); }
+  .cv-skills    { order: 4; margin-top: var(--spacing-component-gap-xl); }
+  .cv-languages { order: 5; margin-top: var(--spacing-sm); }
+  .cv-interests { order: 6; margin-top: var(--spacing-sm); }
+  .cv-side-section .cv-label { display: inline; margin: 0; }
+  .cv-side-section .cv-label::after { content: " "; }
+  .cv-side-section .cv-list,
+  .cv-side-section .cv-list li { display: inline; }
+  .cv-side-section .cv-list li:not(:last-child)::after { content: ", "; }
+}
 
 @container (min-width: 700px) {
   /* Sheet layout (A4: left column 608 / gap 157 / content 1555 of 2320) */
@@ -1097,7 +1211,19 @@ p.type-contact-item,
      below its baseline (the title → text distance is untouched) */
   .cv-intro .cv-body { text-box: trim-end cap alphabetic; }
   .cv-columns { margin-top: var(--spacing-component-gap-large); }
-  .cv-sidebar { order: -1; display: flex; flex-direction: column; gap: var(--spacing-component-gap); }
+  .cv-sidebar { order: -1; display: flex; flex-direction: column; gap: var(--spacing-md); }
+  /* The sheet's type (CV PDF): the site's sizes × 0.82, the name × 0.88, open leading */
+  .cv-page {
+    --cv-scale: 0.82;
+    font-size: calc(var(--type-running) * var(--cv-scale));
+    line-height: 2;
+  }
+  .cv-name { font-size: calc(var(--type-display) * 0.88); line-height: 1; }
+  .cv-section-title,
+  .cv-contact { font-size: calc(var(--type-base) * var(--cv-scale)); }
+  .cv-contact { line-height: 2; }
+  .cv-meta { font-size: calc(var(--type-small) * var(--cv-scale)); }
+  .cv-page .cv-body { max-width: none; } /* the sheet's text runs the full column, as in the PDF */
 }
 
 /* Print: only the sheet, laid out exactly as on screen (1160px wide) and scaled
@@ -1142,7 +1268,7 @@ p.type-contact-item,
   color: #fff;
   mix-blend-mode: difference;
   font-family: var(--font-main);
-  font-size: var(--type-base);
+  font-size: var(--type-ui);
   font-weight: 400;
   pointer-events: none;
   z-index: 50;

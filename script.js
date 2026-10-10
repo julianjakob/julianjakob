@@ -149,16 +149,7 @@ async function init() {
     const de = window.getCurrentLang && window.getCurrentLang() === "de";
     return { menu: de ? "Menü" : "Menu", close: de ? "Schließen" : "Close" }[key];
   };
-  let menuLabelNext = null, menuLabelTimer = 0;
-  function setMenuLabel(text) {
-    menuLabelNext = text;
-    if (menuLabelTimer || menuBtn.textContent === text) return;
-    menuLabelTimer = setTimeout(() => {
-      menuLabelTimer = 0;
-      menuBtn.textContent = menuLabelNext;
-      typewriterIn(menuBtn);
-    }, textOut([menuBtn]));
-  }
+  function setMenuLabel(text) { swapLabel(menuBtn, text); }
 
   function toggleMenu(skipFadeToMenu = false) {
     finishFeed();
@@ -359,7 +350,7 @@ async function init() {
         const expand = (open = !open);
         const r = ++run;
         const toggle = row.querySelector(".service-toggle");
-        if (toggle) toggle.textContent = expand ? "−" : "+";
+        if (toggle) toggle.textContent = expand ? "–" : "+"; // Garamond's own en dash: longer than a minus
         row.setAttribute("aria-expanded", String(expand));
         if (expand) {
           body.querySelectorAll(".text-out").forEach((span) => span.replaceWith(...span.childNodes));
@@ -681,15 +672,34 @@ async function init() {
     detailsFor(slide.getAttribute("data-slot"));
   }
 
+  // A short label changing like all other text: the old word dissolves letter by letter,
+  // the new one types in. A change requested mid-dissolve just updates what types in.
+  function swapLabel(el, text) {
+    el._labelNext = text;
+    if (el._labelTimer || el.textContent === text) return;
+    el._labelTimer = setTimeout(() => {
+      el._labelTimer = 0;
+      el.textContent = el._labelNext;
+      typewriterIn(el);
+    }, textOut([el]));
+  }
+
   // ── Details panel (home) ──────────────────────────────────────
   // Closed by default. "Details" folds the panel up with the project's type, studio
   // and responsibilities (projects/NN/project.json → "details"); the text types in
-  // letter by letter. Clicking the text folds it in again. Swiping while it's open
-  // regenerates the text, and the panel's height glides to the new size.
+  // letter by letter; "Details" folds it in again (Escape too). The grey hint next to it
+  // says what a click will do (superscript + / –). The text itself is not clickable, so swipes,
+  // drags and trackpad scrolling over it move the feed like anywhere else. Swiping while
+  // it's open regenerates the text, and the panel's height glides to the new size.
   // `var`: updateFooter() runs for the first slide before this block is reached
   var detailsBtn     = document.getElementById("details-btn");
   var detailsPanel   = document.getElementById("details-panel");
   var detailsBody    = detailsPanel && detailsPanel.querySelector(".details-body");
+  var detailsHint    = detailsBtn && detailsBtn.querySelector(".details-hint");
+  // "+" closed, "–" open, as a small superscript: the Process accordion's symbols
+  function setDetailsHint(open) {
+    if (detailsHint) swapLabel(detailsHint, open ? "–" : "+");
+  }
   var DETAILS_LABELS = {
     type:             { en: "Type",             de: "Art" },
     studio:           { en: "Studio",           de: "Studio" },
@@ -747,7 +757,7 @@ async function init() {
     detailsOpen = true;
     const run = ++detailsRun;
     detailsBtn.setAttribute("aria-expanded", "true");
-    detailsPanel.tabIndex = 0;
+    setDetailsHint(true);
     detailsBody.innerHTML = detailsHTML(currentSlot); // invisible until typed, but sets the height
     detailsBody.style.visibility = "hidden";
     detailsPanel.classList.add("open");
@@ -764,7 +774,7 @@ async function init() {
     detailsOpen = false;
     const run = ++detailsRun;
     detailsBtn.setAttribute("aria-expanded", "false");
-    detailsPanel.tabIndex = -1;
+    setDetailsHint(false);
     const gone = textOut([...detailsBody.querySelectorAll("p")]);
     setTimeout(() => { if (run === detailsRun) detailsPanel.classList.remove("open"); }, Math.min(gone, 200));
     setTimeout(() => updateUiColors(true), Math.min(gone, 200) + 750);
@@ -982,10 +992,6 @@ async function init() {
 
   if (detailsBtn && detailsPanel) {
     detailsBtn.addEventListener("click", () => (detailsOpen ? closeDetails() : openDetails()));
-    detailsPanel.addEventListener("click", closeDetails);
-    detailsPanel.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " " || e.key === "Escape") { e.preventDefault(); closeDetails(); }
-    });
   }
 
   // ── Drag / swipe (touch + mouse) ─────────────────────────────
@@ -997,8 +1003,10 @@ async function init() {
     if (drag) endDrag(null, true);
     if (!feedReady() || (isAnimating && !feedAnim)) return;
     if (e.pointerType === "mouse" && e.button !== 0) return;
-    // Swipes may start anywhere (incl. over the header/footer bars) except on controls
-    if (e.target.closest && e.target.closest("a, button, #menu-overlay, .details-panel")) return;
+    // Swipes may start anywhere on the feed — also on the logo, Menu, Details and the open
+    // Details text. A press only becomes a swipe once it moves (see pointermove); a plain
+    // tap stays a click, and the click after a real swipe is swallowed (see endDrag)
+    if (e.target.closest && e.target.closest("#menu-overlay")) return;
     abortPeek();
     stopCushion();                   // grab the slide mid-glide…
     const resumeTo = stopFeedAnim(); // …or mid-flight
@@ -1039,6 +1047,11 @@ async function init() {
     const d = drag;
     drag = null;
     document.body.style.userSelect = "";
+    // A swipe that started or ended on a control (Details, logo, Menu…) must not also click it
+    if (d.active) {
+      suppressClick = true;
+      setTimeout(() => { suppressClick = false; }, 0);
+    }
 
     if (!d.active || cancelled) {
       // Tap or horizontal move: let an interrupted transition finish
@@ -1059,6 +1072,13 @@ async function init() {
     const msPerSlide = SLIDE_SLOW_MS - (SLIDE_SLOW_MS - SLIDE_FAST_MS) * velocityIntensity(Math.abs(v));
     animateFeed(target, Math.max(120, msPerSlide * Math.abs(target - feedX)), EASE_RELEASE); // cushion adds the landing
   }
+  let suppressClick = false;
+  window.addEventListener("click", (e) => {
+    if (!suppressClick) return;
+    suppressClick = false;
+    e.preventDefault();
+    e.stopPropagation();
+  }, true);
   window.addEventListener("pointerup", (e) => endDrag(e));
   window.addEventListener("pointercancel", (e) => endDrag(e));
   // Releases that never reach the page (app switch, tab hidden…) still end the drag
@@ -1081,11 +1101,38 @@ async function init() {
   // The browser snaps to the nearest point, so a gentle swipe (< half a slide) would
   // bounce back. Once a swipe passes TRACKPAD_COMMIT, the snap point it started from
   // is switched off: the nearest one left is the next slide in that direction.
+  // The decision is read from the trackpad input itself (a frame before the scroll it
+  // causes) and it sticks until the feed lands: the browser's own snap-back motion never
+  // undoes it — only fingers pulling back do. Otherwise a short, quick swipe that ends
+  // before the switch reaches the browser would snap back and stay there ("stuck").
   const snaps = [];
   let restIdx = -1;            // snap point of the slide the feed rests on
+  let commitDir = 0;           // -1 / 0 / 1: where this swipe is going
+  let wheelSum = 0;            // trackpad travel since the feed last rested (px)
+  let steering = false;        // we took over the landing (see the scroll handler)
+  let lastScrollPos = 0;
 
   function setRestSnap(on) {
     if (snaps[restIdx]) snaps[restIdx].classList.toggle("off", !on);
+  }
+  // One slide on from where the feed is landing (wheel over the header / footer bars):
+  // drives the same native scroll as a swipe, so both kinds of input share one path
+  function trackpadStep(dir) {
+    if (feedAnim) finishFeed();
+    const base = commitDir ? restIdx + commitDir : Math.round(scroller.scrollTop / slideScrollHeight());
+    restIdx = base;
+    commitDir = dir;
+    wheelSum = 0;
+    steering = true; // the landing is set; no snap-back to correct
+    setRestSnap(false);
+    scroller.scrollTo({ top: (base + dir) * slideScrollHeight(), behavior: "smooth" });
+  }
+
+  // d: travel in slides since rest; pullingBack: fingers moving against the commitment
+  function updateCommit(d, pullingBack) {
+    if (Math.abs(d) >= TRACKPAD_COMMIT) commitDir = Math.sign(d);
+    else if (pullingBack) commitDir = 0;
+    setRestSnap(!commitDir);
   }
 
   const slideScrollHeight = () => scroller.clientHeight * TRACKPAD_DISTANCE;
@@ -1093,8 +1140,12 @@ async function init() {
   function syncScroller() {
     if (!scroller) return;
     targetX = feedX;
-    setRestSnap(true);
+    snaps.forEach((snap) => snap.classList.remove("off"));
     restIdx = Math.round(feedX);
+    commitDir = 0;
+    wheelSum = 0;
+    steering = false;
+    lastScrollPos = feedX;
     scrollSyncing = true;
     scroller.scrollTop = feedX * slideScrollHeight();
     requestAnimationFrame(() => { scrollSyncing = false; });
@@ -1139,7 +1190,18 @@ async function init() {
       if (feedAnim) stopFeedAnim();                  // trackpad takes over from keys
       targetX = scroller.scrollTop / slideScrollHeight();
       targetIdle = false;
-      setRestSnap(Math.abs(targetX - restIdx) < TRACKPAD_COMMIT);
+      // Momentum carrying the feed away from where it rested can commit; nothing here
+      // un-commits (moving back toward the start is the browser's bounce, not the fingers)
+      const moving = Math.sign(targetX - lastScrollPos);
+      lastScrollPos = targetX;
+      if (Math.sign(targetX - restIdx) === moving) updateCommit(targetX - restIdx, false);
+      // Committed, fingers off, yet moving back toward the start: the browser decided to
+      // bounce back before our switch reached it (a short, quick swipe). It doesn't
+      // re-target a bounce already running, so steer the landing to the next slide.
+      if (commitDir && !steering && moving === -commitDir && performance.now() - lastWheelAt > 30) {
+        steering = true;
+        scroller.scrollTo({ top: (restIdx + commitDir) * slideScrollHeight(), behavior: "smooth" });
+      }
       // Fingers/momentum: draw right now, like a drag (no frame of delay)
       if (performance.now() - lastWheelAt < 60) { feedX = targetX; renderFeed(feedX); }
       startCushion();
@@ -1148,9 +1210,25 @@ async function init() {
     }, { passive: true });
     // Trackpad during a key/touch animation: jump that one to its end first, so
     // the native scroll continues from the right slide instead of a stale position
-    scroller.addEventListener("wheel", () => {
-      lastWheelAt = performance.now();
+    scroller.addEventListener("wheel", (e) => {
+      const now = performance.now(), gap = now - lastWheelAt;
+      lastWheelAt = now;
       if (feedAnim) finishFeed();
+      const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? scroller.clientHeight : 1);
+      // A new swipe while the last one is still landing counts from where that one lands,
+      // so two swipes move two slides. The browser never says when fingers touch or lift,
+      // so this only applies when it's certain: the same direction after a real pause, with
+      // the last swipe already past halfway. Anything less is the same swipe continuing
+      // (a pause mid-swipe, the coast after lifting) — counting it again would jump a slide.
+      const landed = (scroller.scrollTop / slideScrollHeight() - restIdx) * commitDir;
+      if (commitDir && gap > 250 && Math.sign(dy) === commitDir && landed > 0.5) {
+        restIdx += commitDir;
+        wheelSum = 0;
+        commitDir = 0;
+        steering = false;
+      }
+      wheelSum += dy;
+      updateCommit(wheelSum / slideScrollHeight(), commitDir !== 0 && Math.sign(dy) === -commitDir);
     }, { passive: true, capture: true });
     scroller.addEventListener("scrollend", () => {
       if (scrollSyncing) return;
@@ -1158,20 +1236,26 @@ async function init() {
       onNativeScrollEnd();
     });
     window.addEventListener("resize", () => { if (!feedLive) syncScroller(); });
-    // Wheel over the header/footer controls can't reach the scroll layer: one slide per gesture
+    // Wheel over the header/footer controls can't reach the scroll layer: one slide per gesture.
+    // Listening on the bars only (not the window): a blocking wheel listener on the window
+    // would route every trackpad scroll through the main thread.
     let barWheelAt = 0, barWheelSum = 0, barWheelDone = false;
-    window.addEventListener("wheel", (e) => {
-      if (!feedReady() || scroller.contains(e.target) || !e.target.closest("#main-header, #project-footer")) return;
+    const onBarWheel = (e) => {
+      if (!feedReady()) return;
       e.preventDefault();
       const now = performance.now();
-      if (now - barWheelAt > 250) { barWheelSum = 0; barWheelDone = false; } // a new gesture
+      if (now - barWheelAt > 120) { barWheelSum = 0; barWheelDone = false; } // a new gesture
       barWheelAt = now;
       barWheelSum += e.deltaY;
       if (!barWheelDone && Math.abs(barWheelSum) > slideScrollHeight() * TRACKPAD_COMMIT) {
         barWheelDone = true;
-        changeSlide(barWheelSum > 0 ? "next" : "prev");
+        trackpadStep(barWheelSum > 0 ? 1 : -1);
       }
-    }, { passive: false });
+    };
+    ["main-header", "project-footer"].forEach((bar) => {
+      const el = document.getElementById(bar);
+      if (el) el.addEventListener("wheel", onBarWheel, { passive: false });
+    });
     syncScroller();
   }
 
@@ -1179,6 +1263,7 @@ async function init() {
   window.addEventListener("keydown", (e) => {
     if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
     if (e.key === "Escape" && isMenuOpen) { toggleMenu(); return; }
+    if (e.key === "Escape" && detailsOpen && currentPage === "home") { closeDetails(); return; }
     if (currentPage === "home") {
       if (e.key === "ArrowDown" || e.key === "ArrowRight") { e.preventDefault(); changeSlide("next"); }
       if (e.key === "ArrowUp"   || e.key === "ArrowLeft")  { e.preventDefault(); changeSlide("prev"); }

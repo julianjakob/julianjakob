@@ -7,7 +7,7 @@
 
     <!-- ── Primary SEO ── -->
     <title>About Julian Jakob | Brand Designer</title>
-    <meta name="description" content="Julian Jakob is a Salzburg-based brand designer building flexible brand systems. Selected experience: Spotify, Meta, Sony Music, Mercedes Maybach, Red Bull Music. 2× Cannes Lions.">
+    <meta name="description" content="Julian Jakob is a Salzburg-based brand designer building flexible brand systems. Selected experience: Spotify, Porsche, Meta, Sony Music, Mercedes Maybach, Red Bull Music. 2× Cannes Lions.">
     <meta name="author" content="Julian Jakob">
     <meta name="robots" content="index, follow, max-image-preview:large">
     <link rel="canonical" href="https://julianjakob.at/about">
@@ -16,7 +16,7 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://julianjakob.at/about">
     <meta property="og:title" content="About Julian Jakob | Brand Designer">
-    <meta property="og:description" content="Julian Jakob is a Salzburg-based brand designer building flexible brand systems. Selected experience: Spotify, Meta, Sony Music, Mercedes Maybach, Red Bull Music. 2× Cannes Lions.">
+    <meta property="og:description" content="Julian Jakob is a Salzburg-based brand designer building flexible brand systems. Selected experience: Spotify, Porsche, Meta, Sony Music, Mercedes Maybach, Red Bull Music. 2× Cannes Lions.">
     <meta property="og:image" content="https://julianjakob.at/assets/og-image.jpg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
@@ -28,7 +28,7 @@
     <!-- ── Twitter / X Card ── -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="About Julian Jakob | Brand Designer">
-    <meta name="twitter:description" content="Julian Jakob is a Salzburg-based brand designer building flexible brand systems. Selected experience: Spotify, Meta, Sony Music, Mercedes Maybach, Red Bull Music. 2× Cannes Lions.">
+    <meta name="twitter:description" content="Julian Jakob is a Salzburg-based brand designer building flexible brand systems. Selected experience: Spotify, Porsche, Meta, Sony Music, Mercedes Maybach, Red Bull Music. 2× Cannes Lions.">
     <meta name="twitter:image" content="https://julianjakob.at/assets/og-image.jpg">
     <meta name="twitter:image:alt" content="Julian Jakob | Global Brand Designer">
 
@@ -232,20 +232,22 @@
     <meta name="theme-color" content="#000000">
 
     <!-- ── Font preload (eliminates FOUT, improves LCP) ── -->
-    <link rel="preload" href="/assets/fonts/Inter-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
-    <link rel="preload" href="/assets/fonts/Inter-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+    <link rel="preload" href="/assets/fonts/EBGaramond-latin.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+    <link rel="preload" href="/assets/fonts/EBGaramond-Italic-latin.woff2" as="font" type="font/woff2" crossorigin="anonymous">
 
     <!-- ── Styles & Fonts ── -->
     <link rel="stylesheet" href="/style.css">
-    <!-- Inter self-hosted via @font-face in style.css -->
+    <!-- Fonts self-hosted via @font-face in style.css -->
 </head>
 <body>
 
     <div id="intro-banner" class="banner-overlay">
         <div class="banner-content">
-            <p class="type-banner-headline"
+            <!-- Laptop and up: ©julianjakob sits on the slogan's first line (same baseline);
+                 phones: the separate footer below -->
+            <p class="type-banner-headline"><span class="banner-logo" aria-hidden="true">©julianjakob</span><span class="banner-text"
                 data-en="Constructing flexible<br>brand systems."
-                data-de="Entwicklung von flexiblen<br>Markensystemen.">Constructing flexible<br>brand systems.</p>
+                data-de="Entwicklung von flexiblen<br>Markensystemen.">Constructing flexible<br>brand systems.</span></p>
             <div class="type-banner-footer">©julianjakob</div>
         </div>
     </div>
@@ -399,7 +401,7 @@
       var INTRO_CYCLE_MS  = 1600;  // still loading: next line after this
 
       var banner = document.getElementById("intro-banner");
-      var el = banner.querySelector(".type-banner-headline");
+      var el = banner.querySelector(".banner-text");
 
       var store = function (k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } };
       var lang = function () { return (window.getCurrentLang && window.getCurrentLang()) || (store("jj_lang") === "de" ? "de" : "en"); };
@@ -583,7 +585,7 @@
     </main>
 
     <!-- ABOUT -->
-    <main id="page-about" data-title-en="About Julian Jakob | Brand Designer" data-title-de="Über Julian Jakob | Brand Designer" data-description="Julian Jakob is a Salzburg-based brand designer building flexible brand systems. Selected experience: Spotify, Meta, Sony Music, Mercedes Maybach, Red Bull Music. 2× Cannes Lions." class="page-container contact-container hidden" aria-hidden="true" inert>
+    <main id="page-about" data-title-en="About Julian Jakob | Brand Designer" data-title-de="Über Julian Jakob | Brand Designer" data-description="Julian Jakob is a Salzburg-based brand designer building flexible brand systems. Selected experience: Spotify, Porsche, Meta, Sony Music, Mercedes Maybach, Red Bull Music. 2× Cannes Lions." class="page-container contact-container hidden" aria-hidden="true" inert>
         <div class="contact-wrapper">
             <div class="contact-group">
                 <h1 class="type-about-headline"
@@ -700,7 +702,7 @@
                                 <span class="type-service-title service-num">01</span>
                                 <span class="type-service-title service-name" data-en="Research" data-de="Recherche">Research</span>
                             </div>
-                            <span class="service-toggle">−</span>
+                            <span class="service-toggle">–</span>
                         </div>
                         <div class="service-body-wrapper">
                         <div class="service-body">
@@ -722,7 +724,7 @@
                                 <span class="type-service-title service-num">02</span>
                                 <span class="type-service-title service-name" data-en="Construct" data-de="Konstruieren">Construct</span>
                             </div>
-                            <span class="service-toggle">−</span>
+                            <span class="service-toggle">–</span>
                         </div>
                         <div class="service-body-wrapper">
                         <div class="service-body">
@@ -744,7 +746,7 @@
                                 <span class="type-service-title service-num">03</span>
                                 <span class="type-service-title service-name" data-en="Deliver" data-de="Umsetzen">Deliver</span>
                             </div>
-                            <span class="service-toggle">−</span>
+                            <span class="service-toggle">–</span>
                         </div>
                         <div class="service-body-wrapper">
                         <div class="service-body">
@@ -766,7 +768,7 @@
                                 <span class="type-service-title service-num">04</span>
                                 <span class="type-service-title service-name" data-en="Implement" data-de="Implementieren">Implement</span>
                             </div>
-                            <span class="service-toggle">−</span>
+                            <span class="service-toggle">–</span>
                         </div>
                         <div class="service-body-wrapper">
                         <div class="service-body">
@@ -828,7 +830,7 @@
 
             <div class="cv-columns">
                 <aside class="cv-sidebar">
-                    <section class="cv-side-section">
+                    <section class="cv-side-section cv-skills">
                         <h2 class="cv-label" data-en="Skills:" data-de="Fähigkeiten:">Skills:</h2>
                         <ul class="cv-list">
                             <li data-en="Brand identity &amp; positioning" data-de="Markenidentität &amp; Positionierung">Brand identity &amp; positioning</li>
@@ -840,7 +842,7 @@
                             <li>Figma</li>
                         </ul>
                     </section>
-                    <section class="cv-side-section">
+                    <section class="cv-side-section cv-clients">
                         <h2 class="cv-label" data-en="Client Experience:" data-de="Kunden:">Client Experience:</h2>
                         <ul class="cv-list">
                             <li>Spotify</li>
@@ -852,7 +854,14 @@
                             <li>Life360</li>
                         </ul>
                     </section>
-                    <section class="cv-side-section">
+                    <section class="cv-side-section cv-awards">
+                        <h2 class="cv-label" data-en="Awards:" data-de="Auszeichnungen:">Awards:</h2>
+                        <ul class="cv-list">
+                            <li>2× Cannes Lions</li>
+                        </ul>
+                    </section>
+
+                    <section class="cv-side-section cv-languages">
                         <h2 class="cv-label" data-en="Languages:" data-de="Sprachen:">Languages:</h2>
                         <ul class="cv-list">
                             <li data-en="German (native)" data-de="Deutsch (Muttersprache)">German (native)</li>
@@ -860,7 +869,7 @@
                             <li data-en="Romanian (basics)" data-de="Rumänisch (Grundkenntnisse)">Romanian (basics)</li>
                         </ul>
                     </section>
-                    <section class="cv-side-section">
+                    <section class="cv-side-section cv-interests">
                         <h2 class="cv-label" data-en="Interests:" data-de="Interessen:">Interests:</h2>
                         <ul class="cv-list">
                             <li>Tennis</li>
@@ -892,7 +901,7 @@
                         </div>
                         <div class="cv-entry">
                             <p class="cv-entry-head"><span data-en="Internships | Various companies | 2016–⁠2021:" data-de="Praktika | Verschiedene Unternehmen | 2016–⁠2021:">Internships | Various companies | 2016–⁠2021:</span></p>
-                            <p class="cv-body" data-en="Gained early professional experience across diverse industries, including accounting at OVB, sales support at Palfinger, marketing activities at Biogena and administrative assistance at the European Heat Pump Association in Brussels." data-de="Erste Berufserfahrung in verschiedenen Branchen, darunter Buchhaltung bei OVB, Vertriebsunterstützung bei Palfinger, Marketingaktivitäten bei Biogena sowie administrative Tätigkeiten bei der European Heat Pump Association in Brüssel.">Gained early professional experience across diverse industries, including accounting at OVB, sales support at Palfinger, marketing activities at Biogena and administrative assistance at the European Heat Pump Association in Brussels.</p>
+                            <p class="cv-body" data-en="Gained early professional experience across diverse industries, including accounting at OVB, procurement at Palfinger, marketing activities at Biogena and administrative assistance at the European Heat Pump Association in Brussels." data-de="Erste Berufserfahrung in verschiedenen Branchen, darunter Buchhaltung bei OVB, Einkauf bei Palfinger, Marketingaktivitäten bei Biogena sowie administrative Tätigkeiten bei der European Heat Pump Association in Brüssel.">Gained early professional experience across diverse industries, including accounting at OVB, procurement at Palfinger, marketing activities at Biogena and administrative assistance at the European Heat Pump Association in Brussels.</p>
                         </div>
                     </section>
 
@@ -972,11 +981,11 @@
 
     <footer id="project-footer">
         <div class="project-details">
+            <!-- "Details" opens and closes the panel; the grey hint says which it will do -->
             <button type="button" id="details-btn" class="details-toggle type-ui-text"
-                    aria-expanded="false" aria-controls="details-panel"
-                    data-en="Details" data-de="Details">Details</button>
-            <!-- Folds up on "Details"; click the text to fold it down again -->
-            <div id="details-panel" class="details-panel" role="button" tabindex="-1" aria-label="Close details">
+                    aria-expanded="false" aria-controls="details-panel"><span data-en="Details" data-de="Details">Details</span><span class="details-hint" aria-hidden="true">+</span></button>
+            <!-- Just text: swipes and scrolling pass straight through to the feed -->
+            <div id="details-panel" class="details-panel">
                 <div class="details-body type-details"></div>
             </div>
         </div>
