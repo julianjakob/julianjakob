@@ -355,6 +355,8 @@ header {
   transform: translate3d(0,0,0);
 }
 .brand { cursor: pointer; text-transform: lowercase; }
+/* Print, DE/EN and Menu, right-aligned in the header */
+.header-controls { display: flex; align-items: flex-start; gap: var(--spacing-md); }
 /* Header controls are <button>s — strip native button styling.
    :where() keeps specificity at 0 so .type-ui-text still sets font and colour. */
 :where(button.menu-trigger, button.lang-toggle, button.print-btn) {
@@ -663,6 +665,9 @@ span.mobile-only { display: inline; }
   width: 100%;
 }
 .contact-list.no-lines { border-top: none; }
+.contact-row.static { cursor: default; } /* a ruled line of text, not a link (Services list) */
+/* A group that continues the list above it (About: Awards after Selected experience) */
+.contact-group.follows-list { margin-top: calc(var(--spacing-xl) - var(--spacing-contact-vertical)); }
 .contact-list.no-lines .contact-row { border-bottom: none; padding: 0; margin-bottom: 2px; }
 .copy-row .type-contact-item { transition: opacity var(--transition-base); }
 .copy-link { cursor: pointer; transition: opacity var(--transition-base); }
@@ -1265,7 +1270,7 @@ p.type-contact-item,
 /* ── Hover: one rule for everything clickable (mouse only — no sticky hover on touch) ── */
 @media (hover: hover) {
   .brand:hover, .menu-trigger:hover, .details-toggle:hover,
-  .type-menu-item:hover, .copy-link:hover, .contact-row:hover,
+  .type-menu-item:hover, .copy-link:hover, .contact-row:not(.static):hover,
   .service-row:hover .service-header, .cv-copy-btn:hover, .print-btn:hover { opacity: var(--dim-hover); }
   .lang-toggle:hover { opacity: 1; } /* the other language lights up */
 }

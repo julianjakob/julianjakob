@@ -41,7 +41,6 @@ async function init() {
   const projects = await loadEnabledProjects();
   const homeSlides = await renderHomeSlides(pageHome, projects);
 
-  
   fitImageSources(homeSlides);
   window.addEventListener("resize", () => fitImageSources(homeSlides));
   if (homeSlides.length > 0) updateFooter(homeSlides[0]);
@@ -76,10 +75,15 @@ async function init() {
   if (banner && homeSlides.length > 0) {
     homeSlides[0].classList.remove("active");
     intro.finish(mediaReady(homeSlides[0])).then(() => {
-      banner.classList.add("hidden");
-      typeFooterIn(150); // revealed as the intro folds up
-      intro.done();
       hasSeenBanner = true; // the feed takes input as soon as the intro starts folding away
+      // The UI takes the picture's colours right away, and the footer starts typing in the
+      // same moment the intro starts folding: it's revealed letter by letter, in its final
+      // colour — never standing there first (in the wrong colour) and typing in again
+      syncUiMode();
+      uiGroupList()[0].els.forEach(endColourFade); // the header too: no fade while revealed
+      typeFooterIn(0);
+      banner.classList.add("hidden");
+      intro.done();
 
       if (pendingAfterBanner) {
         pendingAfterBanner();
@@ -91,7 +95,6 @@ async function init() {
 
       setTimeout(() => {
         banner.style.display = "none";
-        syncUiMode();
         if (currentPage === "home" && shouldShowPeek()) { // not when the visit starts on another page
           let peekTimer = null;
           const removePeekListeners = () => {
@@ -180,23 +183,7 @@ async function init() {
       if (!skipFadeToMenu) setMenuLabel(menuLabel("menu"));
       if (activePage) {
         activePage.style.transformOrigin = "bottom center";
-        if (currentPage === "home") {
-          const activeSlide = homeSlides[currentIndex];
-          if (activeSlide) {
-            homeSlides.forEach((s) => s.classList.remove("active", "exit"));
-            activeSlide.style.transition = "none";
-            activeSlide.style.transform = "scaleY(1)";
-            activeSlide.style.opacity = "1";
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                activeSlide.style.transition = "";
-                activeSlide.style.transform = "";
-                activeSlide.style.opacity = "";
-                activeSlide.classList.add("active");
-              });
-            });
-          }
-        }
+        if (currentPage === "home") showSlideAtOnce();
         // Re-adding .visible mid-hide: CSS transitions back from current scaleY automatically
         activePage.classList.remove("hidden");
         activePage.classList.add("visible");
@@ -206,6 +193,21 @@ async function init() {
     }
     syncUiMode(); // menu open: difference blend on black; closed on home: adaptive colours
     tLock.bump(950); // bump = cancel any in-flight timer + re-acquire
+  }
+
+  // Home coming back (menu closed, navigation): the current slide is simply there —
+  // the page unfolding is the animation, the slide doesn't unfold a second time
+  function showSlideAtOnce() {
+    const slide = homeSlides[currentIndex];
+    if (!slide) return;
+    homeSlides.forEach((s) => s.classList.remove("active", "exit"));
+    slide.style.transition = "none";
+    slide.style.transform = "scaleY(1)";
+    slide.style.opacity = "1";
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      slide.style.transition = slide.style.transform = slide.style.opacity = "";
+      slide.classList.add("active");
+    }));
   }
 
   // After navigating: the page name shows in the menu button for a moment
@@ -300,22 +302,7 @@ async function init() {
     if (newPage) {
       if (dest === "home") {
         newPage.style.transformOrigin = "top center";
-        // FIX: snap active slide to visible instantly — page unfold is the animation
-        const activeSlide = homeSlides[currentIndex];
-        if (activeSlide) {
-          homeSlides.forEach((s) => s.classList.remove("active", "exit"));
-          activeSlide.style.transition = "none";
-          activeSlide.style.transform = "scaleY(1)";
-          activeSlide.style.opacity = "1";
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              activeSlide.style.transition = "";
-              activeSlide.style.transform = "";
-              activeSlide.style.opacity = "";
-              activeSlide.classList.add("active");
-            });
-          });
-        }
+        showSlideAtOnce();
       } else if (direction === "next") {
         newPage.scrollTop = 0;
         newPage.style.transformOrigin = "bottom center";
@@ -338,8 +325,6 @@ async function init() {
     fixColumnBreaks(newPage || document);
     syncUiMode();
     tLock.acquire(950);
-
-
   }
 
   initServicesAccordion();
@@ -568,14 +553,28 @@ async function init() {
       setSlideVideosPlaying(homeSlides[b], true);
     }
 
-    // Halfway: the title types in, colours follow. Details regenerate once it lands.
+    // The name changes once the swipe is past halfway AND the new picture is behind it:
+    // going forward the new slide unfolds from the bottom (under the name at once), going
+    // back it unfolds from the top and reaches the name only at the very end — the name
+    // always types in over its own picture, in its colour. Details regenerate on landing.
     const shown = mod(Math.round(x), n);
-    if (shown !== feedShownIdx) {
+    if (shown !== feedShownIdx && slideAtY(footerTitleY()) === homeSlides[shown]) {
       feedShownIdx = shown;
       updateFooterTitle(homeSlides[shown]);
       syncSlideMedia(shown, { playOnly: true });
       updateUiColors(false);
     }
+  }
+
+  // Vertical centre of the project name on screen (it never moves; measured once per size)
+  let titleY = 0, titleYFor = 0;
+  function footerTitleY() {
+    if (!titleY || titleYFor !== window.innerHeight) {
+      const r = footerTitle.getBoundingClientRect();
+      titleY = r.height ? (r.top + r.bottom) / 2 : window.innerHeight - 40;
+      titleYFor = window.innerHeight;
+    }
+    return titleY;
   }
 
   // Back to class-based state at an integer position
@@ -730,10 +729,54 @@ async function init() {
     animateFeed(from + (direction === "next" ? 1 : -1), SLIDE_SLOW_MS, moving ? EASE_RELEASE : EASE_SLIDE);
   }
 
+  // The project name types in once, in the colour it can be read in. Its colour comes
+  // from the picture behind it — while that picture is still loading, the name waits
+  // (invisible), at most TITLE_WAIT_MS, then types in with the best colour known.
+  var TITLE_WAIT_MS = 1500;
+  var titleRun = 0; // var: the first slide's title is set before this line runs
+  function slideMediaReady(slide) {
+    return [...slide.querySelectorAll("img, video:not([data-loop-standby])")].every((m) =>
+      m.tagName === "IMG" ? m.complete && m.naturalWidth > 0 : m.readyState >= 2);
+  }
   function updateFooterTitle(slide) {
     if (!footerTitle || !slide) return;
-    footerTitle.textContent = slide.getAttribute("data-title") || "";
-    typewriterIn(footerTitle);
+    const title = slide.getAttribute("data-title") || "";
+    // Next picture of the same project: the name stays — only its colour may change,
+    // as a soft crossfade (see updateUiColors). It doesn't type in again.
+    if (footerTitle.textContent === title && footerTitle.textContent) return;
+    const run = ++titleRun;
+    // (not uiActive(): this also runs for the first slide, before that is defined)
+    const adaptive = currentPage === "home" && !isMenuOpen && hasSeenBanner;
+    finishTitleTyping();
+    footerTitle.textContent = title;
+    const typeIn = () => {
+      if (run !== titleRun) return;
+      footerTitle.style.visibility = "";
+      if (adaptive) updateUiColors(false);
+      endColourFade(footerTitle); // every letter in its final colour
+      typewriterIn(footerTitle);
+    };
+    if (!adaptive || slideMediaReady(slide)) { typeIn(); return; }
+    footerTitle.style.visibility = "hidden";
+    const since = performance.now();
+    const wait = () => {
+      if (run !== titleRun) return;
+      if (slideMediaReady(slide) || performance.now() - since > TITLE_WAIT_MS) typeIn();
+      else setTimeout(wait, 60);
+    };
+    setTimeout(wait, 60);
+  }
+  // A colour crossfade still running (see .ui-adaptive in style.css) ends at once —
+  // text about to type in starts in its final colour
+  function endColourFade(el) {
+    if (!el) return;
+    el.style.transition = "none";
+    void el.offsetWidth;
+    el.style.transition = "";
+  }
+  function finishTitleTyping() {
+    clearTimeout(footerTitle._typewriterDone);
+    unwrapTypewriter(footerTitle);
   }
   function updateFooter(slide) {
     if (!footerTitle || !slide) return;
@@ -744,14 +787,18 @@ async function init() {
   // The footer (Details, project title) types in whenever it comes into view — after the
   // intro, coming back to home, closing the menu — not only on a swipe; otherwise it
   // would just fade in as a block. `delay`: when it becomes visible (see #project-footer).
-  let footerTypeTimer = 0;
+  var footerTypeTimer = 0; // var: used by the intro, set up before this line runs
   function typeFooterIn(delay) {
     clearTimeout(footerTypeTimer);
-    footerTypeTimer = setTimeout(() => {
+    const type = () => {
       if (currentPage !== "home" || isMenuOpen) return;
       const label = document.querySelector("#details-btn [data-en]");
+      endColourFade(document.querySelector("#project-footer .project-details"));
+      endColourFade(footerTitle);
       [label, footerTitle].forEach((el) => { if (el && el.textContent.trim()) typewriterIn(el); });
-    }, delay);
+    };
+    if (delay) footerTypeTimer = setTimeout(type, delay);
+    else type(); // at once: hidden in this same frame, before anything is painted
   }
   // Home shown again (navigation, menu closed): the footer fades back after 0.7s
   new MutationObserver(() => {
@@ -1074,12 +1121,8 @@ async function init() {
         el._uiColor = color;
         // Text still typing in takes its new colour at once: with the slow crossfade the
         // letters would type in the old, unreadable colour and the word appear in one go
-        if (el.querySelector(".typewriter-char")) {
-          el.style.transition = "none";
-          el.style.color = color;
-          void el.offsetWidth;
-          el.style.transition = "";
-        } else el.style.color = color;
+        el.style.color = color;
+        if (el.querySelector(".typewriter-char")) endColourFade(el);
       });
     });
     // Moving pictures: re-check twice a second while a video sits behind the text
@@ -1450,7 +1493,6 @@ async function renderHomeSlides(pageHome, projects) {
     const manifest = getManifest(project.slot);
 
     if (manifest) {
-      // Manifest vorhanden: kein HEAD-Request nötig
       const toMedia = (m) => ({
         kind: /\.(mp4|webm)$/i.test(m.src) ? "video" : "image",
         src:  `${homeBase}${m.src}`,
@@ -1598,7 +1640,8 @@ function createMediaElement(media, { alt = "", priority = false } = {}) {
     // Safari gets the MP4; other browsers the (usually much smaller) WebM when available
     v.src = (!IS_SAFARI && media.webm) ? media.webm : media.src;
 
-    // Safari: natives loop hat Frame-Gap — Double-Buffer für nahtlosen Loop
+    // Safari's native loop shows a gap between the last and first frame: two copies of
+    // the video take turns instead (the standby one starts just before the end)
     if (IS_SAFARI) {
       v.loop = false;
       const slideActive = () => {
@@ -1626,6 +1669,8 @@ function createMediaElement(media, { alt = "", priority = false } = {}) {
           const [curr, next] = vids;
           if (!slideActive()) {
             vids.forEach((vid) => { if (!vid.paused) vid.pause(); });
+            setTimeout(() => requestAnimationFrame(tick), 250); // off screen: check 4× a second, not every frame
+            return;
           } else if (!inSwap && curr.duration && !isNaN(curr.duration) && isFinite(curr.duration)) {
             if (curr.paused && document.visibilityState !== "hidden") curr.play().catch(() => {});
             const rem = curr.duration - curr.currentTime;
@@ -1710,24 +1755,9 @@ function markPeekShown() {
   try { localStorage.setItem(PEEK_STORAGE_KEY, String(Date.now())); } catch {}
 }
 
+// The address bar follows the page: "" → /, "about" → /about (clean paths, see build-pages.js)
 function setHash(value, push = false) {
-  // Map page names to clean URL paths
-  const pathMap = {
-    "about":   "/about",
-    "process": "/process",
-    "pricing": "/pricing",
-    "contact": "/contact",
-    "legal":   "/legal",
-    "cv":      "/cv",
-  };
-  let next;
-  if (!value) {
-    next = "/";
-  } else if (pathMap[value]) {
-    next = pathMap[value];
-  } else {
-    next = "/" + value;
-  }
+  const next = "/" + (value || "");
   const alreadyThere = window.location.pathname === next && !window.location.hash;
   if (!alreadyThere) {
     if (push) history.pushState(null, "", next);

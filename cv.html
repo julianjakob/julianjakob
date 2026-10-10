@@ -236,7 +236,7 @@
     <link rel="preload" href="/assets/fonts/EBGaramond-Italic-latin.woff2" as="font" type="font/woff2" crossorigin="anonymous">
 
     <!-- ── Styles & Fonts ── -->
-    <link rel="stylesheet" href="/style.css?v=36af83140d">
+    <link rel="stylesheet" href="/style.css?v=06655e770e">
     <!-- Fonts self-hosted via @font-face in style.css -->
 </head>
 <body>
@@ -505,7 +505,7 @@
 
     <header id="main-header">
         <a href="/" data-dest="home" class="brand type-ui-text nav-link" aria-label="Julian Jakob — home">©julianjakob</a>
-        <div style="display:flex;align-items:flex-start;gap:20px;">
+        <div class="header-controls">
             <button type="button" id="print-btn" class="print-btn type-ui-text" data-en="Print" data-de="Drucken" hidden>Print</button>
             <button type="button" id="lang-toggle" class="lang-toggle type-ui-text" aria-label="Switch language to German">DE</button>
             <button type="button" id="menu-btn" class="menu-trigger type-ui-text text-right"
@@ -533,7 +533,7 @@
         <div class="menu-footer">
             <a href="/legal" data-dest="legal" class="type-ui-text nav-link" data-en="Legal" data-de="Impressum">Legal</a>
             <!-- Hidden translation anchors -->
-            <a class="nav-link" href="/cv" data-dest="cv" data-en="Curriculum Vitae" data-de="Lebenslauf" style="display:none"></a>
+            <a class="nav-link" href="/cv" data-dest="cv" data-en="Curriculum Vitae" data-de="Lebenslauf" hidden></a>
             <a class="copy-link type-ui-text text-right" data-copy="hello@julianjakob.at">hello@julianjakob.at</a>
         </div>
     </nav>
@@ -593,9 +593,9 @@
                     data-en="Distilling complexity<br>into clarity."
                     data-de="Komplexität in<br>Klarheit verwandeln.">Distilling complexity<br>into clarity.</h1>
                 <p class="type-contact-item"
-                   data-en="<span class='mobile-only'>Modern brand identities struggle to keep up with content demands, leading to fragmented systems, weaker messaging, and declining loyalty. My approach builds brands as evolving ecosystems—identities that adapt to context, grow with knowledge, and move with culture.</span><span class='desktop-only'>Most identities today cannot keep pace with the volume of output modern brands demand. The result is always the same: design systems fracture, messages dilute, and the loyalty that took years to build quietly erodes. Over the course of my practice, I have developed a way of building brands that function as living ecosystems rather than fixed objects. An identity, like a human one, should evolve with knowledge, adapt to context, and move with culture. That is what I build.</span>"
+                   data-en="<span class='mobile-only'>Modern brand identities struggle to keep up with content demands, leading to fragmented systems, weaker messaging and declining loyalty. My approach builds brands as evolving ecosystems—identities that adapt to context, grow with knowledge and move with culture.</span><span class='desktop-only'>Most identities today cannot keep pace with the volume of output modern brands demand. The result is always the same: design systems fracture, messages dilute and the loyalty that took years to build quietly erodes. Over the course of my practice, I have developed a way of building brands that function as living ecosystems rather than fixed objects. An identity, like a human one, should evolve with knowledge, adapt to context and move with culture. That is what I build.</span>"
                    data-de="<span class='mobile-only'>Markenidentitäten können mit den wachsenden Inhaltsanforderungen oft nicht Schritt halten. Das Ergebnis sind fragmentierte Systeme, schwächere Botschaften und sinkende Loyalität. Mit meinem Ansatz entwickle ich Marken, die als lebendige Ökosysteme funktionieren, nicht als starre Konstrukte.</span><span class='desktop-only'>Die meisten Identitäten sind heute nicht in der Lage, mit der Menge an Inhalten Schritt zu halten, die moderne Marken erfordern. Das Resultat ist oft dasselbe: Designsysteme fallen auseinander, Botschaften verlieren an Klarheit und über Jahre aufgebaute Loyalität nimmt schleichend ab. Im Laufe meiner Arbeit habe ich eine Methode entwickelt, Marken so zu gestalten, dass sie wie lebendige Ökosysteme funktionieren, nicht wie starre Konstrukte. Eine Identität sollte, ähnlich wie eine menschliche, mit Wissen wachsen, sich an ihren Kontext anpassen und sich im Einklang mit der Kultur weiterentwickeln. Genau das gestalte ich.</span>">
-                   <span class="mobile-only">Modern brand identities struggle to keep up with content demands, leading to fragmented systems, weaker messaging, and declining loyalty. My approach builds brands as evolving ecosystems—identities that adapt to context, grow with knowledge, and move with culture.</span><span class="desktop-only">Most identities today cannot keep pace with the volume of output modern brands demand. The result is always the same: design systems fracture, messages dilute, and the loyalty that took years to build quietly erodes. Over the course of my practice, I have developed a way of building brands that function as living ecosystems rather than fixed objects. An identity, like a human one, should evolve with knowledge, adapt to context, and move with culture. That is what I build.</span>
+                   <span class="mobile-only">Modern brand identities struggle to keep up with content demands, leading to fragmented systems, weaker messaging and declining loyalty. My approach builds brands as evolving ecosystems—identities that adapt to context, grow with knowledge and move with culture.</span><span class="desktop-only">Most identities today cannot keep pace with the volume of output modern brands demand. The result is always the same: design systems fracture, messages dilute and the loyalty that took years to build quietly erodes. Over the course of my practice, I have developed a way of building brands that function as living ecosystems rather than fixed objects. An identity, like a human one, should evolve with knowledge, adapt to context and move with culture. That is what I build.</span>
                 </p>
                 <img src="/assets/profile-picture.webp" class="about-portrait" alt="Portrait of Julian Jakob, brand designer" width="1000" height="1250" loading="lazy" decoding="async">
             </div>
@@ -616,7 +616,7 @@
                     </div>
                 </div>
             </div>
-            <div class="contact-group" style="margin-top: calc(var(--spacing-xl) - var(--spacing-contact-vertical))">
+            <div class="contact-group follows-list">
                 <h2 class="type-contact-header" data-en="Awards" data-de="Auszeichnungen">Awards</h2>
                 <div class="client-grid">
                     <div class="client-col">
@@ -626,8 +626,8 @@
             </div>
             <div class="contact-group">
                 <p class="type-contact-item"
-                   data-en="<span class='mobile-only'>I'm based in the heart of Europe, Salzburg. While I currently hold a full-time position, I take on a handful of freelance projects each year for selected companies and individuals. Having studied and worked across both business and design, I understand what a brand needs to perform commercially and what people actually respond to. Most projects fail at the gap between those two things. That is where I work.</span><span class='desktop-only'>I'm based in the heart of Europe, Salzburg. While I currently hold a full-time position, I take on a handful of freelance projects each year for selected companies and individuals. Having studied and worked across both business and design, I understand what a brand needs to perform commercially and what people actually respond to. Most projects fail at the gap between those two things. That is where I work.</span>"
-                   data-de="<span class='mobile-only'>Ich lebe und arbeite in Salzburg, im Herzen Europas. Auch wenn ich derzeit in einer Festanstellung tätig bin, übernehme ich jedes Jahr eine Handvoll freier Projekte für ausgewählte Unternehmen und Privatpersonen. Durch mein Studium und meine Arbeit in den Bereichen Wirtschaft und Design weiß ich, was eine Marke braucht, um kommerziell zu funktionieren, und worauf Menschen wirklich reagieren. Die meisten Projekte scheitern an der Lücke zwischen diesen beiden Polen. Genau dort setze ich an.</span><span class='desktop-only'>Ich lebe und arbeite in Salzburg, im Herzen Europas. Auch wenn ich derzeit in einer Festanstellung tätig bin, übernehme ich jedes Jahr eine Handvoll freier Projekte für ausgewählte Unternehmen und Privatpersonen. Durch mein Studium und meine Arbeit in den Bereichen Wirtschaft und Design weiß ich, was eine Marke braucht, um kommerziell zu funktionieren, und worauf Menschen wirklich reagieren. Die meisten Projekte scheitern an der Lücke zwischen diesen beiden Polen. Genau dort setze ich an.</span>"><span class="mobile-only">I'm based in the heart of Europe, Salzburg. While I currently hold a full-time position, I take on a handful of freelance projects each year for selected companies and individuals. Having studied and worked across both business and design, I understand what a brand needs to perform commercially and what people actually respond to. Most projects fail at the gap between those two things. That is where I work.</span><span class="desktop-only">I'm based in the heart of Europe, Salzburg. While I currently hold a full-time position, I take on a handful of freelance projects each year for selected companies and individuals. Having studied and worked across both business and design, I understand what a brand needs to perform commercially and what people actually respond to. Most projects fail at the gap between those two things. That is where I work.</span></p>
+                   data-en="I’m based in the heart of Europe, Salzburg. While I currently hold a full-time position, I take on a handful of freelance projects each year for selected companies and individuals. Having studied and worked across both business and design, I understand what a brand needs to perform commercially and what people actually respond to. Most projects fail at the gap between those two things. That is where I work."
+                   data-de="Ich lebe und arbeite in Salzburg, im Herzen Europas. Auch wenn ich derzeit in einer Festanstellung tätig bin, übernehme ich jedes Jahr eine Handvoll freier Projekte für ausgewählte Unternehmen und Privatpersonen. Durch mein Studium und meine Arbeit in den Bereichen Wirtschaft und Design weiß ich, was eine Marke braucht, um kommerziell zu funktionieren, und worauf Menschen wirklich reagieren. Die meisten Projekte scheitern an der Lücke zwischen diesen beiden Polen. Genau dort setze ich an.">I’m based in the heart of Europe, Salzburg. While I currently hold a full-time position, I take on a handful of freelance projects each year for selected companies and individuals. Having studied and worked across both business and design, I understand what a brand needs to perform commercially and what people actually respond to. Most projects fail at the gap between those two things. That is where I work.</p>
             </div>
             <div class="contact-group">
                 <h2 class="type-contact-header" data-en="Social media" data-de="Soziale Medien">Social media</h2>
@@ -655,10 +655,21 @@
                     data-en="Transformation<br>enables precision."
                     data-de="Transformation<br>ermöglicht Präzision.">Transformation<br>enables precision.</h1>
                 <p class="type-contact-item"
-                   data-en="<span class='mobile-only'>Brands face different challenges at each stage—some need clarity, others structure to scale. My work builds systems that connect strategy, identity, and execution, creating a foundation for purposeful and adaptable communication. Each project is individually scoped, with focused senior involvement throughout.</span><span class='desktop-only'>I build brand systems that connect strategy, identity, and implementation — a clear foundation that allows a brand to communicate with purpose and adapt over time. Every brand faces different challenges at different stages of its development. Some require strategic clarity before they can grow, while others need structure to remain consistent as they scale. My services focus on exactly that. Every project is scoped individually. The investment reflects the specific problem, not a fixed package. I work with a small number of clients at a time, meaning each receives genuine senior attention from start to finish. Get in touch and I am happy to put together a proposal for you.</span>"
+                   data-en="<span class='mobile-only'>Brands face different challenges at each stage—some need clarity, others structure to scale. My work builds systems that connect strategy, identity and execution, creating a foundation for purposeful and adaptable communication. Each project is individually scoped, with focused senior involvement throughout.</span><span class='desktop-only'>I build brand systems that connect strategy, identity and implementation—a clear foundation that allows a brand to communicate with purpose and adapt over time. Every brand faces different challenges at different stages of its development. Some require strategic clarity before they can grow, while others need structure to remain consistent as they scale. My services focus on exactly that. Every project is scoped individually. The investment reflects the specific problem, not a fixed package. I work with a small number of clients at a time, meaning each receives genuine senior attention from start to finish. Get in touch and I’ll put together a proposal for you.</span>"
                    data-de="<span class='mobile-only'>Ich entwickle Markensysteme, die Strategie, Identität und Umsetzung verbinden. Jedes Projekt wird individuell definiert – die Investition richtet sich nach der konkreten Herausforderung, nicht nach einem festen Paket.</span><span class='desktop-only'>Ich entwickle Markensysteme, die Strategie, Identität und Umsetzung verbinden – eine klare Grundlage, auf der eine Marke kommunizieren und sich langfristig weiterentwickeln kann. Jede Marke steht in unterschiedlichen Phasen ihrer Entwicklung vor anderen Herausforderungen. Manche brauchen zunächst strategische Klarheit, andere benötigen Struktur, um konsistent zu bleiben, während sie wachsen. Genau darauf sind meine Leistungen ausgerichtet. Jedes Projekt wird individuell definiert – die Investition richtet sich nach der konkreten Herausforderung, nicht nach einem festen Paket. Ich arbeite mit nur wenigen Kunden gleichzeitig, sodass jedes Projekt persönlich betreut wird. Melden Sie sich gern – ich erstelle Ihnen ein individuell zugeschnittenes Angebot.</span>">
-                   <span class="mobile-only">Brands face different challenges at each stage—some need clarity, others structure to scale. My work builds systems that connect strategy, identity, and execution, creating a foundation for purposeful and adaptable communication. Each project is individually scoped, with focused senior involvement throughout.</span><span class="desktop-only">I build brand systems that connect strategy, identity, and implementation — a clear foundation that allows a brand to communicate with purpose and adapt over time. Every brand faces different challenges at different stages of its development. Some require strategic clarity before they can grow, while others need structure to remain consistent as they scale. My services focus on exactly that. Every project is scoped individually. The investment reflects the specific problem, not a fixed package. I work with a small number of clients at a time, meaning each receives genuine senior attention from start to finish. Get in touch and I am happy to put together a proposal for you.</span>
+                   <span class="mobile-only">Brands face different challenges at each stage—some need clarity, others structure to scale. My work builds systems that connect strategy, identity and execution, creating a foundation for purposeful and adaptable communication. Each project is individually scoped, with focused senior involvement throughout.</span><span class="desktop-only">I build brand systems that connect strategy, identity and implementation—a clear foundation that allows a brand to communicate with purpose and adapt over time. Every brand faces different challenges at different stages of its development. Some require strategic clarity before they can grow, while others need structure to remain consistent as they scale. My services focus on exactly that. Every project is scoped individually. The investment reflects the specific problem, not a fixed package. I work with a small number of clients at a time, meaning each receives genuine senior attention from start to finish. Get in touch and I’ll put together a proposal for you.</span>
                 </p>
+            </div>
+
+            <div class="contact-group">
+                <h2 class="type-contact-header" data-en="What I offer" data-de="Leistungen im Überblick">What I offer</h2>
+                <div class="contact-list">
+                    <div class="contact-row static"><span class="type-contact-item" data-en="Brand strategy &amp; positioning" data-de="Markenstrategie &amp; Positionierung">Brand strategy &amp; positioning</span></div>
+                    <div class="contact-row static"><span class="type-contact-item" data-en="Naming" data-de="Namensentwicklung">Naming</span></div>
+                    <div class="contact-row static"><span class="type-contact-item" data-en="Visual identity" data-de="Visuelle Identität">Visual identity</span></div>
+                    <div class="contact-row static"><span class="type-contact-item" data-en="Design systems &amp; guidelines" data-de="Designsysteme &amp; Guidelines">Design systems &amp; guidelines</span></div>
+                    <div class="contact-row static"><span class="type-contact-item" data-en="Campaigns &amp; digital applications" data-de="Kampagnen &amp; digitale Anwendungen">Campaigns &amp; digital applications</span></div>
+                </div>
             </div>
 
             <div class="contact-group">
@@ -689,9 +700,9 @@
                     data-en="Clarity fuels<br>transformation."
                     data-de="Klarheit treibt<br>Transformation voran.">Clarity fuels<br>transformation.</h1>
                 <p class="type-contact-item"
-                   data-en="<span class='mobile-only'>A strong result depends on its foundation. Every project follows a four-step process, starting with understanding competition, culture, and audience behavior before any design decisions. This groundwork separates design that simply looks good from design that performs.</span><span class='desktop-only'>The output is only as good as what leads to it. Every project follows the same four-step process. Most brand problems are not design problems. They are clarity problems. Before a single visual decision is made, I invest time understanding the competitive context, the culture, and the audience's actual behaviour. This groundwork is what separates work that looks good from work that performs.</span>"
+                   data-en="<span class='mobile-only'>A strong result depends on its foundation. Every project follows a four-step process, starting with understanding competition, culture and audience behavior before any design decisions. This groundwork separates design that simply looks good from design that performs.</span><span class='desktop-only'>The output is only as good as what leads to it. Every project follows the same four-step process. Most brand problems are not design problems. They are clarity problems. Before a single visual decision is made, I invest time understanding the competitive context, the culture and the audience’s actual behavior. This groundwork is what separates work that looks good from work that performs.</span>"
                    data-de="<span class='mobile-only'>Ein Ergebnis ist nur so stark wie seine Grundlage. Jedes Projekt folgt einem vierstufigen Prozess, der mit dem Verständnis von Wettbewerb, Kultur und Zielgruppe beginnt, bevor Design entsteht. Diese Vorarbeit unterscheidet Design, das gut aussieht, von Design, das nachhaltig funktioniert.</span><span class='desktop-only'>Ein Ergebnis ist nur so stark wie die Grundlage, auf der es entsteht. Deshalb folgt jedes Projekt einem klar strukturierten, vierstufigen Prozess. Die meisten Markenprobleme sind keine Designprobleme, sondern Fragen der Klarheit. Bevor auch nur eine visuelle Entscheidung getroffen wird, investiere ich gezielt Zeit, um Wettbewerb, kulturellen Kontext und das tatsächliche Verhalten der Zielgruppe zu verstehen. Diese Vorarbeit macht den Unterschied zwischen Design, das lediglich gut aussieht, und Design, das nachhaltig funktioniert.</span>">
-                   <span class="mobile-only">A strong result depends on its foundation. Every project follows a four-step process, starting with understanding competition, culture, and audience behavior before any design decisions. This groundwork separates design that simply looks good from design that performs.</span><span class="desktop-only">The output is only as good as what leads to it. Every project follows the same four-step process. Most brand problems are not design problems. They are clarity problems. Before a single visual decision is made, I invest time understanding the competitive context, the culture, and the audience's actual behaviour. This groundwork is what separates work that looks good from work that performs.</span>
+                   <span class="mobile-only">A strong result depends on its foundation. Every project follows a four-step process, starting with understanding competition, culture and audience behavior before any design decisions. This groundwork separates design that simply looks good from design that performs.</span><span class="desktop-only">The output is only as good as what leads to it. Every project follows the same four-step process. Most brand problems are not design problems. They are clarity problems. Before a single visual decision is made, I invest time understanding the competitive context, the culture and the audience’s actual behavior. This groundwork is what separates work that looks good from work that performs.</span>
                 </p>
             </div>
 
@@ -708,9 +719,9 @@
                         <div class="service-body-wrapper">
                         <div class="service-body">
                             <p class="type-contact-item service-description"
-                               data-en="<span class='mobile-only'>Understanding is built through research and collaboration. We define what is truly needed and why it matters by aligning with stakeholders, analyzing competitors, and studying the audience—creating a shared foundation for all decisions.</span><span class='desktop-only'>Understanding is created, not assumed. Through careful research and open collaboration, I define what you need and why it matters, before design takes form. This includes stakeholder interviews, competitive landscape mapping, and audience analysis. The output is a shared understanding that guides every decision that follows.</span>"
+                               data-en="<span class='mobile-only'>Understanding is built through research and collaboration. We define what is truly needed and why it matters by aligning with stakeholders, analyzing competitors and studying the audience—creating a shared foundation for all decisions.</span><span class='desktop-only'>Understanding is created, not assumed. Through careful research and open collaboration, I define what you need and why it matters, before design takes form. This includes stakeholder interviews, competitive landscape mapping and audience analysis. The output is a shared understanding that guides every decision that follows.</span>"
                                data-de="<span class='mobile-only'>Verständnis wird erarbeitet, nicht vorausgesetzt. Durch Recherche und enge Zusammenarbeit klären wir, was tatsächlich gebraucht wird – als gemeinsame Basis für alle weiteren Entscheidungen.</span><span class='desktop-only'>Verständnis entsteht nicht von selbst – es wird erarbeitet. Durch fundierte Recherche und enge Zusammenarbeit klären wir zunächst, was tatsächlich gebraucht wird und warum es relevant ist, bevor Gestaltung Form annimmt. Dazu gehören Gespräche mit Stakeholdern, die Analyse des Wettbewerbsumfelds sowie eine differenzierte Betrachtung der Zielgruppe. So entsteht ein gemeinsames Verständnis, das als Grundlage für alle weiteren Entscheidungen dient.</span>">
-                   <span class="mobile-only">Understanding is built through research and collaboration. We define what is truly needed and why it matters by aligning with stakeholders, analyzing competitors, and studying the audience—creating a shared foundation for all decisions.</span><span class="desktop-only">Understanding is created, not assumed. Through careful research and open collaboration, I define what you need and why it matters, before design takes form. This includes stakeholder interviews, competitive landscape mapping, and audience analysis. The output is a shared understanding that guides every decision that follows.</span>
+                   <span class="mobile-only">Understanding is built through research and collaboration. We define what is truly needed and why it matters by aligning with stakeholders, analyzing competitors and studying the audience—creating a shared foundation for all decisions.</span><span class="desktop-only">Understanding is created, not assumed. Through careful research and open collaboration, I define what you need and why it matters, before design takes form. This includes stakeholder interviews, competitive landscape mapping and audience analysis. The output is a shared understanding that guides every decision that follows.</span>
                 </p>
                             <div class="type-service-tags"
                                  data-en="Workshop · Competitive analysis · Audience analysis"
@@ -730,9 +741,9 @@
                         <div class="service-body-wrapper">
                         <div class="service-body">
                             <p class="type-contact-item service-description"
-                               data-en="<span class='mobile-only'>From these insights, I create a visual system rooted in what makes your brand distinct. It establishes how the brand communicates, translating strategy into a clear structure that ensures consistency while remaining adaptable.</span><span class='desktop-only'>Based on the findings, I construct a visual system derived from what makes your brand distinct. This defines the logic of how you speak to your specific audience. Strategy is only useful if it can be acted on. I translate research into a clear brand architecture that is specific enough to be consistent and open enough to evolve.</span>"
-                               data-de="<span class='mobile-only'>Auf dieser Basis entwickle ich ein visuelles System, das die Einzigartigkeit der Marke definiert und Strategie in eine klare, flexible Markenarchitektur übersetzt.</span><span class='desktop-only'>Auf dieser Basis entwickle ich ein visuelles System, das aus dem heraus entsteht, was Ihre Marke einzigartig macht. Es definiert die Logik, nach der Ihre Marke mit ihrer Zielgruppe kommuniziert. Strategie entfaltet ihren Wert nur dann, wenn sie auch umsetzbar ist. Deshalb übersetze ich die gewonnenen Erkenntnisse in eine klare Markenarchitektur – präzise genug für Konsistenz und zugleich flexibel genug für Weiterentwicklung.</span>">
-                   <span class="mobile-only">From these insights, I create a visual system rooted in what makes your brand distinct. It establishes how the brand communicates, translating strategy into a clear structure that ensures consistency while remaining adaptable.</span><span class="desktop-only">Based on the findings, I construct a visual system derived from what makes your brand distinct. This defines the logic of how you speak to your specific audience. Strategy is only useful if it can be acted on. I translate research into a clear brand architecture that is specific enough to be consistent and open enough to evolve.</span>
+                               data-en="<span class='mobile-only'>From these insights, I define what makes your brand distinct: its positioning, its messaging and a clear brand architecture that stays consistent while remaining adaptable.</span><span class='desktop-only'>Based on the findings, I build the strategic core of your brand: positioning, messaging and a clear brand architecture, derived from what makes your brand distinct. Strategy is only useful if it can be acted on, so it has to be specific enough to be consistent and open enough to evolve.</span>"
+                               data-de="<span class='mobile-only'>Auf dieser Basis definiere ich, was Ihre Marke unverwechselbar macht: Positionierung, Botschaften und eine klare, flexible Markenarchitektur.</span><span class='desktop-only'>Auf Basis der Erkenntnisse entwickle ich den strategischen Kern Ihrer Marke: Positionierung, Botschaften und eine klare Markenarchitektur, abgeleitet aus dem, was Ihre Marke unverwechselbar macht. Strategie entfaltet ihren Wert nur dann, wenn sie auch umsetzbar ist – präzise genug für Konsistenz und zugleich flexibel genug für Weiterentwicklung.</span>">
+                   <span class="mobile-only">From these insights, I define what makes your brand distinct: its positioning, its messaging and a clear brand architecture that stays consistent while remaining adaptable.</span><span class="desktop-only">Based on the findings, I build the strategic core of your brand: positioning, messaging and a clear brand architecture, derived from what makes your brand distinct. Strategy is only useful if it can be acted on, so it has to be specific enough to be consistent and open enough to evolve.</span>
                 </p>
                             <div class="type-service-tags"
                                  data-en="Positioning · Brand strategy · Messaging"
@@ -752,9 +763,9 @@
                         <div class="service-body-wrapper">
                         <div class="service-body">
                             <p class="type-contact-item service-description"
-                               data-en="<span class='mobile-only'>Whether launching or evolving a brand, this phase defines its structure. You gain the tools to build a clear, relevant, and effective presence.</span><span class='desktop-only'>For launches, refreshes or pivots, this is where your brand's structure is defined and you gain the tools to build a meaningful, clear, and high-performing presence.</span>"
+                               data-en="<span class='mobile-only'>Whether launching or evolving a brand, this phase defines its structure. You gain the tools to build a clear, relevant and effective presence.</span><span class='desktop-only'>For launches, refreshes or pivots, this is where your brand’s structure is defined and you gain the tools to build a meaningful, clear and high-performing presence.</span>"
                                data-de="<span class='mobile-only'>Ob Einführung oder Neuausrichtung: Hier wird die Markenstruktur geschärft, und die Werkzeuge für eine klare, wirkungsvolle Präsenz werden bereitgestellt.</span><span class='desktop-only'>Ob Markteinführung, Weiterentwicklung oder strategische Neuausrichtung: In dieser Phase wird die Struktur Ihrer Marke geschärft. Sie erhalten die notwendigen Werkzeuge, um eine klare, relevante und wirkungsvolle Markenpräsenz aufzubauen.</span>">
-                   <span class="mobile-only">Whether launching or evolving a brand, this phase defines its structure. You gain the tools to build a clear, relevant, and effective presence.</span><span class="desktop-only">For launches, refreshes or pivots, this is where your brand's structure is defined and you gain the tools to build a meaningful, clear, and high-performing presence.</span>
+                   <span class="mobile-only">Whether launching or evolving a brand, this phase defines its structure. You gain the tools to build a clear, relevant and effective presence.</span><span class="desktop-only">For launches, refreshes or pivots, this is where your brand’s structure is defined and you gain the tools to build a meaningful, clear and high-performing presence.</span>
                 </p>
                             <div class="type-service-tags"
                                  data-en="Naming · Visual identity · Design system"
@@ -774,9 +785,9 @@
                         <div class="service-body-wrapper">
                         <div class="service-body">
                             <p class="type-contact-item service-description"
-                               data-en="<span class='mobile-only'>Here, the brand moves into execution. Interfaces, campaigns, and internal channels are designed to express the identity consistently and without dilution.</span><span class='desktop-only'>This is where the brand leaves the guidelines and enters real life. Interfaces, activations, and internal channels are designed to carry the identity without dilution.</span>"
+                               data-en="<span class='mobile-only'>Here, the brand moves into execution. Campaigns, digital applications and internal channels are designed to express the identity consistently and without dilution.</span><span class='desktop-only'>This is where the brand leaves the guidelines and enters real life. Campaigns, digital applications and internal channels are designed to carry the identity without dilution.</span>"
                                data-de="<span class='mobile-only'>Hier wird die Marke in die Anwendung überführt. Interfaces, Kampagnen und Kanäle vermitteln die Identität konsistent und ohne Verwässerung.</span><span class='desktop-only'>Hier wird die Marke vom System in die Anwendung überführt. Interfaces, Kampagnen und interne Kanäle werden so gestaltet, dass sie die Identität konsistent und ohne Verwässerung vermitteln.</span>">
-                   <span class="mobile-only">Here, the brand moves into execution. Interfaces, campaigns, and internal channels are designed to express the identity consistently and without dilution.</span><span class="desktop-only">This is where the brand leaves the guidelines and enters real life. Interfaces, activations, and internal channels are designed to carry the identity without dilution.</span>
+                   <span class="mobile-only">Here, the brand moves into execution. Campaigns, digital applications and internal channels are designed to express the identity consistently and without dilution.</span><span class="desktop-only">This is where the brand leaves the guidelines and enters real life. Campaigns, digital applications and internal channels are designed to carry the identity without dilution.</span>
                 </p>
                             <div class="type-service-tags"
                                  data-en="Campaigns · Digital applications · Editorial design"
@@ -940,8 +951,8 @@
             <div class="contact-group">
                 <p class="type-contact-item">
                     Julian Jakob<br>
-                    5223 Pfaffstätt<br>
-                    Bergstraße 3, Austria<br>
+                    Bergstraße 3<br>
+                    5223 Pfaffstätt, Austria<br>
                     <span data-en="Graphic Designer" data-de="Werbegrafik-Designer">Graphic Designer</span>
                 </p>
             </div>
@@ -976,7 +987,7 @@
         </div>
         <footer class="page-footer">
             <div class="type-ui-text" data-en="Legal" data-de="Impressum">Legal</div>
-            <a href="mailto:hello@julianjakob.at" class="type-ui-text text-right">hello@julianjakob.at</a>
+            <a class="copy-link type-ui-text text-right" data-copy="hello@julianjakob.at">hello@julianjakob.at</a>
         </footer>
     </main>
 
@@ -993,7 +1004,7 @@
         <h2 id="footer-title" class="project-title type-ui-text" aria-live="polite"></h2>
     </footer>
 
-    <script src="/script.js?v=9a91cf09db" defer></script>
+    <script src="/script.js?v=69c4d03b82" defer></script>
 
 
     <!-- ── Language system ── -->
@@ -1001,10 +1012,10 @@
     (function () {
       const STORAGE_KEY = "jj_lang";
 
+      // The choice is remembered in this browser. Storage can be blocked (strict privacy
+      // settings): then the site simply starts in English and switching still works.
       function detectLang() {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) return stored;
-        return "en";
+        try { return localStorage.getItem(STORAGE_KEY) === "de" ? "de" : "en"; } catch (e) { return "en"; }
       }
 
       let currentLang = detectLang();
@@ -1013,7 +1024,7 @@
 
       function applyLang(lang, animate) {
         currentLang = lang;
-        localStorage.setItem(STORAGE_KEY, lang);
+        try { localStorage.setItem(STORAGE_KEY, lang); } catch (e) {}
         document.documentElement.lang = lang === "de" ? "de" : "en";
 
         // ── Step 1: Strip ALL typewriter spans before snapshot ──

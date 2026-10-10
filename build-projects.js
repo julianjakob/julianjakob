@@ -2,11 +2,11 @@
 /**
  * build-projects.js
  *
- * Kombiniert alle project.json + manifest.json in eine einzige
- * projects-data.json — nur 1 HTTP-Request beim Laden statt 14+.
+ * Combines every project.json + manifest.json into one projects-data.json —
+ * the site loads all projects with a single request.
  *
- * Ausführen: node build-projects.js
- * (nach jedem Projekt-Update ausführen, dann committen)
+ * Run: node build-projects.js
+ * (after every project change — then commit)
  */
 
 const fs   = require("fs");
@@ -49,4 +49,4 @@ for (const slot of SLOTS) {
 }
 
 fs.writeFileSync("projects-data.json", JSON.stringify(output, null, 2));
-console.log(`\nFertig: projects-data.json mit ${output.length} Projekten erstellt.`);
+console.log(`\nDone: projects-data.json with ${output.length} projects.`);

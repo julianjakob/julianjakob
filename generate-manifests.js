@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 /**
  * generate-manifests.js
- * 
- * Scannt alle Projektordner und erstellt manifest.json Dateien.
- * Einmal ausführen: node generate-manifests.js
- * Danach bei neuen Projekten erneut ausführen.
+ *
+ * Scans every project folder (projects/NN/home) and writes its manifest.json:
+ * the slides in order — 01, 02… single; 02a, 02b… a row — with pixel sizes and
+ * resized copies. Run after adding or changing project media:
+ *   node generate-manifests.js && node build-projects.js
  */
 
 const fs   = require("fs");
@@ -157,5 +158,5 @@ for (const slot of SLOTS) {
   generated++;
 }
 
-console.log(`\nFertig: ${generated} Manifests erstellt, ${skipped} übersprungen.`);
-console.log("Committe die manifest.json Dateien zusammen mit deinen anderen Änderungen.");
+console.log(`\nDone: ${generated} manifests written, ${skipped} skipped.`);
+console.log("Commit the manifest.json files together with your other changes.");

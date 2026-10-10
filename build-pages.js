@@ -14,8 +14,8 @@
  * their contents (style.css?v=…): when a file changes, its address changes, so no
  * browser can mix a new page with an old cached stylesheet or script.
  *
- * Ausführen: node build-pages.js
- * (nach jeder Änderung an index.html, style.css oder script.js ausführen, dann committen)
+ * Run: node build-pages.js
+ * (after every change to index.html, style.css or script.js — then commit)
  */
 
 const fs = require("fs");
