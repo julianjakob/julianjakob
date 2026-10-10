@@ -1162,6 +1162,8 @@ p.type-contact-item,
   hyphenate-limit-chars: 8 4 4;
 }
 .cv-list { list-style: none; }
+/* Under the awards: where the work was done — smaller, dimmed like the other-language toggle */
+.cv-award-note { font-size: 0.85em; opacity: var(--dim-inactive); margin-top: calc(var(--spacing-xs) / 2); }
 .cv-body { max-width: 52em; } /* the sheet's line length */
 
 /* Narrow sheet (phones): location, phone, email, the sidebar lists and the
@@ -1190,7 +1192,6 @@ p.type-contact-item,
   .cv-side-section .cv-list,
   .cv-side-section .cv-list li { display: inline; }
   .cv-side-section .cv-list li:not(:last-child)::after { content: ", "; }
-  .cv-side-section .cv-list li:has(+ .cv-credit)::after { content: " "; } /* the credit follows without a comma */
 }
 
 @container (min-width: 700px) {
