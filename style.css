@@ -453,6 +453,8 @@ html.menu-open #bar-top { display: block; }
    otherwise keeps it on a scaled layer after the fold and can leave it soft */
 .page-container.visible { transform: none; z-index: 10; pointer-events: auto; }
 .page-container.hidden { transform: scaleY(0); z-index: 1; pointer-events: none; }
+/* Folded away for good (script.js): not laid out or drawn until shown again */
+.page-container.parked { content-visibility: hidden; }
 
 .contact-container {
   background-color: var(--color-paper);

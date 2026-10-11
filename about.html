@@ -182,7 +182,7 @@
     <link rel="preload" href="/assets/fonts/EBGaramond-Italic-latin.woff2" as="font" type="font/woff2" crossorigin="anonymous">
 
     <!-- ── Styles & Fonts ── -->
-    <link rel="stylesheet" href="/style.css?v=1944c2b074">
+    <link rel="stylesheet" href="/style.css?v=fe4fb3136a">
     <!-- Fonts self-hosted via @font-face in style.css -->
 </head>
 <body>
@@ -1006,7 +1006,7 @@
         <h2 id="footer-title" class="project-title type-ui-text" aria-live="polite"></h2>
     </footer>
 
-    <script src="/script.js?v=3fcb809291" defer></script>
+    <script src="/script.js?v=05066bdfad" defer></script>
 
 
     <!-- ── Language system ── -->
@@ -1031,7 +1031,9 @@
 
         // ── Step 1: Strip ALL typewriter spans before snapshot ──
         var prevLang = lang === "de" ? "en" : "de";
+        // (only texts still split into animated letters — all others are plain already)
         document.querySelectorAll("[data-en][data-de]").forEach(function (el) {
+          if (!el.querySelector(".text-out, .typewriter-char, .lock-line")) return;
           var clean = el.getAttribute("data-" + prevLang) || el.getAttribute("data-en");
           if (!clean) return;
           if (clean.indexOf("<") !== -1 || clean.indexOf("&") !== -1) { el.innerHTML = clean; }
@@ -1169,13 +1171,14 @@
           same.forEach(function (el, k) { el.innerHTML = originals[k]; });
           applyLang(lang, true); // swap + typewriter (same task, so no flash of old text)
           // Home footer: the translated Details text types back in as well
-          if (footer) footer.querySelectorAll("[data-en][data-de]").forEach(function (el) {
-            if (inView(el) && !el.querySelector("[data-en]")) window.typewriterIn(el);
-          });
+          if (footer) window.typewriterInAll([].filter.call(footer.querySelectorAll("[data-en][data-de]"), function (el) {
+            return inView(el) && !el.querySelector("[data-en]");
+          }));
           // Untranslated text and the toggle label come back with the same rules
           // A + / – sign follows its label: it types in once the label's last letter does,
           // never before its words (Awards, Details, Process steps)
           var skipNested = function (n) { return !!n.parentElement.closest("[data-en]"); };
+          var now = [];
           same.forEach(function (el) {
             var sign = el.classList.contains("details-hint") || el.classList.contains("service-toggle");
             var label = sign && el.parentElement && el.parentElement.closest("button, .service-header");
@@ -1184,8 +1187,9 @@
             if (wait > 0) {
               el.style.visibility = "hidden";
               setTimeout(function () { el.style.visibility = ""; window.typewriterIn(el, skipNested); }, wait);
-            } else window.typewriterIn(el, skipNested);
+            } else now.push(el);
           });
+          window.typewriterInAll(now, skipNested); // all at once: one layout, not one per text
           if (toggle) window.typewriterIn(toggle);
           switching = false;
         }, wait);

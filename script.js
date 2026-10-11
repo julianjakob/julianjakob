@@ -27,6 +27,28 @@ async function init() {
     legal: pageLegal,
     cv:    pageCv,
   };
+  // A text page that has folded away is "parked": the browser skips laying it out and
+  // drawing it (content-visibility: hidden) until it is shown again. Otherwise every
+  // page of the site stays laid out behind the visible one, and a change that touches
+  // all of them (switching language) makes the browser lay out the whole site at once.
+  // The home feed is never parked (its slides and videos are managed separately).
+  const PARK_AFTER_MS = 1000; // after the page fold (--page-speed) has finished
+  const parkable = (pg) => pg && pg !== pageHome;
+  function unpark(pg) {
+    if (!parkable(pg)) return;
+    clearTimeout(pg._parkTimer);
+    pg.classList.remove("parked");
+  }
+  Object.values(pages).forEach((pg) => {
+    if (!parkable(pg)) return;
+    if (pg.classList.contains("hidden")) pg.classList.add("parked");
+    new MutationObserver(() => {
+      clearTimeout(pg._parkTimer);
+      if (pg.classList.contains("hidden") && !pg.classList.contains("parked"))
+        pg._parkTimer = setTimeout(() => { if (pg.classList.contains("hidden")) pg.classList.add("parked"); }, PARK_AFTER_MS);
+    }).observe(pg, { attributes: true, attributeFilter: ["class"] });
+  });
+
   let currentPage = "home",
     currentIndex = 0,
     isAnimating = false, // managed by tLock — do not set directly
@@ -74,7 +96,14 @@ async function init() {
 
   if (banner && homeSlides.length > 0) {
     homeSlides[0].classList.remove("active");
-    intro.finish(mediaReady(homeSlides[0])).then(() => {
+    // The first slide loaded and its colour thumbnail made (at most 1.5 s more): the UI
+    // then appears in its final colours as the intro folds away
+    const thumbsFor = (slide) => new Promise((done) => {
+      const t0 = performance.now();
+      const check = () => (slideMediaReady(slide) || performance.now() - t0 > 1500 ? done() : setTimeout(check, 60));
+      check();
+    });
+    intro.finish(mediaReady(homeSlides[0]).then(() => thumbsFor(homeSlides[0]))).then(() => {
       hasSeenBanner = true; // the feed takes input as soon as the intro starts folding away
       // The UI takes the picture's colours right away, and the footer starts typing in the
       // same moment the intro starts folding: it's revealed letter by letter, in its final
@@ -185,10 +214,12 @@ async function init() {
         activePage.style.transformOrigin = "bottom center";
         if (currentPage === "home") showSlideAtOnce();
         // Re-adding .visible mid-hide: CSS transitions back from current scaleY automatically
+        unpark(activePage);
         activePage.classList.remove("hidden");
         activePage.classList.add("visible");
         activePage.setAttribute("aria-hidden", "false");
         activePage.inert = false;
+        if (currentPage !== "home") fixColumnBreaks(activePage); // laid out again: check the columns
       }
     }
     syncUiMode(); // menu open: difference blend on black; closed on home: adaptive colours
@@ -310,6 +341,7 @@ async function init() {
         newPage.scrollTop = newPage.scrollHeight;
         newPage.style.transformOrigin = "top center";
       }
+      unpark(newPage);
       newPage.classList.remove("hidden");
       newPage.classList.add("visible");
       newPage.setAttribute("aria-hidden", "false");
@@ -643,6 +675,9 @@ async function init() {
     else detailsFor(homeSlides[idx].getAttribute("data-slot")); // held back during the swipe
     syncSlideMedia(idx);
     updateUiColors(false);
+    // The slides a swipe can reach next: their colours ready before the swipe gets there
+    const nn = homeSlides.length;
+    [idx, (idx + 1) % nn, (idx - 1 + nn) % nn].forEach((i) => warmThumbs(homeSlides[i]));
   }
 
   let lastFeedVelocity = 0; // slides/ms of the animation that was just interrupted
@@ -777,9 +812,15 @@ async function init() {
   // (invisible), at most TITLE_WAIT_MS, then types in with the best colour known.
   var TITLE_WAIT_MS = 1500;
   var titleRun = 0; // var: the first slide's title is set before this line runs
+  // Loaded and its colour thumbnail made (started here if missing)
   function slideMediaReady(slide) {
-    return [...slide.querySelectorAll("img, video:not([data-loop-standby])")].every((m) =>
-      m.tagName === "IMG" ? m.complete && m.naturalWidth > 0 : m.readyState >= 2);
+    return [...slide.querySelectorAll("img, video:not([data-loop-standby])")].every((m) => {
+      const loaded = m.tagName === "IMG" ? m.complete && m.naturalWidth > 0 : m.readyState >= 2;
+      if (!loaded) return false;
+      if (thumbReady(m)) return true;
+      thumbAsync(m, m.tagName === "VIDEO");
+      return false;
+    });
   }
   function updateFooterTitle(slide) {
     if (!footerTitle || !slide) return;
@@ -1009,20 +1050,72 @@ async function init() {
   var UI_THUMB_W = 128, uiThumbs = new WeakMap();
   var UI_LIN = new Float32Array(256).map((_, c) => { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); });
 
-  function uiThumb(media, isVideo, now) {
-    let t = uiThumbs.get(media);
-    if (t && (isVideo ? now - t.at < 300 : t.src === media.currentSrc)) return t; // a video frame is shared by all spots
+  // Thumbnails are made without blocking where possible: drawing a full-size picture into
+  // a canvas decodes it on the spot — a 4K photo or video frame froze a swipe on phones.
+  // Photos are prepared ahead in the background (warmThumbs: current and neighbouring
+  // slides); a playing video's thumbnail is refreshed in the background while the last
+  // one keeps being used. Only a picture never seen before is drawn at once.
+  var UI_VIDEO_SAMPLE_MS = 450;
+  function thumbSize(media, isVideo) {
     const nw = isVideo ? media.videoWidth : media.naturalWidth, nh = isVideo ? media.videoHeight : media.naturalHeight;
-    const w = UI_THUMB_W, h = Math.max(1, Math.round(w * nh / nw));
-    if (!t) { const c = document.createElement("canvas"); t = { canvas: c, ctx: c.getContext("2d", { willReadFrequently: true }) }; }
-    t.canvas.width = w; t.canvas.height = h;
-    t.ctx.drawImage(media, 0, 0, w, h);
-    const px = t.ctx.getImageData(0, 0, w, h).data;
-    t.lum = new Float32Array(w * h);
+    return nw && nh ? { w: UI_THUMB_W, h: Math.max(1, Math.round(UI_THUMB_W * nh / nw)) } : null;
+  }
+  function fillThumb(t, source, size, isVideo, media) {
+    if (!t.canvas) { t.canvas = document.createElement("canvas"); t.ctx = t.canvas.getContext("2d", { willReadFrequently: true }); }
+    t.canvas.width = size.w; t.canvas.height = size.h;
+    t.ctx.drawImage(source, 0, 0, size.w, size.h);
+    const px = t.ctx.getImageData(0, 0, size.w, size.h).data;
+    t.lum = new Float32Array(size.w * size.h);
     for (let i = 0, j = 0; i < px.length; i += 4, j++) t.lum[j] = 0.2126 * UI_LIN[px[i]] + 0.7152 * UI_LIN[px[i + 1]] + 0.0722 * UI_LIN[px[i + 2]];
-    t.w = w; t.h = h; t.src = isVideo ? null : media.currentSrc; t.at = now;
-    uiThumbs.set(media, t);
-    return t;
+    t.w = size.w; t.h = size.h; t.src = isVideo ? null : thumbKey(media); t.at = performance.now();
+  }
+  // In the background. Photos: their smallest copy (640 px wide) is loaded and decoded
+  // asynchronously — a few milliseconds, where decoding the full photo took hundreds on
+  // a phone. Videos: the current frame, shrunk by the browser. When a first thumbnail
+  // arrives, the colours are checked again.
+  const thumbKey = (media) => media.dataset.thumb || media.currentSrc;
+  function thumbAsync(media, isVideo) {
+    let t = uiThumbs.get(media);
+    if (!t) uiThumbs.set(media, (t = {}));
+    if (t.pending) return;
+    const first = !t.lum;
+    const done = () => { t.pending = false; if (first && t.lum) updateUiColors(false); };
+    t.pending = true;
+    if (!isVideo) {
+      const small = new Image();
+      small.src = thumbKey(media);
+      small.decode().then(() => {
+        const size = thumbSize(small, false);
+        if (size) fillThumb(t, small, size, false, media);
+      }).catch(() => {}).finally(done);
+      return;
+    }
+    const size = thumbSize(media, true);
+    if (!size) { t.pending = false; return; }
+    if (!window.createImageBitmap) { fillThumb(t, media, size, true, media); done(); return; } // old browsers: at once
+    createImageBitmap(media, { resizeWidth: size.w, resizeHeight: size.h, resizeQuality: "low" })
+      .then((bmp) => { fillThumb(t, bmp, size, true, media); if (bmp.close) bmp.close(); })
+      .catch(() => {}).finally(done);
+  }
+  function thumbReady(media) {
+    const t = uiThumbs.get(media);
+    return !!(t && t.lum && (media.tagName === "VIDEO" || t.src === thumbKey(media)));
+  }
+  function warmThumbs(slide) {
+    if (!slide) return;
+    slide.querySelectorAll("img").forEach((img) => {
+      const t = uiThumbs.get(img);
+      if (!(t && t.lum && t.src === thumbKey(img))) thumbAsync(img, false); // independent of the big photo
+    });
+  }
+  function uiThumb(media, isVideo, now) {
+    const t = uiThumbs.get(media);
+    if (t && t.lum) {
+      if (isVideo) { if (now - t.at > UI_VIDEO_SAMPLE_MS) thumbAsync(media, true); return t; } // last frame meanwhile
+      if (t.src === thumbKey(media)) return t;
+    }
+    thumbAsync(media, isVideo); // never decoded on the spot: ready in a moment
+    throw new Error("thumbnail not ready");
   }
 
   function uiGroupList() {
@@ -1202,7 +1295,11 @@ async function init() {
     if (!hasVideo && uiVideoTimer) { clearInterval(uiVideoTimer); uiVideoTimer = 0; }
   }
   // Images arriving / resizing can change what is behind the text
-  homeSlides.forEach((s) => s.querySelectorAll("img").forEach((img) => img.addEventListener("load", () => updateUiColors(true))));
+  homeSlides.forEach((s) => s.querySelectorAll("img").forEach((img) => img.addEventListener("load", () => {
+    const i = homeSlides.indexOf(s), n = homeSlides.length;
+    if (Math.abs(i - currentIndex) <= 1 || Math.abs(i - currentIndex) === n - 1) warmThumbs(s); // near: prepare it now
+    updateUiColors(true);
+  })));
   window.addEventListener("resize", () => updateUiColors(true));
 
   if (detailsBtn && detailsPanel) {
@@ -1627,6 +1724,8 @@ function createMediaElement(media, { alt = "", priority = false } = {}) {
   } else {
     img.src = media.src;
   }
+  // Colour sampling reads this small copy, never the full-size photo (see thumbAsync)
+  img.dataset.thumb = media.sizes && media.sizes.length ? media.sizes[0].src : media.src;
   img.decoding = "async";
   img.draggable = false; // native image drag would cancel the feed's mouse drag
   // Eager on purpose: slides sit at scaleY(0), which defeats native lazy-loading
@@ -1800,11 +1899,15 @@ function keepKerning(parent, units) {
     if (v === undefined) cache.set(t, (v = kernCtx.measureText(t).width));
     return v;
   };
-  // Rendered size ÷ canvas size, from the letters' own widths
-  let dom = 0, canvas = 0;
-  letters.forEach((span) => { dom += span.getBoundingClientRect().width; canvas += w(span.textContent); });
-  if (!dom || !canvas) return;
-  const scale = dom / canvas;
+  // Rendered size ÷ canvas size, from the letters' own widths — measured once per font:
+  // reading every letter's box each time forced the page's layout again and again
+  let scale = cache.scale;
+  if (!scale) {
+    let dom = 0, canvas = 0;
+    letters.forEach((span) => { dom += span.getBoundingClientRect().width; canvas += w(span.textContent); });
+    if (!dom || !canvas) return;
+    scale = cache.scale = dom / canvas;
+  }
   for (let i = 0; i < units.length - 1; i++) {
     const a = units[i], b = units[i + 1];
     if (!a || !b) continue;
@@ -1816,7 +1919,10 @@ function keepKerning(parent, units) {
 // Splits the visible text of `el` into letter or word spans, in locked lines (see
 // readLines); returns the spans. `skip(textNode)` can exclude text (e.g. nested
 // translated elements).
-function splitText(el, byWord, className, skip) {
+// What splitText needs from the layout, read without changing anything: the visible text
+// nodes and where their lines break. Read for many texts first, then split them all —
+// reading after each split would force the browser to lay out the page again and again.
+function planText(el, skip) {
   const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
   const nodes = [];
   while (walker.nextNode()) {
@@ -1825,9 +1931,12 @@ function splitText(el, byWord, className, skip) {
     if (skip && skip(n)) continue;
     nodes.push(n);
   }
+  return { nodes, layouts: nodes.map(readLines) };
+}
+
+function splitText(el, byWord, className, skip, plan) {
+  const { nodes, layouts } = plan || planText(el, skip);
   const spans = [];
-  // Read every text's lines first: splitting one text changes the layout of the next
-  const layouts = nodes.map(readLines);
   nodes.forEach((node, n) => {
     const { starts, cuts } = layouts[n];
     const frag = document.createDocumentFragment();
@@ -1882,11 +1991,12 @@ function splitText(el, byWord, className, skip) {
 const typingEls = new Set();
 
 // Type text in, letter by letter or word by word (per --tm-in)
-function typewriterIn(el, skip) {
-  settleText(el); // whatever ran on it before (typing, dissolving): from plain text
-  const m = textMotion(el);
+// `plan`: read beforehand by typewriterInAll (the text already settled)
+function typewriterIn(el, skip, plan) {
+  if (!plan) settleText(el); // whatever ran on it before (typing, dissolving): from plain text
+  const m = (plan && plan.motion) || textMotion(el);
   const byWord = m.in === "words" && el.getAttribute("data-typewriter") !== "char";
-  const spans = withIcons(el, splitText(el, byWord, "typewriter-char", skip));
+  const spans = withIcons(el, splitText(el, byWord, "typewriter-char", skip, plan));
   // Long texts step faster, so none takes longer than --tm-in-max
   const step = Math.min(m.inStep, m.inMax / Math.max(1, spans.length - 1));
   spans.forEach((span, i) => {
@@ -1910,15 +2020,25 @@ function finishTyping() {
 
 // Let a set of elements dissolve (per --tm-out). Each element is handled once: a parent
 // covers its children. Returns how long until everything is gone (ms).
+// Many texts typing in at once (a language switch): all settled, all read, then all split
+function typewriterInAll(elements, skip) {
+  elements.forEach(settleText);
+  const plans = elements.map((el) => Object.assign(planText(el, skip), { motion: textMotion(el) }));
+  return elements.map((el, i) => typewriterIn(el, skip, plans[i]));
+}
+
 function textOut(elements) {
   let longest = 0;
-  const done = [];
-  elements.forEach((el) => {
-    if (done.some((d) => d !== el && d.contains(el))) return;
-    settleText(el); // a dissolve over half-typed text would leave letters behind
-    const m = textMotion(el);
+  // A parent covers its children; settle all first (a dissolve over half-typed text would
+  // leave letters behind), read all, then split all — one layout instead of one per text
+  const list = elements.filter((el, i) => !elements.some((d, j) => j !== i && d !== el && d.contains(el)) && elements.indexOf(el) === i);
+  list.forEach(settleText);
+  const plans = list.map((el) => planText(el));
+  const motions = list.map(textMotion);
+  list.forEach((el, i) => {
+    const m = motions[i];
     // Dissolve letter by letter / word by word in reading order, with a little jitter
-    const units = withIcons(el, splitText(el, m.out === "words", "text-out-pending"));
+    const units = withIcons(el, splitText(el, m.out === "words", "text-out-pending", null, plans[i]));
     const last = Math.max(1, units.length - 1);
     units.forEach((span, k) => {
       span.style.animationDelay = Math.round((k / last) * m.outSpread + Math.random() * 40) + "ms";
@@ -1926,7 +2046,6 @@ function textOut(elements) {
       else span.className = "text-out";
     });
     longest = Math.max(longest, m.outSpread + 40 + m.outUnit);
-    done.push(el);
   });
   return longest;
 }
@@ -1939,16 +2058,17 @@ window.textOut = textOut;
 // containerOverride: pass a different root (e.g. #menu-overlay) to bypass active-page check
 function applyTypewriterEffect(elements, containerOverride) {
   const activePage = containerOverride || document.querySelector(".page-container.visible");
-  elements.forEach((el) => {
-    if (el.getAttribute("data-typewriter") === "false") return;
-    if (activePage && !activePage.contains(el)) return;
-    if (el.offsetParent === null) return;
+  const list = [...elements].filter((el) => {
+    if (el.getAttribute("data-typewriter") === "false") return false;
+    if (activePage && !activePage.contains(el)) return false;
+    if (el.offsetParent === null) return false;
     // Nested translated elements are typed once, via their translated parent
     const parent = el.parentElement && el.parentElement.closest("[data-en][data-de]");
-    if (parent && parent !== el && activePage && activePage.contains(parent)) return;
-    typewriterIn(el);
+    return !(parent && parent !== el && activePage && activePage.contains(parent));
   });
+  typewriterInAll(list);
 }
+window.typewriterInAll = typewriterInAll;
 
 // ── No words split across columns ─────────────────────────────
 // In the two-column paragraphs the browser may hyphenate a word at the bottom
@@ -1958,6 +2078,7 @@ function applyTypewriterEffect(elements, containerOverride) {
 // column stays. Re-run after language switches, font loading and resizing.
 function fixColumnBreaks(root = document) {
   root.querySelectorAll("p.type-contact-item").forEach((p) => {
+    if (p.closest(".parked")) return; // not laid out now; checked again when shown
     // Undo a previous pass — layout (width, language) may have changed
     p.querySelectorAll(".no-col-split").forEach((span) => span.replaceWith(...span.childNodes));
     p.normalize();
