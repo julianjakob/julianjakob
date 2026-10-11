@@ -1164,6 +1164,9 @@ p.type-contact-item,
   hyphenate-limit-chars: 8 4 4;
 }
 .cv-list { list-style: none; }
+/* A list that runs on as one paragraph ("Figma, Blender, …") */
+.cv-run li { display: inline; }
+.cv-run li:not(:last-child)::after { content: ", "; }
 /* Under the awards: where the work was done — smaller, dimmed like the other-language toggle */
 .cv-award-note { font-size: 0.85em; line-height: 1.45; opacity: var(--dim-inactive); margin-top: calc(var(--spacing-xs) / 2); }
 .cv-body { max-width: 52em; } /* the sheet's line length */
@@ -1179,18 +1182,19 @@ p.type-contact-item,
   .cv-contact { line-height: var(--line-height-body); }
   .cv-name { font-size: calc(var(--type-display) * 0.82); }
   /* Each sidebar point runs on as one line ("Skills: Brand identity & positioning, …").
-     Client Experience and Awards come right after the introduction, Skills, Languages
-     and Interests after Education: the sidebar's sections join the column directly */
+     Client experience and Awards come right after the introduction, Skills, Tools,
+     Languages and Interests after Education: the sidebar's sections join the column directly */
   .cv-columns { gap: 0; }
   .cv-sidebar { display: contents; }
   .cv-clients   { order: 1; }
   .cv-awards    { order: 2; margin-top: var(--spacing-sm); }
   .cv-main      { order: 3; margin-top: var(--spacing-component-gap-xl); }
   .cv-skills    { order: 4; margin-top: var(--spacing-component-gap-xl); }
-  .cv-languages { order: 5; margin-top: var(--spacing-sm); }
-  .cv-interests { order: 6; margin-top: var(--spacing-sm); }
+  .cv-tools     { order: 5; margin-top: var(--spacing-sm); }
+  .cv-languages { order: 6; margin-top: var(--spacing-sm); }
+  .cv-interests { order: 7; margin-top: var(--spacing-sm); }
   .cv-side-section .cv-label { display: inline; margin: 0; }
-  .cv-side-section .cv-label::after { content: " "; }
+  .cv-side-section .cv-label::after { content: ": "; } /* the headings carry no colon */
   .cv-side-section .cv-list,
   .cv-side-section .cv-list li { display: inline; }
   .cv-side-section .cv-list li:not(:last-child)::after { content: ", "; }

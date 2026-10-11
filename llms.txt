@@ -1,6 +1,6 @@
 # Julian Jakob
 
-> Julian Jakob is an Austrian brand designer based in Salzburg who develops brand concepts and visual systems with meaning and depth — finding the visual way into a brand and building the system that carries it across every touchpoint. He has worked on identities and campaigns for Spotify, Meta, Sony Music and Red Bull Music, as well as work for Alto New York (with Studio Herrström) that won multiple awards, including Cannes Lions. Website: https://julianjakob.at
+> Julian Jakob is an Austrian brand designer based in Salzburg who develops brand concepts and visual systems with meaning and depth — finding the conceptual way into a brand and building the system that carries it across every touchpoint. He has worked on identities and campaigns for Spotify, Meta, Sony Music and Red Bull Music, as well as work for Alto New York (with Studio Herrström) that won multiple awards, including Cannes Lions. Website: https://julianjakob.at
 
 Julian works as a digital brand designer at LOOP (https://www.agentur-loop.com/), where he develops visual systems and the concepts and visual direction for pitches. He occasionally takes on independent projects. He presents his full portfolio in person or on a call rather than as public case studies; the website shows a feed of project snapshots with his role on each.
 
@@ -11,7 +11,8 @@ Julian works as a digital brand designer at LOOP (https://www.agentur-loop.com/)
 - Based in: Salzburg, Austria
 - Focus: brand concepts and ideas, visual systems and identity, pitch concepts, translating strategy into visual language, campaign platforms
 - Awards (work with Studio Herrström for Alto New York): 2× Cannes Lions 2025 (Silver, Bronze), One Show 2025 Silver Pencil (Craft / Art Direction) and Merit, 2× D&AD Shortlist (2025, 2026), Clio Awards 2025 Shortlist, Tribeca X 2025 Official Selection, Ad Age Best Holiday Ads of 2024, Ad Age Creativity Top 5.
-- Languages: German (native), English (fluent)
+- Languages: German (native), English (fluent), Romanian (basics)
+- Tools: Adobe Creative Suite, Figma, Blender, Magnific, Claude, Claude Code, ChatGPT
 - Contact: hello@julianjakob.at
 - Instagram: https://www.instagram.com/julianjakob.at/
 - LinkedIn: https://www.linkedin.com/in/julian-jakob/
@@ -35,10 +36,10 @@ Most brand problems are clarity problems, not design problems. Every project fol
 
 1. Research — stakeholder workshops, competitive analysis and audience analysis to define what is needed and why.
 2. Construct — positioning, brand strategy and messaging translated into a clear brand architecture.
-3. Deliver — naming, visual identity and design system for launches, refreshes or pivots.
-4. Implement — campaigns, digital applications and editorial design that carry the identity without dilution.
+3. Deliver — naming, visual identity and design system, whether launching or evolving a brand.
+4. Implement — campaigns, digital applications and editorial design that carry the identity consistently.
 
-Brand systems are teamwork: Julian works closely with strategists, copywriters, motion designers and developers, and cares about a system long after launch, because it only proves itself in use.
+A brand system is built as a team: Julian works closely with specialists in strategy, copy, motion design and development, and stays involved with a system after launch.
 
 ## Pages
 

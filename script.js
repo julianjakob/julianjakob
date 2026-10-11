@@ -285,6 +285,12 @@ async function init() {
     };
     setMeta('meta[property="og:title"]',    "content", title);
     setMeta('meta[name="twitter:title"]',   "content", title);
+    // German description where one is written, else the page's English one
+    const description = pageEl.getAttribute(`data-description-${lang}`) || pageEl.getAttribute("data-description");
+    if (description) ['meta[name="description"]', 'meta[property="og:description"]', 'meta[name="twitter:description"]']
+      .forEach((sel) => setMeta(sel, "content", description));
+    setMeta('meta[property="og:locale"]',           "content", lang === "de" ? "de_AT" : "en_US");
+    setMeta('meta[property="og:locale:alternate"]', "content", lang === "de" ? "en_US" : "de_AT");
     const canonicalBase = "https://julianjakob.at";
     const ogUrl = `${canonicalBase}${page === "home" || !pages[page] ? "/" : "/" + page}`;
     setMeta('meta[property="og:url"]', "content", ogUrl);
@@ -980,6 +986,8 @@ async function init() {
     const from = detailsBody.offsetHeight;
     detailsBody.innerHTML = detailsHTML(slot);
     detailsSlot = slot;
+    // Typing reveals the text, also when a new slide took over from a still-opening panel
+    detailsBody.style.visibility = "";
     if (glide) {
       // Different amount of text: glide to the new height instead of jumping
       const to = detailsBody.scrollHeight;
@@ -1445,6 +1453,12 @@ async function init() {
 
   async function handleHash() {
     // Responds to URL state — never pushes new history entries (push = false throughout)
+    // Back/forward during a transition: follow the URL once the transition is done
+    if (isAnimating && !isMenuOpen) {
+      clearTimeout(handleHash._retry);
+      handleHash._retry = setTimeout(() => handleHash().catch(console.error), 120);
+      return;
+    }
     // /about and /about.html are the same page; /index.html is home
     const path  = window.location.pathname.replace(/^\//, "").replace(/\.html$/, "").replace(/^index$/, "").trim();
     const hash  = (window.location.hash || "").replace(/^#/, "").trim();
