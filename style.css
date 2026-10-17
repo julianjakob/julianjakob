@@ -256,7 +256,9 @@ body {
   height: var(--fade-bottom);
   background: linear-gradient(to top, var(--color-paper), rgba(255, 255, 255, 0));
 }
-html.fades-held .screen-fade { display: block; }
+html.fades-held .screen-fade,
+html.fades-held-bottom .screen-fade-bottom { display: block; }
+html.fades-held-bottom :is(.contact-container, .cv-container)::after { visibility: hidden; }
 html.fades-held :is(.contact-container, .cv-container)::before,
 html.fades-held :is(.contact-container, .cv-container)::after { visibility: hidden; }
 a { text-decoration: none; color: inherit; }

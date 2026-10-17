@@ -190,10 +190,14 @@ async function init() {
   // only where the page meets the menu or another page; over the feed's pictures a white
   // fade would show, so there they fold away with their page.
   let fadeHold = 0;
-  function holdFades(on) {
+  // bottomOnly: a page unfolding from the bottom over the feed (also on arriving at /cv
+  // etc.) covers the bottom edge at once — its fade can stay there; the top one can't yet
+  function holdFades(on, bottomOnly = false) {
     clearTimeout(fadeHold);
-    document.documentElement.classList.toggle("fades-held", on);
-    if (on) fadeHold = setTimeout(() => document.documentElement.classList.remove("fades-held"), 950);
+    const html = document.documentElement;
+    html.classList.toggle("fades-held", on && !bottomOnly);
+    html.classList.toggle("fades-held-bottom", on);
+    if (on) fadeHold = setTimeout(() => html.classList.remove("fades-held", "fades-held-bottom"), 950);
   }
 
   function toggleMenu(skipFadeToMenu = false) {
@@ -340,7 +344,9 @@ async function init() {
       return;
     }
 
-    holdFades(currentPage !== "home" && dest !== "home");
+    if (dest === "home") holdFades(false);
+    else if (currentPage !== "home") holdFades(true);
+    else holdFades(direction === "next", true); // from the feed: unfolds from the bottom
     if (oldPage) {
       const oldOrigin = dest === "home" ? "bottom center"
                       : direction === "next" ? "top center" : "bottom center";
