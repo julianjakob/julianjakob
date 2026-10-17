@@ -259,6 +259,8 @@ body {
 html.fades-held .screen-fade,
 html.fades-held-bottom .screen-fade-bottom { display: block; }
 html.fades-held-bottom :is(.contact-container, .cv-container)::after { visibility: hidden; }
+html.fades-leaving .screen-fade-bottom { animation: screen-fade-out var(--page-speed) var(--page-curve) forwards; }
+@keyframes screen-fade-out { to { opacity: 0; } }
 html.fades-held :is(.contact-container, .cv-container)::before,
 html.fades-held :is(.contact-container, .cv-container)::after { visibility: hidden; }
 a { text-decoration: none; color: inherit; }
