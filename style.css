@@ -235,6 +235,30 @@ body {
   margin-top: calc(var(--ui-padding-top) - var(--fade-bottom));
   margin-bottom: calc(-1 * var(--ui-padding-top));
 }
+/* While a page folds in or out under the menu or into another page, the fades must not
+   fold with it: fixed copies outside the page hold them at the screen's edges, and the
+   page's own ones step aside (script.js: holdFades). At rest the page's own take over
+   again — they sit exactly where the copies are, so the handover is invisible. */
+.screen-fade {
+  display: none;
+  position: fixed;
+  left: 0; right: 0;
+  z-index: 11; /* above the pages (10), under the menu and the header */
+  pointer-events: none;
+}
+.screen-fade-top {
+  top: 0;
+  height: var(--fade-top);
+  background: linear-gradient(to bottom, var(--color-paper), rgba(255, 255, 255, 0));
+}
+.screen-fade-bottom {
+  bottom: 0;
+  height: var(--fade-bottom);
+  background: linear-gradient(to top, var(--color-paper), rgba(255, 255, 255, 0));
+}
+html.fades-held .screen-fade { display: block; }
+html.fades-held :is(.contact-container, .cv-container)::before,
+html.fades-held :is(.contact-container, .cv-container)::after { visibility: hidden; }
 a { text-decoration: none; color: inherit; }
 
 @keyframes typewriter-char {
@@ -594,6 +618,13 @@ html.menu-open #bar-top { display: block; }
   max-height: none;
   object-fit: cover;
 }
+/* Videos reach 1px past their slide at the top and bottom (centred, so the overshoot
+   is even) and the slide clips them: iOS draws video on its own layer snapped to whole
+   device pixels, which could leave a hairline of the white slide showing at an edge */
+.slide-section.is-landscape,
+.slide-section.is-full-bleed { overflow: hidden; }
+.slide-section.is-landscape .content-single video,
+.slide-section.is-full-bleed .content-single video { height: calc(100% + 2px); }
 
 .media-row {
   width: 100%;
@@ -1266,7 +1297,7 @@ p.type-contact-item,
   html:has(#page-cv.visible),
   html:has(#page-cv.visible) body { height: auto; min-height: 0; overflow: visible; background: var(--color-paper); }
   html:has(#page-cv.visible) body > :not(#page-cv) { display: none !important; }
-  .cv-container::before, .cv-container::after { display: none; } /* the screen's scroll fades */
+  .cv-container::before, .cv-container::after, .screen-fade { display: none !important; } /* the screen's scroll fades */
   #page-cv.visible {
     position: static;
     height: auto;

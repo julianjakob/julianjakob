@@ -186,9 +186,20 @@ async function init() {
     if (e.target === menuOverlay && e.propertyName === "transform" && !isMenuOpen) menuOverlay.classList.add("off");
   });
 
+  // Scroll fades: held on the screen while a page folds in or out (see .screen-fade) —
+  // only where the page meets the menu or another page; over the feed's pictures a white
+  // fade would show, so there they fold away with their page.
+  let fadeHold = 0;
+  function holdFades(on) {
+    clearTimeout(fadeHold);
+    document.documentElement.classList.toggle("fades-held", on);
+    if (on) fadeHold = setTimeout(() => document.documentElement.classList.remove("fades-held"), 950);
+  }
+
   function toggleMenu(skipFadeToMenu = false) {
     finishFeed();
     isMenuOpen = !isMenuOpen;
+    holdFades(currentPage !== "home");
     document.documentElement.classList.toggle("menu-open", isMenuOpen);
     const activePage = pages[currentPage];
     if (isMenuOpen) {
@@ -329,6 +340,7 @@ async function init() {
       return;
     }
 
+    holdFades(currentPage !== "home" && dest !== "home");
     if (oldPage) {
       const oldOrigin = dest === "home" ? "bottom center"
                       : direction === "next" ? "top center" : "bottom center";
@@ -1699,7 +1711,7 @@ function createMediaElement(media, { alt = "", priority = false } = {}) {
         vB.setAttribute("src", v.getAttribute("src")); vB.muted = true; vB.playsInline = true; vB.preload = "none";
         vB.setAttribute("playsinline", ""); vB.setAttribute("muted", ""); vB.setAttribute("aria-hidden", "true");
         vB.dataset.loopStandby = "";
-        vB.style.cssText = "position:absolute;inset:0;width:100%;height:100%;opacity:0;pointer-events:none;";
+        vB.style.cssText = "position:absolute;left:0;top:-1px;width:100%;height:calc(100% + 2px);opacity:0;pointer-events:none;"; // 1px past the slide, like its twin
         if (getComputedStyle(parent).position === "static") parent.style.position = "relative";
         parent.appendChild(vB);
         const PREP = 0.4, SWAP = 0.06;
