@@ -173,7 +173,29 @@
                 "w": 2560,
                 "src": "sizes/01-2560.webp"
               }
-            ]
+            ],
+            "portrait": {
+              "w": 1728,
+              "h": 2160,
+              "sizes": [
+                {
+                  "w": 640,
+                  "src": "sizes/01-portrait-640.webp"
+                },
+                {
+                  "w": 960,
+                  "src": "sizes/01-portrait-960.webp"
+                },
+                {
+                  "w": 1280,
+                  "src": "sizes/01-portrait-1280.webp"
+                },
+                {
+                  "w": 1728,
+                  "src": "sizes/01-portrait-1728.webp"
+                }
+              ]
+            }
           }
         },
         {
@@ -273,7 +295,33 @@
                 "w": 2560,
                 "src": "sizes/01-2560.webp"
               }
-            ]
+            ],
+            "portrait": {
+              "w": 2400,
+              "h": 3000,
+              "sizes": [
+                {
+                  "w": 640,
+                  "src": "sizes/01-portrait-640.webp"
+                },
+                {
+                  "w": 960,
+                  "src": "sizes/01-portrait-960.webp"
+                },
+                {
+                  "w": 1280,
+                  "src": "sizes/01-portrait-1280.webp"
+                },
+                {
+                  "w": 1728,
+                  "src": "sizes/01-portrait-1728.webp"
+                },
+                {
+                  "w": 2400,
+                  "src": "sizes/01-portrait-2400.webp"
+                }
+              ]
+            }
           }
         },
         {
@@ -326,7 +374,8 @@
           "type": "single",
           "item": {
             "src": "01.mp4",
-            "webm": "01.webm"
+            "webm": "01.webm",
+            "portrait": "sizes/01-portrait.mp4"
           }
         },
         {
@@ -401,7 +450,8 @@
           "type": "single",
           "item": {
             "src": "01.mp4",
-            "webm": "01.webm"
+            "webm": "01.webm",
+            "portrait": "sizes/01-portrait.mp4"
           }
         }
       ]

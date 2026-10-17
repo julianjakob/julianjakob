@@ -4,7 +4,8 @@
       "type": "single",
       "item": {
         "src": "01.mp4",
-        "webm": "01.webm"
+        "webm": "01.webm",
+        "portrait": "sizes/01-portrait.mp4"
       }
     }
   ]

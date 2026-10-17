@@ -189,34 +189,51 @@ body {
   background-color: var(--color-paper);
 }
 
-/* Phones, scrolling pages: two white gradients stay fixed at the top and bottom of the
-   screen while the text scrolls underneath, so it dissolves instead of being cut off at
-   an edge. The footer line (z-index 10) sits above them, like the header. */
-@media (hover: none) and (pointer: coarse) {
-  html .contact-container,
-  html .cv-container { contain: none; } /* else the gradients would scroll with the text */
-  .contact-container::before,
-  .cv-container::before,
-  .contact-container::after,
-  .cv-container::after {
-    content: "";
-    position: fixed;
-    left: 0; right: 0;
-    z-index: 5;
-    pointer-events: none;
-  }
-  .contact-container::before,
-  .cv-container::before {
-    top: 0;
-    height: var(--fade-top);
-    background: linear-gradient(to bottom, var(--color-paper), rgba(255, 255, 255, 0));
-  }
-  .contact-container::after,
-  .cv-container::after {
-    bottom: 0;
-    height: var(--fade-bottom);
-    background: linear-gradient(to top, var(--color-paper), rgba(255, 255, 255, 0));
-  }
+/* Scrolling pages: two white gradients stay at the top and bottom of the screen while
+   the text scrolls underneath, so it dissolves instead of being cut off at an edge.
+   Sticky, not fixed: they belong to the page's own scroll box, so they stay put while
+   the page folds (a transformed page would carry fixed children along with its scroll,
+   and the bottom one jumped up the screen when the menu opened). Negative margins take
+   them out of the flow and out of the page's padding. The footer line (z-index 10)
+   sits above them, like the header. */
+.contact-container::before,
+.cv-container::before,
+.contact-container::after,
+.cv-container::after {
+  content: "";
+  position: sticky;
+  display: block;
+  flex: none;
+  z-index: 5;
+  pointer-events: none;
+}
+.contact-container::before,
+.cv-container::before {
+  top: 0;
+  height: var(--fade-top);
+  margin-bottom: calc(-1 * var(--fade-top));
+  background: linear-gradient(to bottom, var(--color-paper), rgba(255, 255, 255, 0));
+}
+.contact-container::after,
+.cv-container::after {
+  bottom: 0;
+  height: var(--fade-bottom);
+  margin-top: calc(-1 * var(--fade-bottom));
+  background: linear-gradient(to top, var(--color-paper), rgba(255, 255, 255, 0));
+}
+/* (the contact pages' padding is inside the scroll box: reach out to its edges, and give
+   the padding back on the other side so the text stays exactly where it was) */
+.contact-container::before,
+.contact-container::after { margin-left: calc(-1 * var(--ui-padding-side)); margin-right: calc(-1 * var(--ui-padding-side)); }
+.contact-container::before {
+  top: calc(-1 * var(--spacing-contact-vertical)); /* sticky offsets count from inside the padding */
+  margin-top: calc(-1 * var(--spacing-contact-vertical));
+  margin-bottom: calc(var(--spacing-contact-vertical) - var(--fade-top));
+}
+.contact-container::after {
+  bottom: calc(-1 * var(--ui-padding-top));
+  margin-top: calc(var(--ui-padding-top) - var(--fade-bottom));
+  margin-bottom: calc(-1 * var(--ui-padding-top));
 }
 a { text-decoration: none; color: inherit; }
 
@@ -1249,6 +1266,7 @@ p.type-contact-item,
   html:has(#page-cv.visible),
   html:has(#page-cv.visible) body { height: auto; min-height: 0; overflow: visible; background: var(--color-paper); }
   html:has(#page-cv.visible) body > :not(#page-cv) { display: none !important; }
+  .cv-container::before, .cv-container::after { display: none; } /* the screen's scroll fades */
   #page-cv.visible {
     position: static;
     height: auto;

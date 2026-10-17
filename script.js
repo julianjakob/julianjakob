@@ -77,6 +77,8 @@ async function init() {
       if (!playOnly) slide._videosPlaying = i === index && homeVisible;
       const isCurrent = i === index && homeVisible;
       const isNear    = i === index || i === (index + 1) % n || i === (index - 1 + n) % n;
+      // Videos buffer two slides ahead: on a slow connection they need the head start
+      const dist = Math.min(Math.abs(i - index), n - Math.abs(i - index));
       // Decode neighbour images ahead of time — no decoding work mid-swipe
       if (isNear) slide.querySelectorAll("img").forEach((img) => {
         if (img.dataset.decoded || !img.src) return;
@@ -84,7 +86,7 @@ async function init() {
         img.decode().catch(() => { delete img.dataset.decoded; });
       });
       slide.querySelectorAll("video:not([data-loop-standby])").forEach((v) => {
-        if (isNear && v.preload !== "auto") {
+        if (dist <= 2 && v.preload !== "auto") {
           v.preload = "auto";
           if (v.readyState === 0 && v.networkState !== HTMLMediaElement.NETWORK_LOADING) v.load();
         }
@@ -1528,6 +1530,9 @@ async function renderHomeSlides(pageHome, projects) {
         kind: /\.(mp4|webm)$/i.test(m.src) ? "video" : "image",
         src:  `${homeBase}${m.src}`,
         webm: m.webm ? `${homeBase}${m.webm}` : null,
+        // Phone cut: a video file, or for wide images their 4:5 crops ({ w, h, sizes })
+        portrait: !m.portrait ? null : typeof m.portrait === "string" ? `${homeBase}${m.portrait}`
+          : { w: m.portrait.w, h: m.portrait.h, sizes: m.portrait.sizes.map((v) => ({ w: v.w, src: `${homeBase}${v.src}` })) },
         w: m.w || 0,
         h: m.h || 0,
         sizes: (m.sizes || []).map((v) => ({ w: v.w, src: `${homeBase}${v.src}` })),
@@ -1668,8 +1673,11 @@ function createMediaElement(media, { alt = "", priority = false } = {}) {
     v.setAttribute("playsinline", "");
     v.setAttribute("muted", "");
     v.setAttribute("aria-label", alt);
-    // Safari gets the MP4; other browsers the (usually much smaller) WebM when available
-    v.src = (!IS_SAFARI && media.webm) ? media.webm : media.src;
+    // Safari gets the MP4; other browsers the (usually much smaller) WebM when available.
+    // Portrait slides switch to the portrait cut (see fitVideoSource)
+    v.dataset.full = (!IS_SAFARI && media.webm) ? media.webm : media.src;
+    if (media.portrait) v.dataset.portrait = media.portrait;
+    v.setAttribute("src", v.dataset.full);
 
     // Safari's native loop shows a gap between the last and first frame: two copies of
     // the video take turns instead (the standby one starts just before the end)
@@ -1688,7 +1696,7 @@ function createMediaElement(media, { alt = "", priority = false } = {}) {
         const parent = v.parentNode;
         if (!parent) return;
         const vB = document.createElement("video");
-        vB.src = v.src; vB.muted = true; vB.playsInline = true; vB.preload = "none";
+        vB.setAttribute("src", v.getAttribute("src")); vB.muted = true; vB.playsInline = true; vB.preload = "none";
         vB.setAttribute("playsinline", ""); vB.setAttribute("muted", ""); vB.setAttribute("aria-hidden", "true");
         vB.dataset.loopStandby = "";
         vB.style.cssText = "position:absolute;inset:0;width:100%;height:100%;opacity:0;pointer-events:none;";
@@ -1739,7 +1747,15 @@ function createMediaElement(media, { alt = "", priority = false } = {}) {
     img.src = media.src;
   }
   // Colour sampling reads this small copy, never the full-size photo (see thumbAsync)
-  img.dataset.thumb = media.sizes && media.sizes.length ? media.sizes[0].src : media.src;
+  img.dataset.thumb = img.dataset.fullThumb = media.sizes && media.sizes.length ? media.sizes[0].src : media.src;
+  // Wide images: the 4:5 crops a portrait slide uses instead (see fitImageSources)
+  if (media.portrait && media.portrait.sizes && media.portrait.sizes.length && img.dataset.srcset) {
+    const p = media.portrait, top = p.sizes[p.sizes.length - 1];
+    img.dataset.portraitSrcset = p.sizes.map((v) => `${v.src} ${v.w}w`).join(", ");
+    img.dataset.portraitSrc = top.src;
+    img.dataset.portraitW = p.w;
+    img.dataset.portraitThumb = p.sizes[0].src;
+  }
   img.decoding = "async";
   img.draggable = false; // native image drag would cancel the feed's mouse drag
   // Eager on purpose: slides sit at scaleY(0), which defeats native lazy-loading
@@ -1751,18 +1767,42 @@ function createMediaElement(media, { alt = "", priority = false } = {}) {
 // Tell the browser how large each slide image is really displayed, so it loads
 // the closest resized copy. Images far larger than shown get shrunk coarsely
 // while a slide animates in, which looks pixelated.
+// Videos on a portrait slide (phones) play their portrait cut (sizes/…-portrait.mp4): the
+// centre slice that object-fit: cover shows there anyway, at a fraction of the 4K file's
+// weight — it starts sooner on a slow connection and decodes without strain. Its 4:5
+// frame covers any slide narrower than that; wider slides keep the full video.
+const PORTRAIT_MAX_ASPECT = 0.8;
+function fitVideoSource(v) {
+  const bw = v.offsetWidth, bh = v.offsetHeight; // layout size — unaffected by the fold transform
+  if (!bw || !bh) return;
+  const want = v.dataset.portrait && bw / bh <= PORTRAIT_MAX_ASPECT ? v.dataset.portrait : v.dataset.full;
+  if (!want || v.getAttribute("src") === want) return;
+  const playing = !v.paused;
+  [v, ...v.parentNode.querySelectorAll("video[data-loop-standby]")].forEach((vid) => {
+    vid.setAttribute("src", want);
+    if (vid.preload === "auto") vid.load();
+  });
+  if (playing) v.play().catch(() => {});
+}
+
 function fitImageSources(slides) {
+  slides.forEach((slide) => slide.querySelectorAll("video[data-full]").forEach(fitVideoSource));
   slides.forEach((slide) => slide.querySelectorAll("img[data-srcset]").forEach((img) => {
     const bw = img.offsetWidth, bh = img.offsetHeight; // layout size — unaffected by the fold transform
-    const w = +img.getAttribute("width"), h = +img.getAttribute("height");
+    const cover = getComputedStyle(img).objectFit === "cover";
+    // A wide picture on a portrait slide shows only its centre: load the 4:5 crop of it
+    const crop = !!img.dataset.portraitSrcset && cover && bw && bh && bw / bh <= PORTRAIT_MAX_ASPECT;
+    const w = crop ? +img.dataset.portraitW : +img.getAttribute("width"), h = +img.getAttribute("height");
     if (!bw || !bh || !w || !h) return;
     const ar = w / h;
-    const cover = getComputedStyle(img).objectFit === "cover";
     const shown = cover ? Math.max(bw, bh * ar) : Math.min(bw, bh * ar);
     img.sizes = `${Math.ceil(shown)}px`;
-    if (!img.srcset) {
-      img.srcset = img.dataset.srcset;
-      img.src = img.dataset.src;
+    const variant = crop ? "portrait" : "full";
+    if (img.dataset.variant !== variant) {
+      img.dataset.variant = variant;
+      img.dataset.thumb = crop ? img.dataset.portraitThumb : img.dataset.fullThumb; // colour sampling: same picture
+      img.srcset = crop ? img.dataset.portraitSrcset : img.dataset.srcset;
+      img.src = crop ? img.dataset.portraitSrc : img.dataset.src;
     }
   }));
 }

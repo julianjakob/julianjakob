@@ -47,6 +47,44 @@ function buildSizes(dir, file, width) {
   return out;
 }
 
+// Phone cut of every video (home/sizes/<name>-portrait.mp4): the centre portrait slice
+// at phone resolution — see make-portrait-video.swift. Needs macOS (swift + AVFoundation);
+// elsewhere an existing cut is kept and none is made.
+let hasSwift = process.platform === "darwin";
+function buildPortrait(dir, file) {
+  const stem = path.basename(file, path.extname(file));
+  const name = `${stem}-portrait.mp4`, target = path.join(dir, "sizes", name), srcPath = path.join(dir, file);
+  const fresh = fs.existsSync(target) && fs.statSync(target).size > 0 && fs.statSync(target).mtimeMs >= fs.statSync(srcPath).mtimeMs;
+  if (!fresh && hasSwift) {
+    try {
+      fs.mkdirSync(path.join(dir, "sizes"), { recursive: true });
+      execFileSync("swift", [path.join(__dirname, "make-portrait-video.swift"), srcPath, target], { stdio: "ignore" });
+    } catch { hasSwift = false; console.warn("  ! portrait video cut failed — run make-portrait-video.swift by hand"); }
+  }
+  return fs.existsSync(target) && fs.statSync(target).size > 0 ? `sizes/${name}` : null;
+}
+
+// Phone crops of wide images (home/sizes/<name>-portrait-<width>.webp): the centre 4:5
+// slice that a portrait slide shows (object-fit: cover) at full sharpness — far lighter
+// to load and decode than the whole wide picture at phone pixel density.
+const PORTRAIT_ASPECT = 0.8, PORTRAIT_WIDTHS = [640, 960, 1280, 1728];
+function buildPortraitImage(dir, file, width, height) {
+  if (!hasCwebp || !width || !height || width / height <= 1) return null;
+  const cw = 2 * Math.round(PORTRAIT_ASPECT * height / 2), x = Math.round((width - cw) / 2);
+  const stem = path.basename(file, path.extname(file));
+  const srcPath = path.join(dir, file), srcTime = fs.statSync(srcPath).mtimeMs;
+  const sizes = [];
+  for (const w of [...PORTRAIT_WIDTHS.filter((w) => w < cw), cw]) {
+    const name = `${stem}-portrait-${w}.webp`, target = path.join(dir, "sizes", name);
+    if (!fs.existsSync(target) || fs.statSync(target).mtimeMs < srcTime) {
+      fs.mkdirSync(path.join(dir, "sizes"), { recursive: true });
+      execFileSync("cwebp", ["-quiet", "-q", WEBP_QUALITY, "-crop", String(x), "0", String(cw), String(height), "-resize", String(w), "0", "-metadata", "none", srcPath, "-o", target]);
+    }
+    sizes.push({ w, src: `sizes/${name}` });
+  }
+  return { w: cw, h: height, sizes };
+}
+
 function findMedia(dir, stem) {
   for (const ext of MEDIA_EXTS) {
     const f = path.join(dir, stem + ext);
@@ -66,10 +104,14 @@ function describeMedia(dir, file) {
       entry.w = dims.w; entry.h = dims.h;
       const sizes = buildSizes(dir, file, dims.w);
       if (sizes.length) entry.sizes = sizes;
+      const portrait = buildPortraitImage(dir, file, dims.w, dims.h);
+      if (portrait) entry.portrait = portrait;
     }
   } else if (ext === ".mp4") {
     const webm = file.replace(/\.mp4$/i, ".webm");
     if (fs.existsSync(path.join(dir, webm))) entry.webm = webm;
+    const portrait = buildPortrait(dir, file);
+    if (portrait) entry.portrait = portrait;
   }
   return entry;
 }
