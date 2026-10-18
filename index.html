@@ -181,7 +181,7 @@
     <link rel="preload" href="/assets/fonts/EBGaramond-Italic-latin.woff2" as="font" type="font/woff2" crossorigin="anonymous">
 
     <!-- ── Styles & Fonts ── -->
-    <link rel="stylesheet" href="/style.css?v=beebe76709">
+    <link rel="stylesheet" href="/style.css?v=0148f2d572">
     <!-- Fonts self-hosted via @font-face in style.css -->
 </head>
 <body>
@@ -374,26 +374,35 @@
       }
 
       var lineShownAt = 0;
+      // A line as plain text, one string per row: the banner's HTML holds the previous
+      // line's letter spans — split as text, their markup would be typed out letter by letter
+      var rows = function (html) {
+        var d = document.createElement("div");
+        d.innerHTML = html.replace(/<br\s*\/?>/gi, "\n");
+        return d.textContent.split("\n");
+      };
+      var esc = function (ch) { return ch === "&" ? "&amp;" : ch === "<" ? "&lt;" : ch === ">" ? "&gt;" : ch; };
+
       function swapTo(line) {
         el.setAttribute("data-en", line.en);
         el.setAttribute("data-de", line.de);
         var html = line[lang()] || line.en;
         if (reduce) { el.innerHTML = html; lineShownAt = performance.now(); return Promise.resolve(); }
         // Out: dissolve letter by letter in reading order, with a little jitter
-        var parts = el.innerHTML.split("<br>"), total = el.textContent.replace(/\s/g, "").length, k = 0;
+        var parts = rows(el.innerHTML), total = parts.join("").replace(/\s/g, "").length, k = 0;
         el.innerHTML = parts.map(function (part) {
           return Array.from(part).map(function (ch) {
             if (ch === " ") return " ";
             var d = Math.round((k++ / Math.max(1, total - 1)) * INTRO_OUT_SPREAD + Math.random() * 40);
-            return '<span class="text-out" style="animation-delay:' + d + 'ms">' + ch + "</span>";
+            return '<span class="text-out" style="animation-delay:' + d + 'ms">' + esc(ch) + "</span>";
           }).join("");
         }).join("<br>");
         return wait(INTRO_OUT_SPREAD + 40 + INTRO_OUT_UNIT).then(function () {
           // In: the headline typewriter, letter by letter
           var i = 0;
-          el.innerHTML = html.split("<br>").map(function (part) {
+          el.innerHTML = rows(html).map(function (part) {
             return Array.from(part).map(function (ch) {
-              return ch === " " ? " " : '<span class="typewriter-char" style="animation-delay:' + (i++ * INTRO_TYPE_MS) + 'ms">' + ch + "</span>";
+              return ch === " " ? " " : '<span class="typewriter-char" style="animation-delay:' + (i++ * INTRO_TYPE_MS) + 'ms">' + esc(ch) + "</span>";
             }).join("");
           }).join("<br>");
           return wait(i * INTRO_TYPE_MS + 380); // + one letter's fade (--tm-in-unit)
@@ -984,7 +993,7 @@
         <h2 id="footer-title" class="project-title type-ui-text" aria-live="polite"></h2>
     </footer>
 
-    <script src="/script.js?v=b51fdfaff3" defer></script>
+    <script src="/script.js?v=2fb4d86bae" defer></script>
 
 
     <!-- ── Language system ── -->

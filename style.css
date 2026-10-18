@@ -834,7 +834,9 @@ p.type-contact-item.service-description {
   transform: translate3d(0,0,0);
 }
 
-#footer-title { text-align: right; }
+/* The project name is always one line: the Details text (left) wraps in the room that's
+   left instead of squeezing the name onto two rows */
+#footer-title { text-align: right; white-space: nowrap; flex: none; margin-left: var(--spacing-md); }
 #main-header a, #main-header button, #project-footer .details-toggle { pointer-events: auto; }
 
 /* ── Details panel (home) ── "Details" bottom left; the panel folds up beneath it,
@@ -843,6 +845,7 @@ p.type-contact-item.service-description {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  min-width: 0; /* may narrow, so its text wraps */
 }
 :where(button.details-toggle) {
   background: none;

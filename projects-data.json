@@ -375,7 +375,9 @@
           "item": {
             "src": "01.mp4",
             "webm": "01.webm",
-            "portrait": "sizes/01-portrait.mp4"
+            "portrait": "sizes/01-portrait.mp4",
+            "poster": "sizes/01-poster.webp",
+            "portraitPoster": "sizes/01-portrait-poster.webp"
           }
         },
         {
@@ -451,7 +453,9 @@
           "item": {
             "src": "01.mp4",
             "webm": "01.webm",
-            "portrait": "sizes/01-portrait.mp4"
+            "portrait": "sizes/01-portrait.mp4",
+            "poster": "sizes/01-poster.webp",
+            "portraitPoster": "sizes/01-portrait-poster.webp"
           }
         }
       ]

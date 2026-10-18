@@ -1552,6 +1552,8 @@ async function renderHomeSlides(pageHome, projects) {
         src:  `${homeBase}${m.src}`,
         webm: m.webm ? `${homeBase}${m.webm}` : null,
         // Phone cut: a video file, or for wide images their 4:5 crops ({ w, h, sizes })
+        poster: m.poster ? `${homeBase}${m.poster}` : null,
+        portraitPoster: m.portraitPoster ? `${homeBase}${m.portraitPoster}` : null,
         portrait: !m.portrait ? null : typeof m.portrait === "string" ? `${homeBase}${m.portrait}`
           : { w: m.portrait.w, h: m.portrait.h, sizes: m.portrait.sizes.map((v) => ({ w: v.w, src: `${homeBase}${v.src}` })) },
         w: m.w || 0,
@@ -1698,6 +1700,9 @@ function createMediaElement(media, { alt = "", priority = false } = {}) {
     // Portrait slides switch to the portrait cut (see fitVideoSource)
     v.dataset.full = (!IS_SAFARI && media.webm) ? media.webm : media.src;
     if (media.portrait) v.dataset.portrait = media.portrait;
+    // Its first frame as a still until the video shows frames (see fitVideoSource)
+    if (media.poster) v.dataset.posterFull = media.poster;
+    if (media.portraitPoster) v.dataset.posterPortrait = media.portraitPoster;
     v.setAttribute("src", v.dataset.full);
 
     // Safari's native loop shows a gap between the last and first frame: two copies of
@@ -1796,7 +1801,15 @@ const PORTRAIT_MAX_ASPECT = 0.8;
 function fitVideoSource(v) {
   const bw = v.offsetWidth, bh = v.offsetHeight; // layout size — unaffected by the fold transform
   if (!bw || !bh) return;
-  const want = v.dataset.portrait && bw / bh <= PORTRAIT_MAX_ASPECT ? v.dataset.portrait : v.dataset.full;
+  const portrait = !!v.dataset.portrait && bw / bh <= PORTRAIT_MAX_ASPECT;
+  const want = portrait ? v.dataset.portrait : v.dataset.full;
+  // The first frame as the element's background, not its poster: browsers drop the poster
+  // as soon as play() is called — before any frame has arrived — and the white slide showed
+  const poster = portrait ? v.dataset.posterPortrait : v.dataset.posterFull;
+  if (poster && v.dataset.posterShown !== poster) {
+    v.dataset.posterShown = poster;
+    v.style.background = `url("${poster}") center / cover no-repeat`;
+  }
   if (!want || v.getAttribute("src") === want) return;
   const playing = !v.paused;
   [v, ...v.parentNode.querySelectorAll("video[data-loop-standby]")].forEach((vid) => {

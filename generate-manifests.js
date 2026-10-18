@@ -85,6 +85,23 @@ function buildPortraitImage(dir, file, width, height) {
   return { w: cw, h: height, sizes };
 }
 
+// Poster: a video's first frame (make-video-poster.swift → PNG → cwebp). macOS only;
+// elsewhere an existing poster is kept and none is made.
+function buildPoster(dir, file, name, maxW) {
+  const target = path.join(dir, "sizes", name), srcPath = path.join(dir, file);
+  const fresh = fs.existsSync(target) && fs.statSync(target).size > 0 && fs.statSync(target).mtimeMs >= fs.statSync(srcPath).mtimeMs;
+  if (!fresh && hasSwift && hasCwebp) {
+    const png = path.join(require("os").tmpdir(), `poster-${process.pid}.png`);
+    try {
+      fs.mkdirSync(path.join(dir, "sizes"), { recursive: true });
+      execFileSync("swift", [path.join(__dirname, "make-video-poster.swift"), srcPath, png, String(maxW)], { stdio: "ignore" });
+      execFileSync("cwebp", ["-quiet", "-q", "72", "-metadata", "none", png, "-o", target]);
+    } catch { console.warn(`  ! poster for ${file} failed — run make-video-poster.swift by hand`); }
+    finally { fs.rmSync(png, { force: true }); }
+  }
+  return fs.existsSync(target) && fs.statSync(target).size > 0 ? `sizes/${name}` : null;
+}
+
 function findMedia(dir, stem) {
   for (const ext of MEDIA_EXTS) {
     const f = path.join(dir, stem + ext);
@@ -112,6 +129,11 @@ function describeMedia(dir, file) {
     if (fs.existsSync(path.join(dir, webm))) entry.webm = webm;
     const portrait = buildPortrait(dir, file);
     if (portrait) entry.portrait = portrait;
+    // First frames as stills, shown while the videos load (never a white slide)
+    const poster = buildPoster(dir, file, `${path.basename(file, ext)}-poster.webp`, 1920);
+    if (poster) entry.poster = poster;
+    const portraitPoster = portrait && buildPoster(dir, portrait, `${path.basename(file, ext)}-portrait-poster.webp`, 1296);
+    if (portraitPoster) entry.portraitPoster = portraitPoster;
   }
   return entry;
 }
