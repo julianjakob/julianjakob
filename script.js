@@ -2,31 +2,20 @@ document.addEventListener("DOMContentLoaded", () => {
   init().catch((e) => console.error("Init error:", e));
 });
 
+// "en" or "de" (the language script in index.html owns the setting)
+const currentLang = () => (window.getCurrentLang && window.getCurrentLang()) === "de" ? "de" : "en";
+
 async function init() {
   const pageHome = document.getElementById("page-home");
   if (!pageHome) return;
-
-  const pageContact = document.getElementById("page-contact");
-  const pageAbout = document.getElementById("page-about");
-  const pageProcess = document.getElementById("page-process");
-  const pageExpertise = document.getElementById("page-expertise");
-  const pageLegal = document.getElementById("page-legal");
-  const pageCv    = document.getElementById("page-cv");
 
   const banner = document.getElementById("intro-banner");
   const footerTitle = document.getElementById("footer-title");
   const menuBtn = document.getElementById("menu-btn");
   const menuOverlay = document.getElementById("menu-overlay");
 
-  const pages = {
-    home: pageHome,
-    contact: pageContact,
-    about: pageAbout,
-    process: pageProcess,
-    expertise: pageExpertise,
-    legal: pageLegal,
-    cv:    pageCv,
-  };
+  // Every page by name: <main id="page-about"> → pages.about
+  const pages = Object.fromEntries([...document.querySelectorAll("main.page-container")].map((pg) => [pg.id.slice(5), pg]));
   // A text page that has folded away is "parked": the browser skips laying it out and
   // drawing it (content-visibility: hidden) until it is shown again. Otherwise every
   // page of the site stays laid out behind the visible one, and a change that touches
@@ -63,8 +52,8 @@ async function init() {
   const projects = await loadEnabledProjects();
   const homeSlides = await renderHomeSlides(pageHome, projects);
 
-  fitImageSources(homeSlides);
-  window.addEventListener("resize", () => fitImageSources(homeSlides));
+  fitMediaSources(homeSlides);
+  window.addEventListener("resize", () => fitMediaSources(homeSlides));
   if (homeSlides.length > 0) updateFooter(homeSlides[0]);
   syncSlideMedia(0);
 
@@ -147,24 +136,17 @@ async function init() {
     });
   } else { hasSeenBanner = true; intro.done(); setTimeout(syncUiMode, 0); }
 
-  // ── Universal transition lock ────────────────────────────────
-  // tLock.acquire(ms)  — sets isAnimating, auto-releases after ms
-  // tLock.release()    — cancels pending timer, releases immediately
-  // tLock.bump(ms)     — cancel + re-acquire (interrupt into new anim)
-  // CSS handles visual reversal automatically when classes change
-  // mid-transition — the lock just keeps JS state honest.
+  // ── Transition lock ──────────────────────────────────────────
+  // tLock.acquire(ms): isAnimating for the next ms (a new transition restarts the clock).
+  // CSS reverses a transition by itself when classes change mid-way — the lock only
+  // keeps the script from starting a second one on top.
   const tLock = {
-    _t: null,
+    _t: 0,
     acquire(ms) {
-      if (this._t) { clearTimeout(this._t); this._t = null; }
+      clearTimeout(this._t);
       isAnimating = true;
-      this._t = setTimeout(() => { this._t = null; isAnimating = false; }, ms);
+      this._t = setTimeout(() => { isAnimating = false; }, ms);
     },
-    release() {
-      if (this._t) { clearTimeout(this._t); this._t = null; }
-      isAnimating = false;
-    },
-    bump(ms) { this.release(); this.acquire(ms); }
   };
 
 
@@ -176,7 +158,7 @@ async function init() {
   // the old word dissolves letter by letter, the new one types in. A change requested
   // while the old word is still dissolving just updates what types in next.
   const menuLabel = (key) => {
-    const de = window.getCurrentLang && window.getCurrentLang() === "de";
+    const de = currentLang() === "de";
     return { menu: de ? "Menü" : "Menu", close: de ? "Schließen" : "Close" }[key];
   };
   function setMenuLabel(text) { swapLabel(menuBtn, text); }
@@ -203,6 +185,23 @@ async function init() {
     if (on) fadeHold = setTimeout(() => html.classList.remove("fades-held", "fades-held-bottom", "fades-leaving"), 950);
   }
 
+  // A page folding in or out (origin: which edge it folds from / to)
+  function showPage(pg, origin) {
+    if (origin) pg.style.transformOrigin = origin;
+    unpark(pg);
+    pg.classList.remove("hidden");
+    pg.classList.add("visible");
+    pg.setAttribute("aria-hidden", "false");
+    pg.inert = false;
+  }
+  function hidePage(pg, origin) {
+    if (origin) pg.style.transformOrigin = origin;
+    pg.classList.remove("visible");
+    pg.classList.add("hidden");
+    pg.setAttribute("aria-hidden", "true");
+    pg.inert = true;
+  }
+
   function toggleMenu(skipFadeToMenu = false) {
     finishFeed();
     isMenuOpen = !isMenuOpen;
@@ -217,13 +216,7 @@ async function init() {
       menuBtn.setAttribute("aria-expanded", "true");
       clearTimeout(menuTimeout);
       setMenuLabel(menuLabel("close"));
-      if (activePage) {
-        activePage.style.transformOrigin = "bottom center";
-        activePage.classList.remove("visible");
-        activePage.classList.add("hidden");
-        activePage.setAttribute("aria-hidden", "true");
-        activePage.inert = true;
-      }
+      if (activePage) hidePage(activePage, "bottom center");
     } else {
       menuOverlay.classList.remove("open");
       menuOverlay.inert = true;
@@ -231,19 +224,14 @@ async function init() {
       // Not when a page name is about to show there instead
       if (!skipFadeToMenu) setMenuLabel(menuLabel("menu"));
       if (activePage) {
-        activePage.style.transformOrigin = "bottom center";
         if (currentPage === "home") showSlideAtOnce();
-        // Re-adding .visible mid-hide: CSS transitions back from current scaleY automatically
-        unpark(activePage);
-        activePage.classList.remove("hidden");
-        activePage.classList.add("visible");
-        activePage.setAttribute("aria-hidden", "false");
-        activePage.inert = false;
+        // Shown again mid-fold: CSS transitions back from the current scaleY by itself
+        showPage(activePage, "bottom center");
         if (currentPage !== "home") fixColumnBreaks(activePage); // laid out again: check the columns
       }
     }
     syncUiMode(); // menu open: difference blend on black; closed on home: adaptive colours
-    tLock.bump(950); // bump = cancel any in-flight timer + re-acquire
+    tLock.acquire(950);
   }
 
   // Home coming back (menu closed, navigation): the current slide is simply there —
@@ -264,7 +252,7 @@ async function init() {
   // After navigating: the page name shows in the menu button for a moment
   function flashMenuText(pageName) {
     clearTimeout(menuTimeout);
-    const lang = (window.getCurrentLang && window.getCurrentLang()) || "en";
+    const lang = currentLang();
     const navLink = document.querySelector(`.nav-link[data-dest="${pageName}"]`);
     setMenuLabel(navLink ? navLink.getAttribute(`data-${lang}`) || navLink.getAttribute("data-en") : pageName);
     menuTimeout = setTimeout(() => { if (!isMenuOpen) setMenuLabel(menuLabel("menu")); }, 2400);
@@ -292,7 +280,7 @@ async function init() {
   // ── Page title + OG meta updater ──────────────────────────────
   window.updatePageTitle = function(page) { updatePageTitle(page); };
   function updatePageTitle(page) {
-    const lang = (window.getCurrentLang && window.getCurrentLang()) || "en";
+    const lang = currentLang();
     // Titles live on each <main> (data-title-en/-de) — shared with build-pages.js
     const pageEl = pages[page] || pages.home;
     const title = pageEl.getAttribute(`data-title-${lang}`) || pageEl.getAttribute("data-title-en");
@@ -350,31 +338,12 @@ async function init() {
     if (dest === "home") holdFades(currentPage !== "home", true, true); // folds down onto the feed
     else if (currentPage !== "home") holdFades(true);
     else holdFades(direction === "next", true); // from the feed: unfolds from the bottom
-    if (oldPage) {
-      const oldOrigin = dest === "home" ? "bottom center"
-                      : direction === "next" ? "top center" : "bottom center";
-      oldPage.style.transformOrigin = oldOrigin;
-      oldPage.classList.remove("visible");
-      oldPage.classList.add("hidden");
-      oldPage.setAttribute("aria-hidden", "true");
-      oldPage.inert = true;
-    }
-    if (newPage) {
-      if (dest === "home") {
-        newPage.style.transformOrigin = "top center";
-        showSlideAtOnce();
-      } else if (direction === "next") {
-        newPage.scrollTop = 0;
-        newPage.style.transformOrigin = "bottom center";
-      } else {
-        newPage.scrollTop = newPage.scrollHeight;
-        newPage.style.transformOrigin = "top center";
-      }
-      unpark(newPage);
-      newPage.classList.remove("hidden");
-      newPage.classList.add("visible");
-      newPage.setAttribute("aria-hidden", "false");
-      newPage.inert = false;
+    // Forward: the old page folds up, the new one unfolds from the bottom; back: the reverse
+    if (oldPage) hidePage(oldPage, dest === "home" || direction !== "next" ? "bottom center" : "top center");
+    if (dest === "home") { showSlideAtOnce(); showPage(newPage, "top center"); }
+    else {
+      newPage.scrollTop = direction === "next" ? 0 : newPage.scrollHeight;
+      showPage(newPage, direction === "next" ? "bottom center" : "top center");
     }
 
     if (dest !== "home") flashMenuText(dest);
@@ -388,89 +357,61 @@ async function init() {
     tLock.acquire(950);
   }
 
-  initServicesAccordion();
-  initReveals();
-  // Process steps: folded at first, one open at a time — opening a step folds the one
-  // that was open. Like the Details panel: closing, the text dissolves first and the row
-  // folds after it; opening, the row unfolds and the text types in on the way.
-  function initServicesAccordion() {
-    const rows = [...document.querySelectorAll(".service-row")];
-    rows.forEach((row) => {
-      const body = row.querySelector(".service-body");
-      const toggle = row.querySelector(".service-toggle");
-      const texts = () => [...body.querySelectorAll(".service-description, .type-service-tags")];
+  // Process steps and the awards on About: folded at first, one open at a time — opening
+  // one folds the one that was open. Like the Details panel: closing, the text dissolves
+  // first and the panel folds after it; opening, it unfolds and the text types in on the
+  // way. The awards' sign (superscript + / –) changes like any other text; a Process
+  // step's sign switches at once.
+  //   items: [{ el (clicked), panel (gets openClass), body (hidden until it types), lines(), sign(open) }]
+  function oneOpenAtATime(items, openClass) {
+    items.forEach((item) => {
       let run = 0;
-      row._open = row.classList.contains("expanded");
-      row._set = (expand) => {
-        if (expand === row._open) return;
-        row._open = expand;
+      item.open = item.panel.classList.contains(openClass);
+      item.set = (open) => {
+        if (open === item.open) return;
+        item.open = open;
         const r = ++run;
-        if (toggle) toggle.textContent = expand ? "–" : "+"; // Garamond's own en dash: longer than a minus
-        row.setAttribute("aria-expanded", String(expand));
-        if (expand) {
-          body.style.visibility = "hidden";
-          row.classList.add("expanded");
-          setTimeout(() => {
-            if (r !== run) return;
-            body.style.visibility = "";
-            texts().forEach((el) => typewriterIn(el));
-          }, 200);
-        } else {
-          body.style.visibility = "";
-          const gone = textOut(texts());
-          setTimeout(() => { if (r === run) row.classList.remove("expanded"); }, Math.min(gone, 200));
-        }
-      };
-      const handleToggle = () => {
-        const expand = !row._open;
-        if (expand) rows.forEach((other) => { if (other !== row) other._set(false); });
-        row._set(expand);
-      };
-      row.addEventListener("click", handleToggle);
-      row.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleToggle(); }
-      });
-    });
-  }
-
-  // A line that opens more lines (the awards on About): the superscript + / – changes
-  // like Details, the panel unfolds and its lines type in; closing, they dissolve and the
-  // panel folds. One open at a time, like the Process steps: opening one folds the other.
-  function initReveals() {
-    const toggles = [...document.querySelectorAll(".reveal-toggle")];
-    toggles.forEach((btn) => {
-      const panel = document.getElementById(btn.getAttribute("aria-controls"));
-      const hint = btn.querySelector(".details-hint");
-      if (!panel) return;
-      const lines = () => [...panel.querySelector(".reveal-body").children];
-      let run = 0;
-      btn._open = false;
-      btn._set = (open) => {
-        if (open === btn._open) return;
-        btn._open = open;
-        const r = ++run;
-        btn.setAttribute("aria-expanded", String(open));
-        if (hint) swapLabel(hint, open ? "–" : "+");
+        item.el.setAttribute("aria-expanded", String(open));
+        item.sign(open ? "–" : "+"); // Garamond's en dash: longer than a minus
         if (open) {
-          panel.style.visibility = "hidden";
-          panel.classList.add("open");
+          item.body.style.visibility = "hidden";
+          item.panel.classList.add(openClass);
           setTimeout(() => {
             if (r !== run) return;
-            panel.style.visibility = "";
-            lines().forEach((el) => typewriterIn(el));
+            item.body.style.visibility = "";
+            item.lines().forEach((el) => typewriterIn(el));
           }, 200);
         } else {
-          const gone = textOut(lines());
-          setTimeout(() => { if (r === run) panel.classList.remove("open"); }, Math.min(gone, 200));
+          item.body.style.visibility = "";
+          const gone = textOut(item.lines());
+          setTimeout(() => { if (r === run) item.panel.classList.remove(openClass); }, Math.min(gone, 200));
+          // Folded away: plain text again instead of hundreds of faded letter spans
+          setTimeout(() => { if (r === run) item.lines().forEach(settleText); }, gone + 900);
         }
       };
-      btn.addEventListener("click", () => {
-        const open = !btn._open;
-        if (open) toggles.forEach((other) => { if (other !== btn && other._set) other._set(false); });
-        btn._set(open);
+      const toggle = () => {
+        const open = !item.open;
+        if (open) items.forEach((other) => { if (other !== item) other.set(false); });
+        item.set(open);
+      };
+      item.el.addEventListener("click", toggle);
+      if (item.el.tagName !== "BUTTON") item.el.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
       });
     });
   }
+  oneOpenAtATime([...document.querySelectorAll(".service-row")].map((row) => {
+    const sign = row.querySelector(".service-toggle");
+    return { el: row, panel: row, body: row.querySelector(".service-body"),
+      sign: (t) => { if (sign) sign.textContent = t; },
+      lines: () => [...row.querySelectorAll(".service-description, .type-service-tags")] };
+  }), "expanded");
+  oneOpenAtATime([...document.querySelectorAll(".reveal-toggle")].map((btn) => {
+    const panel = document.getElementById(btn.getAttribute("aria-controls")), sign = btn.querySelector(".details-hint");
+    return panel && { el: btn, panel, body: panel,
+      sign: (t) => { if (sign) swapLabel(sign, t); },
+      lines: () => [...panel.querySelector(".reveal-body").children] };
+  }).filter(Boolean), "open");
 
   // Scroll hint — shown once per visitor, dismissed on first interaction
   let scrollHintActive = false;
@@ -525,35 +466,17 @@ async function init() {
     await wait(350);
     if (!alive()) return;
 
-    // Snap to UP + move to top
-    rotateArrows( -90, +90);
-    move(HALF_DUR, `translateY(calc(-50% - ${MOVE}px))`);
-    await wait(HALF_DUR + HOLD);
-    if (!alive()) return;
-
-    // Sweep DOWN
-    rotateArrows( +180, -180);
-    move(SWEEP_DUR, `translateY(calc(-50% + ${MOVE}px))`);
-    await wait(SWEEP_DUR + HOLD);
-    if (!alive()) return;
-
-    // Sweep UP
-    rotateArrows( -180, +180);
-    move(SWEEP_DUR, `translateY(calc(-50% - ${MOVE}px))`);
-    await wait(SWEEP_DUR + HOLD);
-    if (!alive()) return;
-
-    // Sweep DOWN
-    rotateArrows( +180, -180);
-    move(SWEEP_DUR, `translateY(calc(-50% + ${MOVE}px))`);
-    await wait(SWEEP_DUR + HOLD);
-    if (!alive()) return;
-
-    // Snap back to inward + return to center
-    rotateArrows( -90, +90);
-    move(HALF_DUR, "translateY(-50%)");
-    await wait(HALF_DUR);
-    if (!alive()) return;
+    // Up, down, up, down, then back to the centre (arrows turned to point the way they move)
+    const UP = `translateY(calc(-50% - ${MOVE}px))`, DOWN = `translateY(calc(-50% + ${MOVE}px))`;
+    for (const [dl, dr, dur, dest, hold] of [
+      [-90, 90, HALF_DUR, UP, HOLD], [180, -180, SWEEP_DUR, DOWN, HOLD], [-180, 180, SWEEP_DUR, UP, HOLD],
+      [180, -180, SWEEP_DUR, DOWN, HOLD], [-90, 90, HALF_DUR, "translateY(-50%)", 0],
+    ]) {
+      rotateArrows(dl, dr);
+      move(dur, dest);
+      await wait(dur + hold);
+      if (!alive()) return;
+    }
 
     // Fade out
     hint.style.transition = "opacity 350ms ease-in";
@@ -985,7 +908,7 @@ async function init() {
   function detailsHTML(slot) {
     const proj = projects.find((p) => p.slot === slot);
     const d = (proj && proj.details) || {};
-    const lang = (window.getCurrentLang && window.getCurrentLang()) || "en";
+    const lang = currentLang();
     const esc = (t) => String(t).replace(/&/g, "&amp;").replace(/"/g, "&quot;");
     const line = (en, de) => `<p data-en="${esc(en)}" data-de="${esc(de)}">${lang === "de" ? de : en}</p>`;
     const L = DETAILS_LABELS;
@@ -1165,7 +1088,7 @@ async function init() {
   // build-cv-pdf.mjs): the same one page in every browser, ready to print or save.
   const printBtn = document.getElementById("print-btn");
   if (printBtn) printBtn.addEventListener("click", () => {
-    const lang = (window.getCurrentLang && window.getCurrentLang()) === "de" ? "DE" : "EN";
+    const lang = currentLang().toUpperCase();
     window.open(`/assets/cv/Julian-Jakob-CV-${lang}.pdf`, "_blank", "noopener");
   });
   let printShown = false, printTimer = 0;
@@ -1175,7 +1098,7 @@ async function init() {
     printShown = show;
     clearTimeout(printTimer);
     if (show) {
-      const lang = (window.getCurrentLang && window.getCurrentLang()) || "en";
+      const lang = currentLang();
       printBtn.textContent = printBtn.getAttribute(`data-${lang}`); // clean text, current language
       glideHeader(() => { printBtn.hidden = false; });
       typewriterIn(printBtn);
@@ -1419,10 +1342,10 @@ async function init() {
     // The finger's speed carries into the spring (px/ms → slides/ms)
     springTo(target, v / window.innerHeight);
   }
+  // The feed and its header / footer bars: where swipes and the wheel move the feed
+  const feedSurfaces = [pageHome, document.getElementById("main-header"), document.getElementById("project-footer")].filter(Boolean);
   // iOS backup for touch-action: while a swipe is on, the page never scrolls natively
-  [pageHome, document.getElementById("main-header"), document.getElementById("project-footer")].forEach((el) => {
-    if (el) el.addEventListener("touchmove", (e) => { if (drag && e.cancelable) e.preventDefault(); }, { passive: false });
-  });
+  feedSurfaces.forEach((el) => el.addEventListener("touchmove", (e) => { if (drag && e.cancelable) e.preventDefault(); }, { passive: false }));
 
   let suppressClick = false;
   window.addEventListener("click", (e) => {
@@ -1456,8 +1379,7 @@ async function init() {
   }
   // On the feed and over its header / footer bars (not the window: a blocking wheel
   // listener there would slow down scrolling on every other page)
-  [pageHome, document.getElementById("main-header"), document.getElementById("project-footer")]
-    .forEach((el) => { if (el) el.addEventListener("wheel", onWheel, { passive: false }); });
+  feedSurfaces.forEach((el) => el.addEventListener("wheel", onWheel, { passive: false }));
 
   // ── Keyboard navigation ──────────────────────────────────────
   window.addEventListener("keydown", (e) => {
@@ -1518,21 +1440,13 @@ function mediaReady(slide) {
   return Promise.race([loaded, new Promise((r) => setTimeout(r, 6000))]);
 }
 
-let _projectsData = null;
-
 // All projects in one request (projects-data.json, written by build-projects.js)
 async function loadEnabledProjects() {
   try {
     const res = await fetch("projects-data.json", { cache: "no-cache" }); // always revalidated: new projects show at once
-    if (res.ok) return (_projectsData = await res.json());
+    if (res.ok) return await res.json();
   } catch {}
   return [];
-}
-
-function getManifest(slot) {
-  if (!_projectsData) return null;
-  const p = _projectsData.find(p => p.slot === slot);
-  return p ? p.manifest : null;
 }
 
 /* Home render */
@@ -1543,22 +1457,24 @@ async function renderHomeSlides(pageHome, projects) {
 
   const slidesToRender = [];
   for (const project of projects) {
-    const homeBase = `projects/${project.slot}/home/`;
-    const manifest = getManifest(project.slot);
+    const manifest = project.manifest;
 
     if (manifest) {
+      // Manifest paths are relative to the project's home folder
+      const at = (file) => (file ? `projects/${project.slot}/home/${file}` : null);
+      const copies = (list) => (list || []).map((v) => ({ w: v.w, src: at(v.src) }));
       const toMedia = (m) => ({
         kind: /\.(mp4|webm)$/i.test(m.src) ? "video" : "image",
-        src:  `${homeBase}${m.src}`,
-        webm: m.webm ? `${homeBase}${m.webm}` : null,
+        src: at(m.src),
+        webm: at(m.webm),
+        poster: at(m.poster),                 // videos: first frames, full and phone cut
+        portraitPoster: at(m.portraitPoster),
         // Phone cut: a video file, or for wide images their 4:5 crops ({ w, h, sizes })
-        poster: m.poster ? `${homeBase}${m.poster}` : null,
-        portraitPoster: m.portraitPoster ? `${homeBase}${m.portraitPoster}` : null,
-        portrait: !m.portrait ? null : typeof m.portrait === "string" ? `${homeBase}${m.portrait}`
-          : { w: m.portrait.w, h: m.portrait.h, sizes: m.portrait.sizes.map((v) => ({ w: v.w, src: `${homeBase}${v.src}` })) },
+        portrait: !m.portrait ? null : typeof m.portrait === "string" ? at(m.portrait)
+          : { w: m.portrait.w, h: m.portrait.h, sizes: copies(m.portrait.sizes) },
         w: m.w || 0,
         h: m.h || 0,
-        sizes: (m.sizes || []).map((v) => ({ w: v.w, src: `${homeBase}${v.src}` })),
+        sizes: copies(m.sizes),
       });
       for (const item of (manifest.home || [])) {
         let block;
@@ -1766,7 +1682,7 @@ function createMediaElement(media, { alt = "", priority = false } = {}) {
   img.alt = alt;
   if (media.w && media.h) { img.width = media.w; img.height = media.h; }
   if (media.sizes && media.sizes.length && media.w) {
-    // Resized copies: fitImageSources() picks one once the display size is known
+    // Resized copies: fitMediaSources() picks one once the display size is known
     img.dataset.srcset = [...media.sizes, { w: media.w, src: media.src }].map((v) => `${v.src} ${v.w}w`).join(", ");
     img.dataset.src = media.src;
   } else {
@@ -1774,7 +1690,7 @@ function createMediaElement(media, { alt = "", priority = false } = {}) {
   }
   // Colour sampling reads this small copy, never the full-size photo (see thumbAsync)
   img.dataset.thumb = img.dataset.fullThumb = media.sizes && media.sizes.length ? media.sizes[0].src : media.src;
-  // Wide images: the 4:5 crops a portrait slide uses instead (see fitImageSources)
+  // Wide images: the 4:5 crops a portrait slide uses instead (see fitMediaSources)
   if (media.portrait && media.portrait.sizes && media.portrait.sizes.length && img.dataset.srcset) {
     const p = media.portrait, top = p.sizes[p.sizes.length - 1];
     img.dataset.portraitSrcset = p.sizes.map((v) => `${v.src} ${v.w}w`).join(", ");
@@ -1790,9 +1706,6 @@ function createMediaElement(media, { alt = "", priority = false } = {}) {
   return img;
 }
 
-// Tell the browser how large each slide image is really displayed, so it loads
-// the closest resized copy. Images far larger than shown get shrunk coarsely
-// while a slide animates in, which looks pixelated.
 // Videos on a portrait slide (phones) play their portrait cut (sizes/…-portrait.mp4): the
 // centre slice that object-fit: cover shows there anyway, at a fraction of the 4K file's
 // weight — it starts sooner on a slow connection and decodes without strain. Its 4:5
@@ -1819,7 +1732,10 @@ function fitVideoSource(v) {
   if (playing) v.play().catch(() => {});
 }
 
-function fitImageSources(slides) {
+// Tell the browser how large each slide image is really displayed, so it loads the
+// closest resized copy (images far larger than shown get shrunk coarsely while a slide
+// animates in, which looks pixelated) — and give portrait slides their phone cuts.
+function fitMediaSources(slides) {
   slides.forEach((slide) => slide.querySelectorAll("video[data-full]").forEach(fitVideoSource));
   slides.forEach((slide) => slide.querySelectorAll("img[data-srcset]").forEach((img) => {
     const bw = img.offsetWidth, bh = img.offsetHeight; // layout size — unaffected by the fold transform
@@ -2004,9 +1920,6 @@ function keepKerning(parent, units) {
   }
 }
 
-// Splits the visible text of `el` into letter or word spans, in locked lines (see
-// readLines); returns the spans. `skip(textNode)` can exclude text (e.g. nested
-// translated elements).
 // What splitText needs from the layout, read without changing anything: the visible text
 // nodes and where their lines break. Read for many texts first, then split them all —
 // reading after each split would force the browser to lay out the page again and again.
@@ -2022,6 +1935,9 @@ function planText(el, skip) {
   return { nodes, layouts: nodes.map(readLines) };
 }
 
+// Splits the visible text of `el` into letter or word spans, in locked lines (see
+// readLines); returns the spans. `skip(textNode)` can exclude text (e.g. nested
+// translated elements).
 function splitText(el, byWord, className, skip, plan) {
   const { nodes, layouts } = plan || planText(el, skip);
   const spans = [];
@@ -2106,8 +2022,6 @@ function finishTyping() {
   typingEls.clear();
 }
 
-// Let a set of elements dissolve (per --tm-out). Each element is handled once: a parent
-// covers its children. Returns how long until everything is gone (ms).
 // Many texts typing in at once (a language switch): all settled, all read, then all split
 function typewriterInAll(elements, skip) {
   elements.forEach(settleText);
@@ -2115,6 +2029,8 @@ function typewriterInAll(elements, skip) {
   return elements.map((el, i) => typewriterIn(el, skip, plans[i]));
 }
 
+// Let a set of elements dissolve (per --tm-out). Each element is handled once: a parent
+// covers its children. Returns how long until everything is gone (ms).
 function textOut(elements) {
   let longest = 0;
   // A parent covers its children; settle all first (a dissolve over half-typed text would
@@ -2256,7 +2172,7 @@ if (_colObserver) document.addEventListener("DOMContentLoaded", () => document.q
       var text    = trigger.getAttribute("data-copy");
       var original = label.innerHTML;
       function show() {
-        var copied = (window.getCurrentLang && window.getCurrentLang() === "de") ? "Kopiert" : "Copied";
+        var copied = currentLang() === "de" ? "Kopiert" : "Copied";
         swap(label, copied, false, function () {
           setTimeout(function () {
             swap(label, original, true, function () { busy = false; });
@@ -2277,15 +2193,10 @@ if (_colObserver) document.addEventListener("DOMContentLoaded", () => document.q
     });
   }
 
+  // Every [data-copy]; a contact row says "Copied" in its text, not over its icon
   function initCopy() {
-    document.querySelectorAll(".cv-copy-btn").forEach(function (btn) {
-      wire(btn, btn);
-    });
-    document.querySelectorAll(".copy-row[data-copy]").forEach(function (row) {
-      wire(row, row.querySelector(".type-contact-item") || row);
-    });
-    document.querySelectorAll(".copy-link[data-copy]").forEach(function (link) {
-      wire(link, link);
+    document.querySelectorAll("[data-copy]").forEach(function (el) {
+      wire(el, el.querySelector(".type-contact-item") || el);
     });
   }
 

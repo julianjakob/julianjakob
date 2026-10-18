@@ -511,7 +511,10 @@ html.menu-open #bar-top { display: block; }
   contain: paint;
 }
 
-#page-home { background-color: var(--color-ink); cursor: grab; }
+/* touch-action: touches on the feed belong to the swipe (script.js), never to the browser.
+   "none" — iOS Safari doesn't know "pinch-zoom" and drops a whole
+   "pan-x pinch-zoom" declaration, which let the page scroll under the swipe */
+#page-home { background-color: var(--color-ink); cursor: grab; touch-action: none; }
 #page-home:active { cursor: grabbing; }
 #page-home img,
 #page-home video { user-select: none; -webkit-user-drag: none; pointer-events: none; }
@@ -524,10 +527,6 @@ html.menu-open #bar-top { display: block; }
   opacity: 0.9;
 }
 
-/* Touches on the feed belong to the swipe (script.js), never to the browser.
-   "none" — iOS Safari doesn't know "pinch-zoom" and drops a whole
-   "pan-x pinch-zoom" declaration, which let the page scroll under the swipe */
-#page-home { touch-action: none; }
 
 
 .slide-section {
@@ -575,8 +574,9 @@ html.menu-open #bar-top { display: block; }
   .slide-section.is-row { padding: var(--spacing-macro) var(--ui-padding-side) !important; }
 }
 
+/* (overflow: videos reach 1px past the slide — see below) */
 .slide-section.is-landscape,
-.slide-section.is-full-bleed { padding: 0; }
+.slide-section.is-full-bleed { padding: 0; overflow: hidden; }
 .slide-section.is-landscape img,
 .slide-section.is-full-bleed img,
 .slide-section.is-landscape video,
@@ -625,8 +625,6 @@ html.menu-open #bar-top { display: block; }
 /* Videos reach 1px past their slide at the top and bottom (centred, so the overshoot
    is even) and the slide clips them: iOS draws video on its own layer snapped to whole
    device pixels, which could leave a hairline of the white slide showing at an edge */
-.slide-section.is-landscape,
-.slide-section.is-full-bleed { overflow: hidden; }
 .slide-section.is-landscape .content-single video,
 .slide-section.is-full-bleed .content-single video { height: calc(100% + 2px); }
 
@@ -899,8 +897,6 @@ p.type-contact-item.service-description {
 /* Adaptive UI colour on the home feed (set per text spot from script.js):
    solid black or white instead of the difference blend, fading slowly between the
    two. Everywhere else the difference blend stays. */
-.ui-adaptive #main-header,
-.ui-adaptive #project-footer { mix-blend-mode: normal; }
 .ui-adaptive #main-header .brand,
 .ui-adaptive #lang-toggle,
 .ui-adaptive #menu-btn,
@@ -913,6 +909,7 @@ p.type-contact-item.service-description {
    over), and dragging across them doesn't select text */
 .ui-adaptive #main-header,
 .ui-adaptive #project-footer {
+  mix-blend-mode: normal;
   touch-action: none;
   -webkit-user-select: none;
   user-select: none;
@@ -1205,9 +1202,7 @@ p.type-contact-item,
 .cv-entry + .cv-entry { margin-top: var(--spacing-md); }
 /* Entry lines and sidebar titles: the size of their text */
 .cv-entry-head,
-.cv-label { font-size: inherit; }
-.cv-entry-head,
-.cv-label { margin-bottom: calc(var(--spacing-xs) / 2); } /* entry line → its text */
+.cv-label { font-size: inherit; margin-bottom: calc(var(--spacing-xs) / 2); } /* entry line → its text */
 
 .cv-sidebar {
   display: grid;
