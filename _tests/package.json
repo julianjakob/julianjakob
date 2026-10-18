@@ -1,0 +1,14 @@
+{
+  "name": "julianjakob-site-tests",
+  "private": true,
+  "type": "module",
+  "description": "Browser checks for julianjakob.at (see README.md)",
+  "scripts": {
+    "test": "node run.mjs",
+    "quick": "node run.mjs --quick",
+    "serve": "node server.cjs .. 8767"
+  },
+  "devDependencies": {
+    "playwright": "^1.64.0"
+  }
+}
