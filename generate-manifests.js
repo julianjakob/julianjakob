@@ -47,19 +47,18 @@ function buildSizes(dir, file, width) {
   return out;
 }
 
-// Phone cut of every video (home/sizes/<name>-portrait.mp4): the centre portrait slice
-// at phone resolution — see make-portrait-video.swift. Needs macOS (swift + AVFoundation);
-// elsewhere an existing cut is kept and none is made.
+// Lighter cuts of every video (home/sizes/): <name>-1080.mp4 for screens, <name>-portrait.mp4
+// for phones (the centre slice they show) — see make-video-cut.swift. Needs macOS
+// (swift + AVFoundation); elsewhere existing cuts are kept and none are made.
 let hasSwift = process.platform === "darwin";
-function buildPortrait(dir, file) {
-  const stem = path.basename(file, path.extname(file));
-  const name = `${stem}-portrait.mp4`, target = path.join(dir, "sizes", name), srcPath = path.join(dir, file);
+function buildCut(dir, file, name, w, h, bitrate) {
+  const target = path.join(dir, "sizes", name), srcPath = path.join(dir, file);
   const fresh = fs.existsSync(target) && fs.statSync(target).size > 0 && fs.statSync(target).mtimeMs >= fs.statSync(srcPath).mtimeMs;
   if (!fresh && hasSwift) {
     try {
       fs.mkdirSync(path.join(dir, "sizes"), { recursive: true });
-      execFileSync("swift", [path.join(__dirname, "make-portrait-video.swift"), srcPath, target], { stdio: "ignore" });
-    } catch { hasSwift = false; console.warn("  ! portrait video cut failed — run make-portrait-video.swift by hand"); }
+      execFileSync("swift", [path.join(__dirname, "make-video-cut.swift"), srcPath, target, String(w), String(h), String(bitrate)], { stdio: "ignore" });
+    } catch { hasSwift = false; console.warn(`  ! video cut ${name} failed — run make-video-cut.swift by hand`); }
   }
   return fs.existsSync(target) && fs.statSync(target).size > 0 ? `sizes/${name}` : null;
 }
@@ -125,10 +124,15 @@ function describeMedia(dir, file) {
       if (portrait) entry.portrait = portrait;
     }
   } else if (ext === ".mp4") {
-    const webm = file.replace(/\.mp4$/i, ".webm");
-    if (fs.existsSync(path.join(dir, webm))) entry.webm = webm;
-    const portrait = buildPortrait(dir, file);
+    // Lighter cuts; the original stays as the fallback (src) when one is missing
+    const stem = path.basename(file, ext);
+    const desktop = buildCut(dir, file, `${stem}-1080.mp4`, 1920, 1080, 5000000);
+    if (desktop) entry.desktop = desktop;
+    const portrait = buildCut(dir, file, `${stem}-portrait.mp4`, 1296, 1620, 2500000);
     if (portrait) entry.portrait = portrait;
+    // A WebM (Chrome, Firefox) only where it is lighter than the MP4 they'd get instead
+    const webm = file.replace(/\.mp4$/i, ".webm"), size = (f) => fs.statSync(path.join(dir, f)).size;
+    if (fs.existsSync(path.join(dir, webm)) && size(webm) < size(desktop || file)) entry.webm = webm;
     // First frames as stills, shown while the videos load (never a white slide)
     const poster = buildPoster(dir, file, `${path.basename(file, ext)}-poster.webp`, 1920);
     if (poster) entry.poster = poster;

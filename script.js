@@ -1467,6 +1467,7 @@ async function renderHomeSlides(pageHome, projects) {
         kind: /\.(mp4|webm)$/i.test(m.src) ? "video" : "image",
         src: at(m.src),
         webm: at(m.webm),
+        desktop: at(m.desktop),               // videos: 1080p cut (the 4K original is the fallback)
         poster: at(m.poster),                 // videos: first frames, full and phone cut
         portraitPoster: at(m.portraitPoster),
         // Phone cut: a video file, or for wide images their 4:5 crops ({ w, h, sizes })
@@ -1612,9 +1613,10 @@ function createMediaElement(media, { alt = "", priority = false } = {}) {
     v.setAttribute("playsinline", "");
     v.setAttribute("muted", "");
     v.setAttribute("aria-label", alt);
-    // Safari gets the MP4; other browsers the (usually much smaller) WebM when available.
-    // Portrait slides switch to the portrait cut (see fitVideoSource)
-    v.dataset.full = (!IS_SAFARI && media.webm) ? media.webm : media.src;
+    // The 1080p cut (the 4K original if there is none); Chrome / Firefox the WebM where the
+    // manifest lists one (only when it is lighter). Portrait slides switch to the phone cut
+    // (see fitVideoSource)
+    v.dataset.full = (!IS_SAFARI && media.webm) ? media.webm : media.desktop || media.src;
     if (media.portrait) v.dataset.portrait = media.portrait;
     // Its first frame as a still until the video shows frames (see fitVideoSource)
     if (media.poster) v.dataset.posterFull = media.poster;

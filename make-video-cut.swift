@@ -1,21 +1,23 @@
-// make-portrait-video.swift
+// make-video-cut.swift
 //
-// Phone version of a home-feed video: the centre portrait slice that a phone shows
-// anyway (the slide fills the screen with object-fit: cover), at phone resolution and
-// a streaming-friendly bitrate. H.264 MP4 with the index at the start (plays while it
-// loads), no audio. Plays in every browser, so phones need only this one file.
+// A lighter copy of a home-feed video at a given size: scaled to cover that frame and
+// cropped to its centre — exactly what the site shows there with object-fit: cover.
+// H.264 MP4 with the index at the start (plays while it loads), no audio, a keyframe
+// every second. Plays in every browser.
 //
-//   swift make-portrait-video.swift projects/05/home/01.mp4 projects/05/home/sizes/01-portrait.mp4
+//   swift make-video-cut.swift <in.mp4> <out.mp4> <width> <height> [bits per second]
 //
-// Then run: node generate-manifests.js && node build-projects.js
+// generate-manifests.js makes two per video (and keeps the original as the fallback):
+//   sizes/<name>-portrait.mp4  1296×1620, 2.5 Mbit/s — phones (the 4:5 slice they show)
+//   sizes/<name>-1080.mp4      1920×1080, 5 Mbit/s   — everything else
 import AVFoundation
 import Foundation
 
-let OUT_W = 1296, OUT_H = 1620   // 4:5 — covers any portrait phone slide (box aspect ≤ 0.8)
-let BITRATE = Int(ProcessInfo.processInfo.environment["BITRATE"] ?? "") ?? 2_500_000 // bits/s: starts quickly on a weak connection, no visible loss at phone size
-
 let args = CommandLine.arguments
-guard args.count == 3 else { print("usage: swift make-portrait-video.swift <in.mp4> <out.mp4>"); exit(1) }
+guard args.count >= 5, let OUT_W = Int(args[3]), let OUT_H = Int(args[4]) else {
+  print("usage: swift make-video-cut.swift <in.mp4> <out.mp4> <width> <height> [bits per second]"); exit(1)
+}
+let BITRATE = args.count > 5 ? Int(args[5]) ?? 2_500_000 : 2_500_000
 let src = URL(fileURLWithPath: args[1]), dst = URL(fileURLWithPath: args[2])
 try? FileManager.default.removeItem(at: dst)
 
@@ -26,16 +28,16 @@ Task {
     guard let track = try await asset.loadTracks(withMediaType: .video).first else { print("no video track"); exit(1) }
     let (natural, transform, fps, duration) = try await track.load(.naturalSize, .preferredTransform, .nominalFrameRate, .timeRange)
     let size = natural.applying(transform), w = abs(size.width), h = abs(size.height)
-    // Scale to the output height, crop the centre
-    let scale = CGFloat(OUT_H) / h
-    let dx = (w * scale - CGFloat(OUT_W)) / 2
+    // Scale to cover the output frame, crop the centre
+    let scale = max(CGFloat(OUT_W) / w, CGFloat(OUT_H) / h)
+    let dx = (w * scale - CGFloat(OUT_W)) / 2, dy = (h * scale - CGFloat(OUT_H)) / 2
     let comp = AVMutableVideoComposition()
     comp.renderSize = CGSize(width: OUT_W, height: OUT_H)
     comp.frameDuration = CMTime(value: 1, timescale: CMTimeScale(max(1, round(fps))))
     let instr = AVMutableVideoCompositionInstruction()
     instr.timeRange = duration
     let layer = AVMutableVideoCompositionLayerInstruction(assetTrack: track)
-    layer.setTransform(transform.concatenating(CGAffineTransform(scaleX: scale, y: scale)).concatenating(CGAffineTransform(translationX: -dx, y: 0)), at: .zero)
+    layer.setTransform(transform.concatenating(CGAffineTransform(scaleX: scale, y: scale)).concatenating(CGAffineTransform(translationX: -dx, y: -dy)), at: .zero)
     instr.layerInstructions = [layer]
     comp.instructions = [instr]
 
